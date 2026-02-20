@@ -110,7 +110,7 @@ export function XpProgress({
           className={cn(
             "h-full rounded-lg",
             "bg-gradient-to-r from-lr-green-500 to-lr-gold-500",
-            "transition-all duration-[1500ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+            "transition-all duration-1500 ease-smooth"
           )}
           style={{ width: animated ? `${percentage}%` : "0%" }}
         />

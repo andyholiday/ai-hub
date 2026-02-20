@@ -217,24 +217,15 @@ function handleStreamingResponse(
 
 /**
  * Log token usage for cost tracking.
- * This is a placeholder that writes to console; a future implementation
- * will insert into the ai_cost_log Supabase table.
+ * This is a placeholder; a future implementation will insert into
+ * the ai_cost_log Supabase table.
  */
 function logTokenUsage(
-  provider: AIProvider | string,
-  model: string,
-  usage: { promptTokens: number; completionTokens: number; totalTokens: number }
+  _provider: AIProvider | string,
+  _model: string,
+  _usage: { promptTokens: number; completionTokens: number; totalTokens: number }
 ): void {
-  console.log("[AI Usage]", {
-    provider,
-    model,
-    promptTokens: usage.promptTokens,
-    completionTokens: usage.completionTokens,
-    totalTokens: usage.totalTokens,
-    timestamp: new Date().toISOString(),
-  });
-
-  // TODO: Insert into Supabase ai_cost_log table
+  // TODO: Replace with Supabase ai_cost_log table insert
   // const supabase = createServerClient();
   // await supabase.from("ai_cost_log").insert({
   //   provider,

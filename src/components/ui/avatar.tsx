@@ -6,6 +6,7 @@
 "use client";
 
 import React, { forwardRef, useState, type HTMLAttributes } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
 
 // -----------------------------------------------------------------------------
@@ -107,7 +108,7 @@ export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
     const colorClass = name ? getAvatarColor(name) : "bg-surface-200 text-surface-500";
 
     return (
-      <div ref={ref} className={cn("relative inline-flex shrink-0", className)}>
+      <div ref={ref} className={cn("relative inline-flex shrink-0", className)} {...props}>
         {/* Avatar Circle */}
         <div
           className={cn(
@@ -119,11 +120,14 @@ export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
           aria-label={alt || name || "Avatar"}
         >
           {showImage ? (
-            <img
+            <Image
               src={src as string}
               alt={alt || name || "Avatar"}
               onError={() => setImgError(true)}
               className="h-full w-full object-cover"
+              fill
+              sizes="56px"
+              unoptimized
             />
           ) : (
             <span className={cn("select-none leading-none", styles.text)}>

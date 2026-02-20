@@ -285,8 +285,8 @@ export default function ChallengesPage() {
           <ChallengeCard
             key={challenge.id}
             {...challenge}
-            onJoin={(id) => console.log("Join challenge:", id)}
-            onContinue={(id) => console.log("Continue challenge:", id)}
+            onJoin={() => { /* TODO: implement join handler */ }}
+            onContinue={() => { /* TODO: implement continue handler */ }}
           />
         ))}
       </div>

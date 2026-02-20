@@ -118,11 +118,11 @@ export default function AdminPage() {
               <ProviderCard
                 key={provider.id}
                 provider={provider}
-                onEdit={(id) => console.log("Edit:", id)}
-                onTest={(id) => console.log("Test:", id)}
-                onSetPrimary={(id) => console.log("Set Primary:", id)}
-                onSetup={(id) => console.log("Setup:", id)}
-                onStats={(id) => console.log("Stats:", id)}
+                onEdit={() => { /* TODO: implement edit handler */ }}
+                onTest={() => { /* TODO: implement test handler */ }}
+                onSetPrimary={() => { /* TODO: implement set-primary handler */ }}
+                onSetup={() => { /* TODO: implement setup handler */ }}
+                onStats={() => { /* TODO: implement stats handler */ }}
               />
             ))}
           </div>
@@ -135,14 +135,12 @@ export default function AdminPage() {
 
           {/* System Prompts */}
           <SystemPrompts
-            onEdit={(id) => console.log("Edit Prompt:", id)}
+            onEdit={() => { /* TODO: implement edit-prompt handler */ }}
           />
 
           {/* Feature Toggles */}
           <FeatureToggles
-            onToggle={(id, enabled) =>
-              console.log("Toggle:", id, enabled)
-            }
+            onToggle={() => { /* TODO: implement toggle handler */ }}
           />
 
           {/* Provider Sandbox */}
