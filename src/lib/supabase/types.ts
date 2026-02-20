@@ -57,6 +57,7 @@ export interface Database {
           onboarding_completed?: boolean;
           updated_at?: string;
         };
+        Relationships: [];
       };
 
       best_practices: {
@@ -105,6 +106,7 @@ export interface Database {
           status?: "draft" | "published" | "archived";
           updated_at?: string;
         };
+        Relationships: [];
       };
 
       courses: {
@@ -148,6 +150,7 @@ export interface Database {
           is_published?: boolean;
           updated_at?: string;
         };
+        Relationships: [];
       };
 
       lessons: {
@@ -184,6 +187,7 @@ export interface Database {
           xp_reward?: number;
           updated_at?: string;
         };
+        Relationships: [];
       };
 
       community_posts: {
@@ -226,6 +230,7 @@ export interface Database {
           status?: "active" | "closed" | "archived";
           updated_at?: string;
         };
+        Relationships: [];
       };
 
       ai_chat_sessions: {
@@ -256,6 +261,7 @@ export interface Database {
           messages_count?: number;
           last_message_at?: string;
         };
+        Relationships: [];
       };
 
       ai_chat_messages: {
@@ -283,6 +289,7 @@ export interface Database {
           content?: string;
           tokens_used?: number | null;
         };
+        Relationships: [];
       };
 
       challenges: {
@@ -326,6 +333,7 @@ export interface Database {
           max_participants?: number | null;
           is_active?: boolean;
         };
+        Relationships: [];
       };
 
       innovation_radar_items: {
@@ -362,6 +370,153 @@ export interface Database {
           votes_count?: number;
           updated_at?: string;
         };
+        Relationships: [];
+      };
+
+      ai_providers: {
+        Row: {
+          id: string;
+          provider_key: string;
+          display_name: string;
+          api_endpoint: string;
+          api_key_encrypted: string | null;
+          model: string;
+          temperature: number;
+          max_tokens: number;
+          top_p: number;
+          is_active: boolean;
+          is_primary: boolean;
+          fallback_provider_id: string | null;
+          monthly_budget_limit: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          provider_key: string;
+          display_name: string;
+          api_endpoint: string;
+          api_key_encrypted?: string | null;
+          model: string;
+          temperature?: number;
+          max_tokens?: number;
+          top_p?: number;
+          is_active?: boolean;
+          is_primary?: boolean;
+          fallback_provider_id?: string | null;
+          monthly_budget_limit?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          provider_key?: string;
+          display_name?: string;
+          api_endpoint?: string;
+          api_key_encrypted?: string | null;
+          model?: string;
+          temperature?: number;
+          max_tokens?: number;
+          top_p?: number;
+          is_active?: boolean;
+          is_primary?: boolean;
+          fallback_provider_id?: string | null;
+          monthly_budget_limit?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      ai_cost_log: {
+        Row: {
+          id: string;
+          provider_id: string;
+          feature: "mentor_chat" | "usecase_eval" | "search" | "auto_tag" | "summary";
+          tokens_input: number;
+          tokens_output: number;
+          estimated_cost: number;
+          user_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          provider_id: string;
+          feature: "mentor_chat" | "usecase_eval" | "search" | "auto_tag" | "summary";
+          tokens_input?: number;
+          tokens_output?: number;
+          estimated_cost?: number;
+          user_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          provider_id?: string;
+          feature?: "mentor_chat" | "usecase_eval" | "search" | "auto_tag" | "summary";
+          tokens_input?: number;
+          tokens_output?: number;
+          estimated_cost?: number;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
+
+      system_prompts: {
+        Row: {
+          id: string;
+          prompt_key: string;
+          prompt_text: string;
+          version: number;
+          is_active: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          prompt_key: string;
+          prompt_text: string;
+          version?: number;
+          is_active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          prompt_key?: string;
+          prompt_text?: string;
+          version?: number;
+          is_active?: boolean;
+          created_by?: string | null;
+        };
+        Relationships: [];
+      };
+
+      feature_flags: {
+        Row: {
+          id: string;
+          flag_key: string;
+          name: string;
+          description: string;
+          enabled: boolean;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          flag_key: string;
+          name: string;
+          description?: string;
+          enabled?: boolean;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          flag_key?: string;
+          name?: string;
+          description?: string;
+          enabled?: boolean;
+          updated_by?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
 
       user_progress: {
@@ -397,6 +552,7 @@ export interface Database {
           completed_at?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
     };
 
@@ -413,6 +569,7 @@ export interface Database {
       difficulty_level: "beginner" | "intermediate" | "advanced";
       content_status: "draft" | "published" | "archived";
       ai_provider: "gemini" | "claude" | "openai" | "copilot";
+      ai_feature_type: "mentor_chat" | "usecase_eval" | "search" | "auto_tag" | "summary";
       challenge_type: "daily" | "weekly" | "special";
       radar_category: "tools" | "techniques" | "platforms" | "frameworks";
       radar_ring: "adopt" | "trial" | "assess" | "hold";
