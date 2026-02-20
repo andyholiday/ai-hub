@@ -673,6 +673,63 @@ export interface Database {
         Relationships: [];
       };
 
+      usecase_evaluations: {
+        Row: {
+          id: string;
+          idea_id: string;
+          evaluator_type: "ai" | "human";
+          overall_score: number;
+          company_value_score: number | null;
+          employee_value_score: number | null;
+          feasibility_score: number | null;
+          scalability_score: number | null;
+          innovation_score: number | null;
+          strengths: string | null;
+          risks: string | null;
+          roi_estimate: string | null;
+          recommendation: string | null;
+          next_steps: string | null;
+          ai_provider_used: string | null;
+          evaluated_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          idea_id: string;
+          evaluator_type?: "ai" | "human";
+          overall_score: number;
+          company_value_score?: number | null;
+          employee_value_score?: number | null;
+          feasibility_score?: number | null;
+          scalability_score?: number | null;
+          innovation_score?: number | null;
+          strengths?: string | null;
+          risks?: string | null;
+          roi_estimate?: string | null;
+          recommendation?: string | null;
+          next_steps?: string | null;
+          ai_provider_used?: string | null;
+          evaluated_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          overall_score?: number;
+          company_value_score?: number | null;
+          employee_value_score?: number | null;
+          feasibility_score?: number | null;
+          scalability_score?: number | null;
+          innovation_score?: number | null;
+          strengths?: string | null;
+          risks?: string | null;
+          roi_estimate?: string | null;
+          recommendation?: string | null;
+          next_steps?: string | null;
+          ai_provider_used?: string | null;
+          evaluated_by?: string | null;
+        };
+        Relationships: [];
+      };
+
       user_progress: {
         Row: {
           id: string;

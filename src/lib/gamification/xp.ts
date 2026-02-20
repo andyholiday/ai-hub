@@ -15,6 +15,7 @@ export const XP_ACTIONS = {
   POST_CREATED: { action: "post_created", amount: 50 },
   COMMENT_CREATED: { action: "comment_created", amount: 20 },
   UPVOTE_RECEIVED: { action: "upvote_received", amount: 10 },
+  IDEA_EVALUATED: { action: "idea_evaluated", amount: 30 },
 } as const;
 
 export type XPActionKey = keyof typeof XP_ACTIONS;

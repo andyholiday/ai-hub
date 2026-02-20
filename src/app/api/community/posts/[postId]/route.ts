@@ -90,10 +90,44 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     const commentList = comments ?? [];
     const commentTree = buildCommentTree(commentList);
 
+    // Fetch AI evaluation if this is an idea post
+    let evaluation = null;
+    if (post.type === "idea") {
+      const { data: evalData } = await supabase
+        .from("usecase_evaluations")
+        .select("*")
+        .eq("idea_id", postId)
+        .eq("evaluator_type", "ai")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (evalData) {
+        evaluation = {
+          id: evalData.id,
+          overallScore: evalData.overall_score,
+          scores: {
+            feasibility: evalData.feasibility_score ?? 0,
+            impact: evalData.company_value_score ?? 0,
+            effort: evalData.employee_value_score ?? 0,
+            innovation: evalData.innovation_score ?? 0,
+            aiReadiness: evalData.scalability_score ?? 0,
+          },
+          recommendation: evalData.recommendation ?? "consider",
+          strengths: parseJsonArray(evalData.strengths),
+          risks: parseJsonArray(evalData.risks),
+          nextSteps: parseJsonArray(evalData.next_steps),
+          evaluationText: evalData.recommendation ?? "",
+          createdAt: evalData.created_at,
+        };
+      }
+    }
+
     return apiSuccess({
       ...post,
       hasUpvoted,
       comments: commentTree,
+      evaluation,
     });
   } catch {
     return apiInternalError();
@@ -201,6 +235,23 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Safely parse a JSON-encoded string array from the database.
+ * Returns an empty array if parsing fails.
+ */
+function parseJsonArray(value: string | null): string[] {
+  if (!value) return [];
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed.map(String);
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
 
 interface CommentRow {
   id: string;

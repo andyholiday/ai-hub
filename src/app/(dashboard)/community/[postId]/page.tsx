@@ -22,8 +22,11 @@ import {
   Send,
   Reply,
   Trash2,
+  Sparkles,
 } from "lucide-react";
 import type { CommunityPostType } from "@/lib/validators/community";
+import type { UseCaseEvaluation } from "@/lib/validators/evaluation";
+import { EvaluationCard } from "@/components/features/community/evaluation-card";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -64,6 +67,7 @@ interface PostDetail {
   author: Author;
   hasUpvoted: boolean;
   comments: CommentNode[];
+  evaluation: UseCaseEvaluation | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,6 +104,8 @@ export default function CommunityPostPage() {
   const [error, setError] = useState<string | null>(null);
   const [isVoting, setIsVoting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [evaluationError, setEvaluationError] = useState<string | null>(null);
 
   // --- Fetch Post ---
   const fetchPost = useCallback(async () => {
@@ -172,6 +178,43 @@ export default function CommunityPostPage() {
       }
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // --- Request AI Evaluation ---
+  const handleRequestEvaluation = async () => {
+    if (!post || post.type !== "idea") return;
+    setIsEvaluating(true);
+    setEvaluationError(null);
+
+    try {
+      const res = await fetch("/api/ai/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          postId: post.id,
+          title: post.title,
+          description: post.content,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (json.error) {
+        setEvaluationError(json.error.message);
+        return;
+      }
+
+      // Update post with evaluation data
+      setPost((prev) =>
+        prev
+          ? { ...prev, evaluation: json.data.evaluation }
+          : prev,
+      );
+    } catch {
+      setEvaluationError("Bewertung konnte nicht angefordert werden.");
+    } finally {
+      setIsEvaluating(false);
     }
   };
 
@@ -352,6 +395,43 @@ export default function CommunityPostPage() {
           </div>
         </div>
       </Card>
+
+      {/* AI Evaluation Section (only for idea posts) */}
+      {post.type === "idea" && (
+        <div className="space-y-4">
+          {post.evaluation ? (
+            <EvaluationCard evaluation={post.evaluation} />
+          ) : (
+            <Card className="text-center">
+              <div className="space-y-3 py-4">
+                <Sparkles className="mx-auto h-10 w-10 text-lr-gold-500" />
+                <div>
+                  <h3 className="font-heading text-title-sm font-semibold text-surface-900">
+                    KI-Bewertung
+                  </h3>
+                  <p className="mt-1 text-body-sm text-surface-500">
+                    Lass diese Idee von der KI bewerten und erhalte detailliertes Feedback zu
+                    Machbarkeit, Impact und mehr.
+                  </p>
+                </div>
+                {evaluationError && (
+                  <p className="text-caption font-medium text-error">
+                    {evaluationError}
+                  </p>
+                )}
+                <Button
+                  onClick={handleRequestEvaluation}
+                  isLoading={isEvaluating}
+                  loadingText="KI bewertet..."
+                  iconLeft={<Sparkles />}
+                >
+                  KI-Bewertung anfordern
+                </Button>
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Comment Section */}
       <div className="space-y-4">
