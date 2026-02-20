@@ -5,6 +5,9 @@
 export { requireAdmin } from "./admin-auth";
 export type { AdminAuthResult, AdminAuthError } from "./admin-auth";
 
+export { requireAuth } from "./require-auth";
+export type { AuthResult, AuthError } from "./require-auth";
+
 export {
   apiSuccess,
   apiError,

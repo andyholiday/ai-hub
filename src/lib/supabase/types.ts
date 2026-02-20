@@ -18,42 +18,50 @@ export interface Database {
       profiles: {
         Row: {
           id: string;
-          email: string;
+          username: string | null;
           full_name: string | null;
           avatar_url: string | null;
-          role: "user" | "moderator" | "admin" | "super_admin";
-          lr_partner_id: string | null;
+          department: string | null;
+          position: string | null;
+          bio: string | null;
+          xp: number;
           level: number;
-          xp_points: number;
-          badges: string[];
+          role: "user" | "moderator" | "admin" | "super_admin";
+          streak_days: number;
+          last_login_at: string | null;
           onboarding_completed: boolean;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id: string;
-          email: string;
+          username?: string | null;
           full_name?: string | null;
           avatar_url?: string | null;
-          role?: "user" | "moderator" | "admin" | "super_admin";
-          lr_partner_id?: string | null;
+          department?: string | null;
+          position?: string | null;
+          bio?: string | null;
+          xp?: number;
           level?: number;
-          xp_points?: number;
-          badges?: string[];
+          role?: "user" | "moderator" | "admin" | "super_admin";
+          streak_days?: number;
+          last_login_at?: string | null;
           onboarding_completed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
-          id?: string;
-          email?: string;
+          username?: string | null;
           full_name?: string | null;
           avatar_url?: string | null;
-          role?: "user" | "moderator" | "admin" | "super_admin";
-          lr_partner_id?: string | null;
+          department?: string | null;
+          position?: string | null;
+          bio?: string | null;
+          xp?: number;
           level?: number;
-          xp_points?: number;
-          badges?: string[];
+          role?: "user" | "moderator" | "admin" | "super_admin";
+          streak_days?: number;
+          last_login_at?: string | null;
           onboarding_completed?: boolean;
           updated_at?: string;
         };
@@ -196,12 +204,15 @@ export interface Database {
           author_id: string;
           title: string;
           content: string;
-          category: string;
+          type: "discussion" | "idea" | "show_and_tell" | "question" | "challenge";
+          category: string | null;
           tags: string[];
-          likes_count: number;
+          upvotes_count: number;
           comments_count: number;
+          views_count: number;
           is_pinned: boolean;
-          status: "active" | "closed" | "archived";
+          is_resolved: boolean;
+          ai_evaluation_score: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -210,25 +221,168 @@ export interface Database {
           author_id: string;
           title: string;
           content: string;
-          category: string;
+          type?: "discussion" | "idea" | "show_and_tell" | "question" | "challenge";
+          category?: string | null;
           tags?: string[];
-          likes_count?: number;
+          upvotes_count?: number;
           comments_count?: number;
+          views_count?: number;
           is_pinned?: boolean;
-          status?: "active" | "closed" | "archived";
+          is_resolved?: boolean;
+          ai_evaluation_score?: number | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           title?: string;
           content?: string;
-          category?: string;
+          type?: "discussion" | "idea" | "show_and_tell" | "question" | "challenge";
+          category?: string | null;
           tags?: string[];
-          likes_count?: number;
+          upvotes_count?: number;
           comments_count?: number;
+          views_count?: number;
           is_pinned?: boolean;
-          status?: "active" | "closed" | "archived";
+          is_resolved?: boolean;
+          ai_evaluation_score?: number | null;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      comments: {
+        Row: {
+          id: string;
+          entity_type: "best_practice" | "community_post";
+          entity_id: string;
+          parent_id: string | null;
+          author_id: string;
+          content: string;
+          upvotes_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          entity_type: "best_practice" | "community_post";
+          entity_id: string;
+          parent_id?: string | null;
+          author_id: string;
+          content: string;
+          upvotes_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          content?: string;
+          upvotes_count?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      upvotes: {
+        Row: {
+          user_id: string;
+          entity_type: "best_practice" | "community_post";
+          entity_id: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          entity_type: "best_practice" | "community_post";
+          entity_id: string;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          entity_type?: "best_practice" | "community_post";
+          entity_id?: string;
+        };
+        Relationships: [];
+      };
+
+      badges: {
+        Row: {
+          id: string;
+          key: string;
+          name: string;
+          description: string;
+          icon: string;
+          category: "achievement" | "skill" | "social" | "special";
+          xp_threshold: number | null;
+          condition: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          key: string;
+          name: string;
+          description: string;
+          icon: string;
+          category?: "achievement" | "skill" | "social" | "special";
+          xp_threshold?: number | null;
+          condition?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          key?: string;
+          name?: string;
+          description?: string;
+          icon?: string;
+          category?: "achievement" | "skill" | "social" | "special";
+          xp_threshold?: number | null;
+          condition?: string | null;
+        };
+        Relationships: [];
+      };
+
+      user_badges: {
+        Row: {
+          user_id: string;
+          badge_id: string;
+          earned_at: string;
+        };
+        Insert: {
+          user_id: string;
+          badge_id: string;
+          earned_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          badge_id?: string;
+          earned_at?: string;
+        };
+        Relationships: [];
+      };
+
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: "achievement" | "comment" | "like" | "challenge" | "system" | "mention";
+          title: string;
+          message: string;
+          link: string | null;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: "achievement" | "comment" | "like" | "challenge" | "system" | "mention";
+          title: string;
+          message: string;
+          link?: string | null;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          type?: "achievement" | "comment" | "like" | "challenge" | "system" | "mention";
+          title?: string;
+          message?: string;
+          link?: string | null;
+          is_read?: boolean;
         };
         Relationships: [];
       };
@@ -561,13 +715,36 @@ export interface Database {
     };
 
     Functions: {
-      [_ in never]: never;
+      award_xp: {
+        Args: {
+          target_user_id: string;
+          xp_amount: number;
+        };
+        Returns: {
+          new_xp: number;
+          new_level: number;
+          leveled_up: boolean;
+        }[];
+      };
+      increment_field: {
+        Args: {
+          table_name: string;
+          row_id: string;
+          field_name: string;
+          increment_by?: number;
+        };
+        Returns: undefined;
+      };
     };
 
     Enums: {
       user_role: "user" | "moderator" | "admin" | "super_admin";
       difficulty_level: "beginner" | "intermediate" | "advanced";
       content_status: "draft" | "published" | "archived";
+      community_post_type: "discussion" | "idea" | "show_and_tell" | "question" | "challenge";
+      entity_type: "best_practice" | "community_post";
+      badge_category: "achievement" | "skill" | "social" | "special";
+      notification_type: "achievement" | "comment" | "like" | "challenge" | "system" | "mention";
       ai_provider: "gemini" | "claude" | "openai" | "copilot";
       ai_feature_type: "mentor_chat" | "usecase_eval" | "search" | "auto_tag" | "summary";
       challenge_type: "daily" | "weekly" | "special";

@@ -6,14 +6,14 @@
 
 import { NextResponse } from "next/server";
 import type { ZodError } from "zod";
-import type { ApiResponse, ApiError } from "@/types/api";
+import type { ApiResponse, ApiError, PaginationMeta } from "@/types/api";
 
 // ---------------------------------------------------------------------------
 // Success
 // ---------------------------------------------------------------------------
 
-export function apiSuccess<T>(data: T, status = 200): NextResponse<ApiResponse<T>> {
-  return NextResponse.json({ data, error: null }, { status });
+export function apiSuccess<T>(data: T, status = 200, meta?: PaginationMeta): NextResponse<ApiResponse<T>> {
+  return NextResponse.json({ data, error: null, ...(meta ? { meta } : {}) }, { status });
 }
 
 // ---------------------------------------------------------------------------

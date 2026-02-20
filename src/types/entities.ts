@@ -71,10 +71,20 @@ export interface LessonWithProgress extends Lesson {
 // ---------------------------------------------------------------------------
 
 export type CommunityPost = Tables<"community_posts">;
+export type Comment = Tables<"comments">;
 
 export interface CommunityPostWithAuthor extends CommunityPost {
-  author: Pick<Profile, "id" | "full_name" | "avatar_url" | "level" | "badges">;
-  isLikedByUser: boolean;
+  author: Pick<Profile, "id" | "full_name" | "avatar_url" | "level">;
+  hasUpvoted: boolean;
+}
+
+export interface CommentWithAuthor extends Comment {
+  author: Pick<Profile, "id" | "full_name" | "avatar_url" | "level">;
+  replies?: CommentWithAuthor[];
+}
+
+export interface CommunityPostDetail extends CommunityPostWithAuthor {
+  comments: CommentWithAuthor[];
 }
 
 // ---------------------------------------------------------------------------
