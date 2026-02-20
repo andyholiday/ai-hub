@@ -2,12 +2,12 @@
 
 // =============================================================================
 // AI Config Page
-// Dedicated page for KI-Provider configuration
-// Redirects to admin page with ai-provider tab active,
-// or can be used as standalone view
+// Dedicated page for KI-Provider configuration.
+// All handlers are wired to the real backend API via useAdminData.
 // =============================================================================
 
-import { Shield, ArrowLeft } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Shield, ArrowLeft, X, AlertTriangle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import {
   ProviderCard,
@@ -17,72 +17,109 @@ import {
   FeatureToggles,
   ProviderSandbox,
 } from "@/components/features/admin";
-import type { ProviderData } from "@/components/features/admin";
-
-
-// -----------------------------------------------------------------------------
-// Static Demo Data - AI Providers
-// -----------------------------------------------------------------------------
-
-const PROVIDERS: ProviderData[] = [
-  {
-    id: "gemini",
-    name: "Google Gemini",
-    icon: "\u2728",
-    iconBg: "#E8F5E9",
-    endpoint: "generativelanguage.googleapis.com",
-    model: "Gemini 2.5 Pro",
-    apiKeyMasked: "AIza...\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
-    temperature: 0.7,
-    costPerMonth: "\u20AC 124,50",
-    status: "primary",
-    statusLabel: "Primaer",
-  },
-  {
-    id: "claude",
-    name: "Anthropic Claude",
-    icon: "\uD83D\uDFE0",
-    iconBg: "#FFF3E0",
-    endpoint: "api.anthropic.com",
-    model: "Claude Sonnet 4.5",
-    apiKeyMasked: "sk-ant...\u2022\u2022\u2022\u2022\u2022\u2022",
-    temperature: 0.7,
-    status: "fallback",
-    statusLabel: "Fallback 1",
-    fallbackOrder: 1,
-  },
-  {
-    id: "chatgpt",
-    name: "OpenAI ChatGPT",
-    icon: "\uD83D\uDCAC",
-    iconBg: "#E3F2FD",
-    endpoint: "api.openai.com",
-    model: "GPT-4o",
-    apiKeyMasked: "sk-proj...\u2022\u2022\u2022\u2022",
-    temperature: 0.7,
-    status: "fallback",
-    statusLabel: "Fallback 2",
-    fallbackOrder: 2,
-  },
-  {
-    id: "copilot",
-    name: "Microsoft Copilot",
-    icon: "\uD83D\uDD37",
-    iconBg: "#F3E5F5",
-    endpoint: "Azure OpenAI Service",
-    model: "GPT-4o via Azure",
-    apiKeyMasked: "Nicht hinterlegt",
-    temperature: 0.7,
-    status: "inactive",
-    statusLabel: "Nicht konfiguriert",
-  },
-];
+import { useAdminData } from "@/hooks/use-admin-data";
 
 // -----------------------------------------------------------------------------
 // Page Component
 // -----------------------------------------------------------------------------
 
 export default function AIConfigPage() {
+  const admin = useAdminData();
+
+  // --- Provider test handler ---
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const [testMessage, setTestMessage] = useState<string | null>(null);
+
+  const handleTestProvider = useCallback(
+    async (id: string) => {
+      setTestingId(id);
+      setTestMessage(null);
+
+      const result = await admin.testProvider(id);
+
+      setTestingId(null);
+
+      if (result) {
+        const status = result.available ? "erreichbar" : "nicht erreichbar";
+        const latency = result.latency_ms ? ` (${result.latency_ms}ms)` : "";
+        const errMsg = result.error ? ` - ${result.error}` : "";
+        setTestMessage(
+          `${result.display_name}: ${status}${latency}${errMsg}`,
+        );
+      }
+    },
+    [admin],
+  );
+
+  // --- Provider edit handler ---
+  const handleEditProvider = useCallback(
+    (id: string) => {
+      const provider = admin.providers.find((p) => p.id === id);
+      if (!provider) return;
+
+      const newTemp = window.prompt(
+        `Temperature fuer ${provider.name} (aktuell: ${provider.temperature}):`,
+        String(provider.temperature),
+      );
+
+      if (newTemp === null) return;
+
+      const parsed = parseFloat(newTemp);
+      if (isNaN(parsed) || parsed < 0 || parsed > 2) {
+        return;
+      }
+
+      admin.updateProvider(id, { temperature: parsed });
+    },
+    [admin],
+  );
+
+  // --- Provider setup handler ---
+  const handleSetupProvider = useCallback(
+    async (id: string) => {
+      await admin.updateProvider(id, { is_active: true });
+    },
+    [admin],
+  );
+
+  // --- Prompt edit handler ---
+  const handleEditPrompt = useCallback(
+    (promptId: string) => {
+      const prompt = admin.prompts.find((p) => p.id === promptId);
+      if (!prompt) return;
+
+      const newText = window.prompt(
+        `Prompt-Text fuer "${prompt.name}" bearbeiten:`,
+      );
+
+      if (newText === null || newText.trim() === "") return;
+
+      admin.updatePrompt(promptId, newText.trim());
+    },
+    [admin],
+  );
+
+  // --- Feature toggle handler ---
+  const handleToggleFeature = useCallback(
+    (id: string, enabled: boolean) => {
+      admin.toggleFeature(id, enabled);
+    },
+    [admin],
+  );
+
+  // --- Stats handler ---
+  const handleViewStats = useCallback(() => {
+    const costSection = document.getElementById("ai-config-cost-dashboard");
+    costSection?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  // --- Determine if initial load is in progress ---
+  const isInitialLoading =
+    admin.providersLoading &&
+    admin.costsLoading &&
+    admin.promptsLoading &&
+    admin.featuresLoading;
+
   return (
     <div className="animate-fade-in">
       {/* Page Header */}
@@ -110,40 +147,136 @@ export default function AIConfigPage() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="space-y-5">
-        {/* Provider Cards Grid */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {PROVIDERS.map((provider) => (
-            <ProviderCard
-              key={provider.id}
-              provider={provider}
-              onEdit={() => { /* TODO: implement edit handler */ }}
-              onTest={() => { /* TODO: implement test handler */ }}
-              onSetPrimary={() => { /* TODO: implement set-primary handler */ }}
-              onSetup={() => { /* TODO: implement setup handler */ }}
-              onStats={() => { /* TODO: implement stats handler */ }}
-            />
-          ))}
+      {/* Global Error Banner */}
+      {admin.globalError && (
+        <div className="mb-5 flex items-start gap-3 rounded-[14px] border border-red-200 bg-red-50 p-4">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
+          <div className="flex-1 text-[13px] text-red-700">{admin.globalError}</div>
+          <button
+            onClick={admin.dismissError}
+            className="shrink-0 rounded-md p-1 text-red-400 transition-colors hover:bg-red-100 hover:text-red-600"
+            aria-label="Fehlermeldung schliessen"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
+      )}
 
-        {/* Fallback Chain */}
-        <FallbackChain />
+      {/* Test Result Banner */}
+      {testMessage && (
+        <div className="mb-5 flex items-start gap-3 rounded-[14px] border border-lr-green-200 bg-lr-green-50 p-4">
+          <div className="flex-1 text-[13px] text-lr-green-700">{testMessage}</div>
+          <button
+            onClick={() => setTestMessage(null)}
+            className="shrink-0 rounded-md p-1 text-lr-green-400 transition-colors hover:bg-lr-green-100 hover:text-lr-green-600"
+            aria-label="Nachricht schliessen"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
-        {/* Cost Dashboard */}
-        <CostDashboard />
+      {/* Content */}
+      {isInitialLoading ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
+          <p className="text-sm text-surface-500">Daten werden geladen...</p>
+        </div>
+      ) : (
+        <div className="space-y-5">
+          {/* Provider Cards Grid */}
+          {admin.providersLoading ? (
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="animate-pulse rounded-[14px] border border-surface-200 bg-white p-6"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="h-12 w-12 rounded-xl bg-surface-200" />
+                    <div className="flex-1">
+                      <div className="h-4 w-32 rounded bg-surface-200" />
+                      <div className="mt-2 h-3 w-48 rounded bg-surface-100" />
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    {[1, 2, 3, 4].map((j) => (
+                      <div key={j} className="h-14 rounded-lg bg-surface-100" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : admin.providersError ? (
+            <div className="rounded-[14px] border border-red-200 bg-red-50 p-6 text-center">
+              <AlertTriangle className="mx-auto h-8 w-8 text-red-400" />
+              <p className="mt-2 text-sm text-red-600">{admin.providersError}</p>
+              <button
+                onClick={admin.fetchProviders}
+                className="mt-3 text-[13px] font-semibold text-red-600 underline hover:no-underline"
+              >
+                Erneut versuchen
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {admin.providers.map((provider) => (
+                <ProviderCard
+                  key={provider.id}
+                  provider={provider}
+                  onEdit={handleEditProvider}
+                  onTest={handleTestProvider}
+                  onSetPrimary={admin.setProviderPrimary}
+                  onSetup={handleSetupProvider}
+                  onStats={handleViewStats}
+                  className={
+                    testingId === provider.id
+                      ? "ring-2 ring-lr-green-500 ring-offset-2"
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
+          )}
 
-        {/* System Prompts */}
-        <SystemPrompts onEdit={() => { /* TODO: implement edit-prompt handler */ }} />
+          {/* Fallback Chain */}
+          <FallbackChain
+            items={admin.chainItems.length > 0 ? admin.chainItems : undefined}
+          />
 
-        {/* Feature Toggles */}
-        <FeatureToggles
-          onToggle={() => { /* TODO: implement toggle handler */ }}
-        />
+          {/* Cost Dashboard */}
+          <div id="ai-config-cost-dashboard">
+            <CostDashboard
+              period={admin.costPeriodLabel}
+              items={admin.costItems.length > 0 ? admin.costItems : undefined}
+              activePeriod={admin.costPeriod}
+              onPeriodChange={admin.setCostPeriod}
+              isLoading={admin.costsLoading}
+              error={admin.costsError}
+            />
+          </div>
 
-        {/* Provider Sandbox */}
-        <ProviderSandbox />
-      </div>
+          {/* System Prompts */}
+          <SystemPrompts
+            prompts={admin.prompts.length > 0 ? admin.prompts : undefined}
+            onEdit={handleEditPrompt}
+          />
+
+          {/* Feature Toggles */}
+          <FeatureToggles
+            features={admin.features.length > 0 ? admin.features : undefined}
+            onToggle={handleToggleFeature}
+          />
+
+          {/* Provider Sandbox */}
+          <ProviderSandbox
+            results={admin.sandboxResults.length > 0 ? admin.sandboxResults : undefined}
+            onTest={admin.testAllProviders}
+            isLoading={admin.sandboxLoading}
+            error={admin.sandboxError}
+          />
+        </div>
+      )}
     </div>
   );
 }

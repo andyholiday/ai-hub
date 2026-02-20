@@ -28,6 +28,12 @@ export interface SandboxResult {
 export interface ProviderSandboxProps {
   /** Preloaded results */
   results?: SandboxResult[];
+  /** Callback when "Test all" is clicked */
+  onTest?: (prompt: string) => void;
+  /** Whether a test is running */
+  isLoading?: boolean;
+  /** Error message */
+  error?: string | null;
   /** Additional CSS classes */
   className?: string;
 }
@@ -91,11 +97,18 @@ const DEFAULT_RESULTS: SandboxResult[] = [
 // -----------------------------------------------------------------------------
 
 export function ProviderSandbox({
-  results: initialResults = DEFAULT_RESULTS,
+  results: initialResults,
+  onTest,
+  isLoading = false,
+  error,
   className,
 }: ProviderSandboxProps) {
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
-  const [results] = useState(initialResults);
+  const results = initialResults ?? DEFAULT_RESULTS;
+
+  const handleTest = () => {
+    onTest?.(prompt);
+  };
 
   return (
     <div
@@ -119,6 +132,13 @@ export function ProviderSandbox({
         Ergebnisse.
       </p>
 
+      {/* Error */}
+      {error && (
+        <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-600">
+          {error}
+        </div>
+      )}
+
       {/* Input + Button */}
       <div className="flex gap-2.5">
         <div className="flex-1">
@@ -134,63 +154,72 @@ export function ProviderSandbox({
           variant="primary"
           iconLeft={<Play />}
           className="shrink-0"
+          onClick={handleTest}
+          isLoading={isLoading}
+          loadingText="Teste..."
         >
           Alle testen
         </Button>
       </div>
 
       {/* Results Grid */}
-      <div className="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-        {results.map((result) => (
-          <div
-            key={result.id}
-            className={cn(
-              "rounded-[10px] border border-surface-100 bg-[#F7F8FA] p-4",
-              !result.available && "opacity-50"
-            )}
-          >
-            {/* Provider Name */}
-            <div className="mb-2 flex items-center gap-1.5 text-xs font-bold text-surface-900">
-              <span className="text-base" aria-hidden="true">
-                {result.providerIcon}
-              </span>
-              {result.providerName}
-            </div>
-
-            {/* Response */}
+      {results.length > 0 && (
+        <div className="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+          {results.map((result) => (
             <div
+              key={result.id}
               className={cn(
-                "max-h-[120px] overflow-y-auto text-xs leading-relaxed text-surface-500",
-                !result.available && "italic text-surface-400"
+                "rounded-[10px] border border-surface-100 bg-[#F7F8FA] p-4",
+                !result.available && "opacity-50"
               )}
             >
-              {result.response}
-            </div>
+              {/* Provider Name */}
+              <div className="mb-2 flex items-center gap-1.5 text-xs font-bold text-surface-900">
+                <span className="text-base" aria-hidden="true">
+                  {result.providerIcon}
+                </span>
+                {result.providerName}
+              </div>
 
-            {/* Meta */}
-            <div className="mt-2 flex items-center gap-3 text-[10px] text-surface-400">
-              {result.available ? (
-                <>
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {result.latency}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <BarChart3 className="h-3 w-3" />
-                    {result.tokens}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Coins className="h-3 w-3" />
-                    {result.cost}
-                  </span>
-                </>
-              ) : (
-                <span>Nicht verfuegbar</span>
-              )}
+              {/* Response */}
+              <div
+                className={cn(
+                  "max-h-[120px] overflow-y-auto text-xs leading-relaxed text-surface-500",
+                  !result.available && "italic text-surface-400"
+                )}
+              >
+                {result.response}
+              </div>
+
+              {/* Meta */}
+              <div className="mt-2 flex items-center gap-3 text-[10px] text-surface-400">
+                {result.available ? (
+                  <>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {result.latency}
+                    </span>
+                    {result.tokens && (
+                      <span className="inline-flex items-center gap-1">
+                        <BarChart3 className="h-3 w-3" />
+                        {result.tokens}
+                      </span>
+                    )}
+                    {result.cost && (
+                      <span className="inline-flex items-center gap-1">
+                        <Coins className="h-3 w-3" />
+                        {result.cost}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span>Nicht verfuegbar</span>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
