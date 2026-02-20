@@ -125,10 +125,11 @@ export interface Database {
           thumbnail_url: string | null;
           category: string;
           difficulty: "beginner" | "intermediate" | "advanced";
-          estimated_duration_minutes: number;
+          duration_minutes: number;
           lessons_count: number;
           xp_reward: number;
           is_published: boolean;
+          author_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -139,10 +140,11 @@ export interface Database {
           thumbnail_url?: string | null;
           category: string;
           difficulty?: "beginner" | "intermediate" | "advanced";
-          estimated_duration_minutes: number;
+          duration_minutes?: number;
           lessons_count?: number;
           xp_reward?: number;
           is_published?: boolean;
+          author_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -152,10 +154,11 @@ export interface Database {
           thumbnail_url?: string | null;
           category?: string;
           difficulty?: "beginner" | "intermediate" | "advanced";
-          estimated_duration_minutes?: number;
+          duration_minutes?: number;
           lessons_count?: number;
           xp_reward?: number;
           is_published?: boolean;
+          author_id?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -762,6 +765,54 @@ export interface Database {
           score?: number | null;
           completed_at?: string | null;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      user_course_progress: {
+        Row: {
+          user_id: string;
+          course_id: string;
+          completed_lessons: number[];
+          progress_percent: number;
+          started_at: string;
+          completed_at: string | null;
+          certificate_id: string | null;
+        };
+        Insert: {
+          user_id: string;
+          course_id: string;
+          completed_lessons?: number[];
+          progress_percent?: number;
+          started_at?: string;
+          completed_at?: string | null;
+          certificate_id?: string | null;
+        };
+        Update: {
+          completed_lessons?: number[];
+          progress_percent?: number;
+          completed_at?: string | null;
+          certificate_id?: string | null;
+        };
+        Relationships: [];
+      };
+
+      user_lesson_progress: {
+        Row: {
+          user_id: string;
+          lesson_id: string;
+          completed_at: string;
+          quiz_score: number | null;
+        };
+        Insert: {
+          user_id: string;
+          lesson_id: string;
+          completed_at?: string;
+          quiz_score?: number | null;
+        };
+        Update: {
+          completed_at?: string;
+          quiz_score?: number | null;
         };
         Relationships: [];
       };
