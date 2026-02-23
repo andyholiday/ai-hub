@@ -7,7 +7,7 @@ export const siteConfig = {
   name: "LR AI Hub",
   description:
     "Die KI-Community-Plattform fuer LR Health & Beauty Systems Partner. Lernen, teilen und wachsen mit kuenstlicher Intelligenz.",
-  url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  url: process.env.NEXT_PUBLIC_APP_URL || (process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : "http://localhost:3000"),
   ogImage: "/images/og-image.png",
 
   // LR Branding
