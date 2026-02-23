@@ -349,6 +349,7 @@ export function useAdminData(): AdminDataState {
   // Track mounted state to avoid state updates after unmount
   const mountedRef = useRef(true);
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
       mountedRef.current = false;
     };

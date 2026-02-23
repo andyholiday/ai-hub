@@ -27,6 +27,7 @@ import {
 import type { CommunityPostType } from "@/lib/validators/community";
 import type { UseCaseEvaluation } from "@/lib/validators/evaluation";
 import { EvaluationCard } from "@/components/features/community/evaluation-card";
+import { useUiSound } from "@/hooks/use-ui-sound";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -98,6 +99,7 @@ export default function CommunityPostPage() {
   const params = useParams();
   const router = useRouter();
   const postId = params.postId as string;
+  const { playSuccessChime } = useUiSound();
 
   const [post, setPost] = useState<PostDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -148,11 +150,11 @@ export default function CommunityPostPage() {
         setPost((prev) =>
           prev
             ? {
-                ...prev,
-                hasUpvoted: json.data.voted,
-                upvotes_count:
-                  prev.upvotes_count + (json.data.voted ? 1 : -1),
-              }
+              ...prev,
+              hasUpvoted: json.data.voted,
+              upvotes_count:
+                prev.upvotes_count + (json.data.voted ? 1 : -1),
+            }
             : prev,
         );
       }
@@ -211,6 +213,9 @@ export default function CommunityPostPage() {
           ? { ...prev, evaluation: json.data.evaluation }
           : prev,
       );
+
+      // Play a success chime to notify the user
+      playSuccessChime();
     } catch {
       setEvaluationError("Bewertung konnte nicht angefordert werden.");
     } finally {
@@ -298,19 +303,17 @@ export default function CommunityPostPage() {
             <button
               onClick={handleVote}
               disabled={isVoting}
-              className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors ${
-                post.hasUpvoted
+              className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors ${post.hasUpvoted
                   ? "bg-lr-green-50 text-lr-green-600"
                   : "bg-surface-100 text-surface-400 hover:bg-surface-200 hover:text-surface-600"
-              }`}
+                }`}
               aria-label="Upvote"
             >
               <ThumbsUp className="h-5 w-5" />
             </button>
             <span
-              className={`text-body-sm font-bold ${
-                post.hasUpvoted ? "text-lr-green-600" : "text-surface-500"
-              }`}
+              className={`text-body-sm font-bold ${post.hasUpvoted ? "text-lr-green-600" : "text-surface-500"
+                }`}
             >
               {post.upvotes_count}
             </span>

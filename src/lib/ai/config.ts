@@ -17,8 +17,8 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       name: "gemini-2.0-flash",
       displayName: "Gemini 2.0 Flash",
       maxTokens: 8192,
-      inputCostPer1k: 0.00035,
-      outputCostPer1k: 0.0015,
+      inputCostPer1k: 0, // Free API Key tier
+      outputCostPer1k: 0,
       supportsStreaming: true,
       supportsVision: true,
       supportsFunctionCalling: true,

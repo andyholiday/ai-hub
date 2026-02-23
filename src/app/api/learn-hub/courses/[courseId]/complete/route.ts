@@ -14,6 +14,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { awardXP } from "@/lib/gamification/xp";
 import { checkAndAwardBadges } from "@/lib/gamification/badges";
+import { checkAndUnlockAchievements } from "@/lib/gamification/achievements";
 
 // ---------------------------------------------------------------------------
 // POST - Mark course as completed (all lessons must be done)
@@ -112,7 +113,10 @@ export async function POST(
       auth.userId,
       "course_completed",
       course.xp_reward,
-    ).then(() => checkAndAwardBadges(supabase, auth.userId));
+    ).then(() => {
+      checkAndAwardBadges(supabase, auth.userId);
+      checkAndUnlockAchievements(supabase, auth.userId).catch(() => {});
+    });
 
     // Create notification
     await supabase.from("notifications").insert({

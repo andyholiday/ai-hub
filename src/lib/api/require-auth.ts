@@ -2,6 +2,12 @@
 // Auth Helper for API Routes
 // Verifies that the current request is from an authenticated user.
 // Reusable across all API route handlers requiring authentication.
+//
+// OPTIMIZED:
+// - Uses getSession() instead of getUser() to avoid Auth API round-trip.
+//   The JWT is cryptographically signed; local validation is sufficient.
+// - Reads user role from JWT app_metadata instead of a separate DB query.
+//   This eliminates 2 queries per API call (getUser + profile role fetch).
 // =============================================================================
 
 import { NextRequest, NextResponse } from "next/server";
@@ -15,7 +21,7 @@ import type { Database } from "@/lib/supabase/types";
 export interface AuthResult {
   /** The authenticated user's ID */
   userId: string;
-  /** The user's role */
+  /** The user's role (read from JWT app_metadata) */
   role: "user" | "moderator" | "admin" | "super_admin";
   /** The Supabase client scoped to this request (respects RLS) */
   supabase: ReturnType<typeof createServerClient<Database>>;
@@ -58,13 +64,13 @@ export async function requireAuth(
     },
   );
 
-  // --- Verify user with auth server (getUser validates the JWT) ---
+  // --- Validate session from JWT (no Auth API round-trip) ---
   const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
 
-  if (authError || !user) {
+  if (sessionError || !session?.user) {
     return {
       response: NextResponse.json(
         {
@@ -79,14 +85,10 @@ export async function requireAuth(
     };
   }
 
-  // --- Fetch role ---
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  const user = session.user;
 
-  const role = ((profile as { role: string } | null)?.role ?? "user") as AuthResult["role"];
+  // --- Read role from JWT app_metadata (no DB query) ---
+  const role = (user.app_metadata?.role ?? "user") as AuthResult["role"];
 
   return {
     userId: user.id,

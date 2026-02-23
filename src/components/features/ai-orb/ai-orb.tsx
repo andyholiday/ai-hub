@@ -3,23 +3,77 @@
 // Persistent floating AI companion visible on every page.
 //
 // Features:
-// - 64px round orb with LR Green-to-Gold gradient
-// - Breathing box-shadow animation (3s cycle)
-// - Rotating ring with gold particle (8s cycle)
+// - 64px round orb with context-dependent gradient (changes per state)
+// - Breathing box-shadow animation (3s cycle, varies by state)
+// - Rotating ring with gold particle (8s cycle, speed varies by state)
 // - Status dot (online indicator)
-// - Hover: scale 1.1 + tooltip with pill shape
+// - Hover: scale 1.1 + tooltip with pill shape (state-aware text)
 // - Click: toggles the chat panel
+// - Celebration particles (orbiting glowing dots)
+// - aria-live region for state announcements
 // - Respects prefers-reduced-motion
 // =============================================================================
 
 "use client";
 
+import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils/cn";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
-import { useCallback, useState } from "react";
-import { ChatPanel } from "./chat-panel";
-import { useOrb } from "./orb-provider";
+import { useCallback, useRef, useState } from "react";
+import { useOrb, type OrbState } from "./orb-provider";
+import { OrbParticles } from "./orb-particles";
+
+// ---------------------------------------------------------------------------
+// Lazy-load the ChatPanel (heavy: framer-motion animations, date-fns, icons).
+// Only loaded when the user expands the orb. SSR disabled (client overlay).
+// ---------------------------------------------------------------------------
+const ChatPanel = dynamic(
+  () => import("./chat-panel").then((m) => m.ChatPanel),
+  { ssr: false },
+);
+
+// -----------------------------------------------------------------------------
+// Gradient map per state -- determines the orb's visual color identity
+// -----------------------------------------------------------------------------
+
+const STATE_GRADIENT: Record<OrbState, string> = {
+  idle: "from-lr-green-500 to-lr-gold-500",
+  thinking: "from-lr-gold-400 to-lr-gold-600",
+  notification: "from-lr-green-500 to-lr-gold-500",
+  celebration: "from-lr-gold-400 to-lr-gold-500",
+  greeting: "from-lr-gold-400 to-lr-gold-500",
+  listening: "from-lr-green-400 to-lr-green-600",
+  energized: "from-lr-green-400 to-lr-gold-400",
+};
+
+// -----------------------------------------------------------------------------
+// CSS class map for core animation per state
+// -----------------------------------------------------------------------------
+
+const STATE_CORE_CLASS: Record<OrbState, string> = {
+  idle: "",
+  thinking: "ai-orb-core--thinking",
+  notification: "ai-orb-core--notification",
+  celebration: "ai-orb-core--celebration",
+  greeting: "ai-orb-core--greeting",
+  listening: "ai-orb-core--listening",
+  energized: "ai-orb-core--energized",
+};
+
+// -----------------------------------------------------------------------------
+// Ring modifier class per state
+// -----------------------------------------------------------------------------
+
+const STATE_RING_CLASS: Record<OrbState, string> = {
+  idle: "",
+  thinking: "ai-orb-ring--paused",
+  notification: "",
+  celebration: "",
+  greeting: "",
+  listening: "ai-orb-ring--listening",
+  energized: "ai-orb-ring--energized",
+};
 
 // -----------------------------------------------------------------------------
 // Orb Component
@@ -35,6 +89,13 @@ export function AiOrb() {
   } = useOrb();
 
   const [isHovered, setIsHovered] = useState(false);
+  const prevStateRef = useRef<OrbState>(orbState);
+
+  // Track state changes for aria-live announcement
+  const stateChanged = prevStateRef.current !== orbState;
+  if (stateChanged) {
+    prevStateRef.current = orbState;
+  }
 
   const handleClick = useCallback(() => {
     toggle();
@@ -42,6 +103,17 @@ export function AiOrb() {
 
   return (
     <>
+      {/* ----------------------------------------------------------------- */}
+      {/* Accessibility: Announce orb state changes to screen readers       */}
+      {/* ----------------------------------------------------------------- */}
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {tooltipText}
+      </div>
+
       {/* ----------------------------------------------------------------- */}
       {/* Chat Panel (rendered via AnimatePresence for exit animations)      */}
       {/* ----------------------------------------------------------------- */}
@@ -85,12 +157,15 @@ export function AiOrb() {
               )}
             </AnimatePresence>
 
+            {/* Celebration Particles */}
+            <OrbParticles active={orbState === "celebration"} />
+
             {/* Rotating Ring */}
             <div
               className={cn(
                 "ai-orb-ring pointer-events-none absolute inset-1/2 h-[88px] w-[88px] -translate-x-1/2 -translate-y-1/2 rounded-full",
                 "border border-lr-green-500/15",
-                { "ai-orb-ring--paused": orbState === "thinking" }
+                STATE_RING_CLASS[orbState]
               )}
               aria-hidden="true"
             >
@@ -106,15 +181,12 @@ export function AiOrb() {
               onMouseLeave={() => setIsHovered(false)}
               className={cn(
                 "ai-orb-core group relative flex h-16 w-16 items-center justify-center rounded-full",
-                "bg-gradient-to-br from-lr-green-500 to-lr-gold-500",
-                "cursor-pointer outline-none transition-transform duration-200 ease-out",
+                "bg-gradient-to-br",
+                STATE_GRADIENT[orbState],
+                "cursor-pointer outline-none transition-all duration-500 ease-out",
                 "hover:scale-110",
                 "focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-2",
-                {
-                  "ai-orb-core--thinking": orbState === "thinking",
-                  "ai-orb-core--notification": orbState === "notification",
-                  "ai-orb-core--celebration": orbState === "celebration",
-                }
+                STATE_CORE_CLASS[orbState]
               )}
               aria-label="AI Mentor oeffnen"
             >

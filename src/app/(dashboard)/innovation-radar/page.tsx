@@ -6,10 +6,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import { Loader2, Radar, AlertTriangle } from "lucide-react";
 import {
-  RadarChart,
   TopicListSidebar,
   TopicDetailCard,
   TopicDetailEmpty,
@@ -17,6 +17,24 @@ import {
 } from "@/components/features/innovation-radar";
 import type { RadarItem } from "@/components/features/innovation-radar";
 import type { RadarCategory } from "@/lib/validators/innovation-radar";
+
+// ---------------------------------------------------------------------------
+// Lazy-load the SVG-heavy RadarChart component (large DOM + math calculations)
+// ---------------------------------------------------------------------------
+const RadarChart = dynamic(
+  () =>
+    import("@/components/features/innovation-radar/radar-chart").then(
+      (m) => m.RadarChart,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-surface-300" />
+      </div>
+    ),
+  },
+);
 
 // ---------------------------------------------------------------------------
 // Types for API response

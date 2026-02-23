@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
@@ -24,6 +25,11 @@ import {
   Trophy,
 } from "lucide-react";
 import type { DifficultyLevel } from "@/lib/validators/learn-hub";
+import {
+  DIFFICULTY_LABELS,
+  DIFFICULTY_COLORS,
+} from "@/constants/learn-hub";
+import { PageBriefingBanner } from "@/components/features/mentor-signals";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -56,26 +62,11 @@ interface CourseWithProgress {
 }
 
 // ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const DIFFICULTY_LABELS: Record<DifficultyLevel, string> = {
-  beginner: "Einsteiger",
-  intermediate: "Fortgeschritten",
-  advanced: "Experte",
-};
-
-const DIFFICULTY_COLORS: Record<DifficultyLevel, "green" | "gold" | "red"> = {
-  beginner: "green",
-  intermediate: "gold",
-  advanced: "red",
-};
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export default function LearnHubPage() {
+  const router = useRouter();
   const [courses, setCourses] = useState<CourseWithProgress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +90,12 @@ export default function LearnHubPage() {
       const res = await fetch(
         `/api/learn-hub/courses?${params.toString()}`,
       );
+
+      if (res.status === 401 || res.status === 403) {
+        window.location.href = "/login?redirectTo=/learn-hub";
+        return;
+      }
+
       const json = await res.json();
 
       if (json.error) {
@@ -135,6 +132,9 @@ export default function LearnHubPage() {
 
   return (
     <div className="space-y-6">
+      {/* AI Mentor Page-Entry Briefing */}
+      <PageBriefingBanner pageContext="learn-hub" />
+
       {/* Page Header */}
       <div>
         <h1 className="font-display text-2xl font-bold text-surface-900">
@@ -210,11 +210,10 @@ export default function LearnHubPage() {
                   activeDifficulty === level ? null : level,
                 )
               }
-              className={`rounded-full px-3 py-1 text-caption font-medium transition-colors ${
-                activeDifficulty === level
-                  ? "bg-lr-green-500 text-white"
-                  : "bg-surface-100 text-surface-600 hover:bg-surface-200"
-              }`}
+              className={`rounded-full px-3 py-1 text-caption font-medium transition-colors ${activeDifficulty === level
+                ? "bg-lr-green-500 text-white"
+                : "bg-surface-100 text-surface-600 hover:bg-surface-200"
+                }`}
             >
               {DIFFICULTY_LABELS[level]}
             </button>
@@ -232,11 +231,10 @@ export default function LearnHubPage() {
               onClick={() =>
                 setActiveCategory(activeCategory === cat ? null : cat)
               }
-              className={`rounded-full px-3 py-1 text-caption font-medium transition-colors ${
-                activeCategory === cat
-                  ? "bg-lr-green-500 text-white"
-                  : "bg-surface-100 text-surface-600 hover:bg-surface-200"
-              }`}
+              className={`rounded-full px-3 py-1 text-caption font-medium transition-colors ${activeCategory === cat
+                ? "bg-lr-green-500 text-white"
+                : "bg-surface-100 text-surface-600 hover:bg-surface-200"
+                }`}
             >
               {cat}
             </button>

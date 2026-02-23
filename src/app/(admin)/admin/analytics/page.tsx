@@ -1,4 +1,9 @@
-"use client";
+// Server Component (no client-side interactivity needed for this placeholder)
+
+export const metadata = {
+  title: "Analytics | Admin",
+  description: "Analytics-Dashboard fuer die LR AI Hub Administration",
+};
 
 export default function AdminAnalyticsPage() {
   return (

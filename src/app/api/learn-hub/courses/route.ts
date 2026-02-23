@@ -78,23 +78,42 @@ export async function GET(req: NextRequest) {
       return apiInternalError(error.message);
     }
 
-    // Fetch user progress for all returned courses
+    // -----------------------------------------------------------------------
+    // Fetch user progress and completed lessons in PARALLEL (was sequential).
+    // Before: 3 sequential queries (progress -> all lessons -> completed).
+    // After:  2 parallel queries (progress + lesson-progress via join).
+    // -----------------------------------------------------------------------
     let progressMap = new Map<
       string,
       { progress_percent: number; completed_at: string | null }
     >();
+    const completedLessonsMap = new Map<string, number>();
 
     if (userId && courses && courses.length > 0) {
       const courseIds = courses.map((c) => c.id);
-      const { data: progressData } = await supabase
-        .from("user_course_progress")
-        .select("course_id, progress_percent, completed_at")
-        .eq("user_id", userId)
-        .in("course_id", courseIds);
 
-      if (progressData) {
+      // Run both queries in parallel instead of sequentially
+      const [progressResult, lessonsResult] = await Promise.all([
+        // 1. Course-level progress
+        supabase
+          .from("user_course_progress")
+          .select("course_id, progress_percent, completed_at")
+          .eq("user_id", userId)
+          .in("course_id", courseIds),
+
+        // 2. Completed lessons with their course_id via join
+        //    (replaces the previous 2-step: fetch all lessons -> fetch completed)
+        supabase
+          .from("user_lesson_progress")
+          .select("lesson_id, lessons!inner(course_id)")
+          .eq("user_id", userId)
+          .in("lessons.course_id", courseIds),
+      ]);
+
+      // Process course progress
+      if (progressResult.data) {
         progressMap = new Map(
-          progressData.map((p) => [
+          progressResult.data.map((p) => [
             p.course_id,
             {
               progress_percent: p.progress_percent,
@@ -103,37 +122,15 @@ export async function GET(req: NextRequest) {
           ]),
         );
       }
-    }
 
-    // Count completed lessons per course for the user
-    const completedLessonsMap = new Map<string, number>();
-    if (userId && courses && courses.length > 0) {
-      const courseIds = courses.map((c) => c.id);
-
-      // Get all lessons for these courses
-      const { data: allLessons } = await supabase
-        .from("lessons")
-        .select("id, course_id")
-        .in("course_id", courseIds);
-
-      if (allLessons && allLessons.length > 0) {
-        const lessonIds = allLessons.map((l) => l.id);
-        const { data: completedLessons } = await supabase
-          .from("user_lesson_progress")
-          .select("lesson_id")
-          .eq("user_id", userId)
-          .in("lesson_id", lessonIds);
-
-        if (completedLessons) {
-          const completedLessonIds = new Set(
-            completedLessons.map((cl) => cl.lesson_id),
-          );
-
-          for (const lesson of allLessons) {
-            if (completedLessonIds.has(lesson.id)) {
-              const current = completedLessonsMap.get(lesson.course_id) ?? 0;
-              completedLessonsMap.set(lesson.course_id, current + 1);
-            }
+      // Process completed lessons count per course
+      if (lessonsResult.data) {
+        for (const row of lessonsResult.data) {
+          // The join returns lessons as an object with course_id
+          const courseId = (row.lessons as unknown as { course_id: string })?.course_id;
+          if (courseId) {
+            const current = completedLessonsMap.get(courseId) ?? 0;
+            completedLessonsMap.set(courseId, current + 1);
           }
         }
       }

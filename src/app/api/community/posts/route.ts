@@ -18,6 +18,7 @@ import {
 } from "@/lib/validators/community";
 import { awardCommunityXP } from "@/lib/gamification/xp";
 import { checkAndAwardBadges } from "@/lib/gamification/badges";
+import { checkAndUnlockAchievements } from "@/lib/gamification/achievements";
 import type { PaginationMeta } from "@/types/api";
 
 // ---------------------------------------------------------------------------
@@ -50,10 +51,13 @@ export async function GET(req: NextRequest) {
     const supabase = createAdminClient();
 
     // Build query
+    // Select only the fields needed for the list view to reduce payload size.
+    // The full content is trimmed on the client (line-clamp-2) so we still
+    // include it, but exclude internal columns like updated_at, author_id etc.
     let query = supabase
       .from("community_posts")
       .select(
-        "*, author:profiles!community_posts_author_id_fkey(id, full_name, avatar_url, level)",
+        "id, title, content, type, tags, upvotes_count, comments_count, views_count, is_pinned, created_at, author:profiles!community_posts_author_id_fkey(id, full_name, avatar_url, level)",
         { count: "exact" },
       );
 
@@ -173,9 +177,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Award XP for post creation (fire-and-forget)
-    awardCommunityXP(supabase, auth.userId, "POST_CREATED").then(() =>
-      checkAndAwardBadges(supabase, auth.userId),
-    );
+    awardCommunityXP(supabase, auth.userId, "POST_CREATED").then(() => {
+      checkAndAwardBadges(supabase, auth.userId);
+      checkAndUnlockAchievements(supabase, auth.userId).catch(() => {});
+    });
 
     return apiSuccess({ ...post, hasUpvoted: false }, 201);
   } catch {

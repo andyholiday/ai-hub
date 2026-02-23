@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,7 @@ const SORT_LABELS: Record<SortOption, string> = {
 // ---------------------------------------------------------------------------
 
 export default function CommunityPage() {
+  const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -105,6 +107,12 @@ export default function CommunityPage() {
       if (search.trim()) params.set("search", search.trim());
 
       const res = await fetch(`/api/community/posts?${params.toString()}`);
+
+      if (res.status === 401 || res.status === 403) {
+        window.location.href = "/login?redirectTo=/community";
+        return;
+      }
+
       const json = await res.json();
 
       if (json.error) {
@@ -138,10 +146,10 @@ export default function CommunityPage() {
           prev.map((p) =>
             p.id === postId
               ? {
-                  ...p,
-                  hasUpvoted: json.data.voted,
-                  upvotes_count: p.upvotes_count + (json.data.voted ? 1 : -1),
-                }
+                ...p,
+                hasUpvoted: json.data.voted,
+                upvotes_count: p.upvotes_count + (json.data.voted ? 1 : -1),
+              }
               : p,
           ),
         );
@@ -206,11 +214,10 @@ export default function CommunityPage() {
                 onClick={() =>
                   setActiveType(activeType === type ? null : type)
                 }
-                className={`rounded-full px-3 py-1 text-caption font-medium transition-colors ${
-                  activeType === type
+                className={`rounded-full px-3 py-1 text-caption font-medium transition-colors ${activeType === type
                     ? "bg-lr-green-500 text-white"
                     : "bg-surface-100 text-surface-600 hover:bg-surface-200"
-                }`}
+                  }`}
               >
                 {POST_TYPE_LABELS[type]}
               </button>
@@ -226,11 +233,10 @@ export default function CommunityPage() {
           <button
             key={option}
             onClick={() => setSort(option)}
-            className={`rounded-lg px-3 py-1 text-caption font-medium transition-colors ${
-              sort === option
+            className={`rounded-lg px-3 py-1 text-caption font-medium transition-colors ${sort === option
                 ? "bg-lr-green-50 text-lr-green-700"
                 : "text-surface-500 hover:text-surface-700"
-            }`}
+              }`}
           >
             {SORT_LABELS[option]}
           </button>
@@ -309,19 +315,17 @@ function PostCard({
                 onVote(post.id);
               }}
               disabled={isVoting}
-              className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
-                post.hasUpvoted
+              className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${post.hasUpvoted
                   ? "bg-lr-green-50 text-lr-green-600"
                   : "bg-surface-100 text-surface-400 hover:bg-surface-200 hover:text-surface-600"
-              }`}
+                }`}
               aria-label="Upvote"
             >
               <ThumbsUp className="h-4 w-4" />
             </button>
             <span
-              className={`text-caption font-semibold ${
-                post.hasUpvoted ? "text-lr-green-600" : "text-surface-500"
-              }`}
+              className={`text-caption font-semibold ${post.hasUpvoted ? "text-lr-green-600" : "text-surface-500"
+                }`}
             >
               {post.upvotes_count}
             </span>
@@ -459,11 +463,10 @@ function CreatePostForm({
                   key={t}
                   type="button"
                   onClick={() => setType(t)}
-                  className={`rounded-full px-3 py-1.5 text-caption font-medium transition-colors ${
-                    type === t
+                  className={`rounded-full px-3 py-1.5 text-caption font-medium transition-colors ${type === t
                       ? "bg-lr-green-500 text-white"
                       : "bg-surface-100 text-surface-600 hover:bg-surface-200"
-                  }`}
+                    }`}
                 >
                   {POST_TYPE_LABELS[t]}
                 </button>

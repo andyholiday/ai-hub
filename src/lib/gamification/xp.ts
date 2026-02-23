@@ -6,6 +6,14 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
+import { getRedis } from "@/lib/api/rate-limit";
+
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+export const DAILY_XP_LIMIT = 500;
 
 // ---------------------------------------------------------------------------
 // XP Action Constants
@@ -69,6 +77,28 @@ export async function awardXP(
   action: string,
   amount: number,
 ): Promise<AwardXPResult | null> {
+  // 1. Check daily limit via Redis if configured
+  const redis = getRedis();
+  if (redis) {
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const redisKey = `daily_xp:${userId}:${today}`;
+    try {
+      const currentDailyXp = (await redis.get<number>(redisKey)) || 0;
+
+      if (currentDailyXp >= DAILY_XP_LIMIT) {
+        console.log(`[XP] User ${userId} hit daily cap (${currentDailyXp}/${DAILY_XP_LIMIT}). Action: ${action} ignored.`);
+        return null;
+      }
+
+      // Increment and set expiry (24h = 86400s)
+      await redis.incrby(redisKey, amount);
+      await redis.expire(redisKey, 86400);
+    } catch (err) {
+      console.error("[XP] Redis daily cap check failed, gracefully continuing:", err);
+    }
+  }
+
+  // 2. Award XP in database
   const { data, error } = await supabase.rpc("award_xp", {
     target_user_id: userId,
     xp_amount: amount,

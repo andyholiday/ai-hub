@@ -5,8 +5,9 @@
 // stores the evaluation in the database, and awards XP to the user.
 // =============================================================================
 
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/require-auth";
+import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import {
   apiSuccess,
   apiInternalError,
@@ -28,6 +29,15 @@ export async function POST(req: NextRequest) {
     // --- Auth check ---
     const auth = await requireAuth(req);
     if ("response" in auth) return auth.response;
+
+    // --- Rate limiting ---
+    const rl = await rateLimit(req, "ai", auth.userId);
+    if (!rl.success) {
+      return NextResponse.json(
+        { data: null, error: { code: "RATE_LIMITED", message: "Rate limit exceeded. Please try again later." } },
+        { status: 429, headers: rateLimitHeaders(rl) },
+      );
+    }
 
     // --- Parse and validate request body ---
     const body: unknown = await req.json();
@@ -89,7 +99,6 @@ export async function POST(req: NextRequest) {
         recommendation: evaluation.recommendation,
         next_steps: JSON.stringify(evaluation.nextSteps),
         ai_provider_used: result.provider,
-        evaluated_by: auth.userId,
       })
       .select("id, overall_score, created_at")
       .single();

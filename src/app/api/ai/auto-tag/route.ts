@@ -5,7 +5,7 @@
 // suggestions using the existing AI Router.
 // =============================================================================
 
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { suggestTags } from "@/lib/ai/auto-tagger";
 import {
@@ -14,42 +14,9 @@ import {
   apiInternalError,
   apiValidationError,
 } from "@/lib/api/response";
+import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import { autoTagSchema } from "@/lib/validators/auto-tag";
 import type { Database } from "@/lib/supabase/types";
-
-// ---------------------------------------------------------------------------
-// Rate Limiting Interface (prepared for future implementation)
-// ---------------------------------------------------------------------------
-
-/**
- * Rate limit configuration for auto-tagging requests.
- * To be connected to a proper rate limiter (e.g. Upstash Redis).
- */
-interface RateLimitConfig {
-  /** Maximum requests per window. */
-  maxRequests: number;
-  /** Window duration in seconds. */
-  windowSeconds: number;
-}
-
-/** Default rate limit: 10 requests per minute per user. */
-const _RATE_LIMIT_CONFIG: RateLimitConfig = {
-  maxRequests: 10,
-  windowSeconds: 60,
-};
-
-/**
- * Check rate limit for a user.
- * TODO: Implement with Upstash Redis or similar.
- * Currently always returns allowed.
- */
-async function checkRateLimit(
-  _userId: string,
-  _config: RateLimitConfig,
-): Promise<{ allowed: boolean; retryAfterSeconds?: number }> {
-  // Placeholder: always allow. Connect to Redis/Upstash for production.
-  return { allowed: true };
-}
 
 // ---------------------------------------------------------------------------
 // Response Types
@@ -98,13 +65,12 @@ export async function POST(req: NextRequest) {
       return apiError("UNAUTHORIZED", "Authentication required", 401);
     }
 
-    // --- Rate limiting (prepared) ---
-    const rateLimitResult = await checkRateLimit(user.id, _RATE_LIMIT_CONFIG);
-    if (!rateLimitResult.allowed) {
-      return apiError(
-        "RATE_LIMITED",
-        `Too many requests. Retry after ${rateLimitResult.retryAfterSeconds ?? 60} seconds.`,
-        429,
+    // --- Rate limiting ---
+    const rl = await rateLimit(req, "ai", user.id);
+    if (!rl.success) {
+      return NextResponse.json(
+        { data: null, error: { code: "RATE_LIMITED", message: "Rate limit exceeded. Please try again later." } },
+        { status: 429, headers: rateLimitHeaders(rl) },
       );
     }
 

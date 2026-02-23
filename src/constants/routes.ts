@@ -16,10 +16,13 @@ export const ROUTES = {
   BEST_PRACTICE_DETAIL: (id: string) => `/best-practices/${id}` as const,
   BEST_PRACTICE_NEW: "/best-practices/new",
   LEARN_HUB: "/learn-hub",
+  LEARNING_PATHS: "/learn-hub/paths",
+  LEARNING_PATH_DETAIL: (pathId: string) => `/learn-hub/paths/${pathId}` as const,
   COURSE_DETAIL: (courseId: string) => `/learn-hub/${courseId}` as const,
   LESSON_DETAIL: (courseId: string, lessonId: string) =>
     `/learn-hub/${courseId}/${lessonId}` as const,
   COMMUNITY: "/community",
+  COMMUNITY_IDEAS: "/community/ideas",
   COMMUNITY_POST: (postId: string) => `/community/${postId}` as const,
   AI_MENTOR: "/ai-mentor",
   AI_MENTOR_SESSION: (sessionId: string) => `/ai-mentor/${sessionId}` as const,
@@ -31,6 +34,7 @@ export const ROUTES = {
   // Profile
   PROFILE: "/profile",
   PROFILE_SETTINGS: "/profile/settings",
+  PROFILE_ACHIEVEMENTS: "/profile/achievements",
   NOTIFICATIONS: "/notifications",
 
   // Admin

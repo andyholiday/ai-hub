@@ -26,7 +26,21 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatMessage, TypingIndicator } from "./chat-message";
-import { useOrb } from "./orb-provider";
+import { useOrb, type OrbState } from "./orb-provider";
+
+// -----------------------------------------------------------------------------
+// Status labels shown in the chat panel header subtitle
+// -----------------------------------------------------------------------------
+
+const PANEL_STATUS_LABEL: Record<OrbState, string> = {
+  idle: "Online",
+  thinking: "denkt nach...",
+  notification: "Online",
+  celebration: "Feiert mit dir!",
+  greeting: "Begruesst dich!",
+  listening: "Hoert zu...",
+  energized: "Voller Energie!",
+};
 
 // -----------------------------------------------------------------------------
 // Quick action chip definitions
@@ -194,7 +208,7 @@ export function ChatPanel() {
               AI Mentor
             </span>
             <span className="text-[11px] text-surface-400">
-              {orbState === "thinking" ? "denkt nach..." : "Online"}
+              {PANEL_STATUS_LABEL[orbState]}
             </span>
           </div>
 

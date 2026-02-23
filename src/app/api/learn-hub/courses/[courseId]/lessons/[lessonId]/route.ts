@@ -16,6 +16,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { awardXP } from "@/lib/gamification/xp";
 import { checkAndAwardBadges } from "@/lib/gamification/badges";
+import { checkAndUnlockAchievements } from "@/lib/gamification/achievements";
 import {
   lessonCompletionSchema,
   quizContentSchema,
@@ -241,7 +242,10 @@ export async function POST(
 
     // Award XP for lesson completion (fire-and-forget)
     awardXP(supabase, auth.userId, "lesson_completed", LESSON_XP_REWARD).then(
-      () => checkAndAwardBadges(supabase, auth.userId),
+      () => {
+        checkAndAwardBadges(supabase, auth.userId);
+        checkAndUnlockAchievements(supabase, auth.userId).catch(() => {});
+      },
     );
 
     return apiSuccess(

@@ -28,6 +28,7 @@ export interface Database {
           level: number;
           role: "user" | "moderator" | "admin" | "super_admin";
           streak_days: number;
+          longest_streak: number;
           last_login_at: string | null;
           onboarding_completed: boolean;
           created_at: string;
@@ -45,6 +46,7 @@ export interface Database {
           level?: number;
           role?: "user" | "moderator" | "admin" | "super_admin";
           streak_days?: number;
+          longest_streak?: number;
           last_login_at?: string | null;
           onboarding_completed?: boolean;
           created_at?: string;
@@ -61,6 +63,7 @@ export interface Database {
           level?: number;
           role?: "user" | "moderator" | "admin" | "super_admin";
           streak_days?: number;
+          longest_streak?: number;
           last_login_at?: string | null;
           onboarding_completed?: boolean;
           updated_at?: string;
@@ -493,6 +496,28 @@ export interface Database {
         Relationships: [];
       };
 
+      user_challenges: {
+        Row: {
+          user_id: string;
+          challenge_id: string;
+          progress: number;
+          completed_at: string | null;
+          joined_at: string;
+        };
+        Insert: {
+          user_id: string;
+          challenge_id: string;
+          progress?: number;
+          completed_at?: string | null;
+          joined_at?: string;
+        };
+        Update: {
+          progress?: number;
+          completed_at?: string | null;
+        };
+        Relationships: [];
+      };
+
       innovation_radar_items: {
         Row: {
           id: string;
@@ -816,6 +841,289 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      learning_paths: {
+        Row: {
+          id: string;
+          title: string;
+          description: string;
+          slug: string;
+          difficulty: "beginner" | "intermediate" | "advanced";
+          estimated_hours: number;
+          icon: string;
+          color: string;
+          is_published: boolean;
+          order_index: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description: string;
+          slug: string;
+          difficulty?: "beginner" | "intermediate" | "advanced";
+          estimated_hours?: number;
+          icon?: string;
+          color?: string;
+          is_published?: boolean;
+          order_index?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          title?: string;
+          description?: string;
+          slug?: string;
+          difficulty?: "beginner" | "intermediate" | "advanced";
+          estimated_hours?: number;
+          icon?: string;
+          color?: string;
+          is_published?: boolean;
+          order_index?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      learning_path_courses: {
+        Row: {
+          id: string;
+          learning_path_id: string;
+          course_id: string;
+          order_index: number;
+          is_required: boolean;
+        };
+        Insert: {
+          id?: string;
+          learning_path_id: string;
+          course_id: string;
+          order_index?: number;
+          is_required?: boolean;
+        };
+        Update: {
+          learning_path_id?: string;
+          course_id?: string;
+          order_index?: number;
+          is_required?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "learning_path_courses_learning_path_id_fkey";
+            columns: ["learning_path_id"];
+            isOneToOne: false;
+            referencedRelation: "learning_paths";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "learning_path_courses_course_id_fkey";
+            columns: ["course_id"];
+            isOneToOne: false;
+            referencedRelation: "courses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      user_learning_path_progress: {
+        Row: {
+          id: string;
+          user_id: string;
+          learning_path_id: string;
+          started_at: string;
+          completed_at: string | null;
+          current_course_index: number;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          learning_path_id: string;
+          started_at?: string;
+          completed_at?: string | null;
+          current_course_index?: number;
+        };
+        Update: {
+          started_at?: string;
+          completed_at?: string | null;
+          current_course_index?: number;
+        };
+        Relationships: [];
+      };
+
+      achievements: {
+        Row: {
+          id: string;
+          key: string;
+          title: string;
+          description: string;
+          icon: string;
+          category: "learning" | "community" | "engagement" | "mastery";
+          requirement_type:
+          | "xp_total"
+          | "posts_count"
+          | "comments_count"
+          | "courses_completed"
+          | "login_streak"
+          | "lessons_completed"
+          | "upvotes_received"
+          | "badges_earned";
+          requirement_value: number;
+          xp_reward: number;
+          is_hidden: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          key: string;
+          title: string;
+          description: string;
+          icon?: string;
+          category?: "learning" | "community" | "engagement" | "mastery";
+          requirement_type:
+          | "xp_total"
+          | "posts_count"
+          | "comments_count"
+          | "courses_completed"
+          | "login_streak"
+          | "lessons_completed"
+          | "upvotes_received"
+          | "badges_earned";
+          requirement_value?: number;
+          xp_reward?: number;
+          is_hidden?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          key?: string;
+          title?: string;
+          description?: string;
+          icon?: string;
+          category?: "learning" | "community" | "engagement" | "mastery";
+          requirement_type?:
+          | "xp_total"
+          | "posts_count"
+          | "comments_count"
+          | "courses_completed"
+          | "login_streak"
+          | "lessons_completed"
+          | "upvotes_received"
+          | "badges_earned";
+          requirement_value?: number;
+          xp_reward?: number;
+          is_hidden?: boolean;
+        };
+        Relationships: [];
+      };
+
+      user_achievements: {
+        Row: {
+          id: string;
+          user_id: string;
+          achievement_id: string;
+          unlocked_at: string;
+          notified: boolean;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          achievement_id: string;
+          unlocked_at?: string;
+          notified?: boolean;
+        };
+        Update: {
+          unlocked_at?: string;
+          notified?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey";
+            columns: ["achievement_id"];
+            isOneToOne: false;
+            referencedRelation: "achievements";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      mentor_signals: {
+        Row: {
+          id: string;
+          user_id: string;
+          signal_type:
+          | "page_entry_briefing"
+          | "inline_suggestion"
+          | "scroll_trigger"
+          | "inactivity_nudge"
+          | "achievement_congrats"
+          | "streak_motivation"
+          | "course_reminder"
+          | "smart_notification";
+          page_context: string;
+          title: string | null;
+          content: string;
+          priority: number;
+          metadata: Json;
+          is_read: boolean;
+          is_dismissed: boolean;
+          shown_at: string | null;
+          expires_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          signal_type:
+          | "page_entry_briefing"
+          | "inline_suggestion"
+          | "scroll_trigger"
+          | "inactivity_nudge"
+          | "achievement_congrats"
+          | "streak_motivation"
+          | "course_reminder"
+          | "smart_notification";
+          page_context?: string;
+          title?: string | null;
+          content: string;
+          priority?: number;
+          metadata?: Json;
+          is_read?: boolean;
+          is_dismissed?: boolean;
+          shown_at?: string | null;
+          expires_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          signal_type?:
+          | "page_entry_briefing"
+          | "inline_suggestion"
+          | "scroll_trigger"
+          | "inactivity_nudge"
+          | "achievement_congrats"
+          | "streak_motivation"
+          | "course_reminder"
+          | "smart_notification";
+          page_context?: string;
+          title?: string | null;
+          content?: string;
+          priority?: number;
+          metadata?: Json;
+          is_read?: boolean;
+          is_dismissed?: boolean;
+          shown_at?: string | null;
+          expires_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
 
     Views: {
@@ -843,6 +1151,34 @@ export interface Database {
         };
         Returns: undefined;
       };
+      get_user_profile_data: {
+        Args: {
+          target_user_id: string;
+        };
+        Returns: Json;
+      };
+      get_leaderboard_optimized: {
+        Args: {
+          current_user_id?: string | null;
+          limit_count?: number;
+        };
+        Returns: Json;
+      };
+      get_mentor_signals: {
+        Args: {
+          p_user_id: string;
+          p_page_context?: string | null;
+          p_limit?: number;
+        };
+        Returns: Database["public"]["Tables"]["mentor_signals"]["Row"][];
+      };
+      generate_page_briefing: {
+        Args: {
+          p_user_id: string;
+          p_page_context: string;
+        };
+        Returns: string | null;
+      };
     };
 
     Enums: {
@@ -858,6 +1194,25 @@ export interface Database {
       challenge_type: "daily" | "weekly" | "special";
       radar_category: "tools" | "techniques" | "platforms" | "frameworks";
       radar_ring: "adopt" | "trial" | "assess" | "hold";
+      achievement_category: "learning" | "community" | "engagement" | "mastery";
+      achievement_requirement_type:
+      | "xp_total"
+      | "posts_count"
+      | "comments_count"
+      | "courses_completed"
+      | "login_streak"
+      | "lessons_completed"
+      | "upvotes_received"
+      | "badges_earned";
+      mentor_signal_type:
+      | "page_entry_briefing"
+      | "inline_suggestion"
+      | "scroll_trigger"
+      | "inactivity_nudge"
+      | "achievement_congrats"
+      | "streak_motivation"
+      | "course_reminder"
+      | "smart_notification";
     };
   };
 }

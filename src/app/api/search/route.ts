@@ -5,7 +5,7 @@
 // the most similar best practices from pgvector.
 // =============================================================================
 
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { generateEmbedding, getEmbeddingConfig } from "@/lib/ai/embeddings";
 import {
@@ -15,6 +15,7 @@ import {
   apiValidationError,
   apiError,
 } from "@/lib/api/response";
+import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import { semanticSearchSchema } from "@/lib/validators/search";
 import type { Database } from "@/lib/supabase/types";
 
@@ -79,6 +80,15 @@ export async function POST(req: NextRequest) {
 
     if (authError || !user) {
       return apiError("UNAUTHORIZED", "Authentication required", 401);
+    }
+
+    // --- Rate limiting ---
+    const rl = await rateLimit(req, "search", user.id);
+    if (!rl.success) {
+      return NextResponse.json(
+        { data: null, error: { code: "RATE_LIMITED", message: "Rate limit exceeded. Please try again later." } },
+        { status: 429, headers: rateLimitHeaders(rl) },
+      );
     }
 
     // --- Parse and validate request body ---

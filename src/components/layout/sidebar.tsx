@@ -17,12 +17,15 @@ import {
   Trophy,
   Target,
   Shield,
+  Route,
+  Award,
   ChevronRight,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { MAIN_NAVIGATION, ADMIN_NAVIGATION } from "@/constants/navigation";
 import type { NavItem } from "@/constants/navigation";
+import { LogoutButton } from "@/app/(auth)/login/logout";
 
 // ---------------------------------------------------------------------------
 // Icon Map – maps string icon names from navigation constants to components
@@ -38,6 +41,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Trophy,
   Target,
   Shield,
+  Route,
+  Award,
 };
 
 // ---------------------------------------------------------------------------
@@ -53,15 +58,15 @@ interface NavSection {
 const NAV_SECTIONS: NavSection[] = [
   {
     // Hauptnavigation (no label, top section)
-    items: MAIN_NAVIGATION.slice(0, 4), // Dashboard, Best Practices, Learn Hub, Community
+    items: MAIN_NAVIGATION.slice(0, 5), // Dashboard, Best Practices, Learn Hub, Community, Ideen-Board
   },
   {
     label: "KI-Features",
-    items: MAIN_NAVIGATION.slice(4, 6), // AI Mentor, Innovation Radar
+    items: MAIN_NAVIGATION.slice(5, 7), // AI Mentor, Innovation Radar
   },
   {
     label: "Gamification",
-    items: MAIN_NAVIGATION.slice(6, 8), // Leaderboard, Challenges
+    items: MAIN_NAVIGATION.slice(7, 10), // Leaderboard, Challenges, Achievements
   },
   {
     label: "Administration",
@@ -212,6 +217,7 @@ function SidebarUserCard() {
         {/* Chevron */}
         <ChevronRight className="h-4 w-4 shrink-0 text-surface-400" />
       </Link>
+      <LogoutButton />
     </div>
   );
 }
@@ -255,6 +261,19 @@ export function Sidebar() {
                 return (
                   <li key={item.href}>
                     <SidebarNavItem item={item} isActive={isActive} />
+                    {/* Child Navigation Items */}
+                    {item.children && item.children.length > 0 && isActive && (
+                      <ul className="ml-7 mt-0.5 flex flex-col gap-0.5 border-l border-surface-200 pl-3">
+                        {item.children.map((child) => {
+                          const isChildActive = pathname === child.href || pathname.startsWith(child.href);
+                          return (
+                            <li key={child.href}>
+                              <SidebarNavItem item={child} isActive={isChildActive} />
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
                   </li>
                 );
               })}

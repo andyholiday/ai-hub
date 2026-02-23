@@ -19,6 +19,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { sanitizeHtml } from "@/lib/utils/sanitize";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -376,7 +377,7 @@ export default function BestPracticeDetailPage() {
             {/* Content Area with Prose Styling */}
             <div className="border-t border-surface-200 p-6 sm:p-8">
               <div className="prose prose-surface max-w-none prose-headings:font-heading prose-headings:text-surface-900 prose-h2:text-title-lg prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-title prose-h3:font-semibold prose-p:text-body-lg prose-p:text-surface-700 prose-p:leading-relaxed prose-strong:text-surface-800 prose-code:rounded prose-code:bg-surface-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-body-sm prose-code:text-lr-green-700 prose-code:before:content-none prose-code:after:content-none prose-pre:rounded-xl prose-pre:bg-surface-900 prose-pre:p-4 prose-table:border-collapse prose-th:bg-surface-50 prose-th:p-3 prose-th:text-left prose-th:text-body-sm prose-th:font-semibold prose-td:border-t prose-td:border-surface-200 prose-td:p-3 prose-td:text-body-sm prose-blockquote:border-l-lr-green-500 prose-blockquote:bg-lr-green-50/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:px-4 prose-blockquote:not-italic prose-a:text-lr-green-600 prose-a:no-underline hover:prose-a:underline prose-li:text-body-lg prose-li:text-surface-700">
-                <div dangerouslySetInnerHTML={{ __html: markdownToHtml(data.content) }} />
+                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(markdownToHtml(data.content)) }} />
               </div>
             </div>
           </Card>

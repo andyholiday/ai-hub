@@ -6,7 +6,6 @@
 "use client";
 
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
-import { cn } from "@/lib/utils/cn";
 import type {
   RadarCategory,
   RadarRing,
@@ -253,7 +252,6 @@ function RadarTooltip({ item, x, y, containerRef }: RadarTooltipProps) {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const svgWidth = rect.width;
-    const svgHeight = rect.height;
     const scale = svgWidth / SVG_SIZE;
 
     let left = x * scale;

@@ -227,6 +227,94 @@
   }
 }
 
+/* Greeting state – warm golden wave with subtle rocking */
+.ai-orb-core--greeting {
+  animation: orbGreeting 1.8s ease-in-out infinite;
+}
+
+@keyframes orbGreeting {
+  0%, 100% {
+    box-shadow:
+      0 0 24px rgba(199, 168, 78, 0.35),
+      0 0 48px rgba(199, 168, 78, 0.12);
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.05) rotate(-3deg);
+  }
+  50% {
+    box-shadow:
+      0 0 40px rgba(199, 168, 78, 0.50),
+      0 0 72px rgba(199, 168, 78, 0.25),
+      0 0 12px rgba(0, 166, 81, 0.15);
+    transform: scale(1.05) rotate(3deg);
+  }
+  75% {
+    transform: scale(1.02) rotate(-1deg);
+  }
+}
+
+/* Listening state – calm green glow that gently grows */
+.ai-orb-core--listening {
+  animation: orbListening 2.5s ease-in-out infinite;
+}
+
+@keyframes orbListening {
+  0%, 100% {
+    box-shadow:
+      0 0 24px rgba(0, 166, 81, 0.30),
+      0 0 48px rgba(0, 166, 81, 0.10);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 36px rgba(0, 166, 81, 0.50),
+      0 0 64px rgba(0, 166, 81, 0.20),
+      0 0 96px rgba(0, 166, 81, 0.08);
+    transform: scale(1.06);
+  }
+}
+
+/* Energized state – rapid pulsing with high-energy glow */
+.ai-orb-core--energized {
+  animation: orbEnergized 0.8s ease-in-out infinite;
+}
+
+@keyframes orbEnergized {
+  0%, 100% {
+    box-shadow:
+      0 0 24px rgba(0, 166, 81, 0.40),
+      0 0 48px rgba(0, 166, 81, 0.15),
+      0 0 8px rgba(199, 168, 78, 0.20);
+  }
+  50% {
+    box-shadow:
+      0 0 48px rgba(0, 166, 81, 0.60),
+      0 0 80px rgba(0, 166, 81, 0.25),
+      0 0 16px rgba(199, 168, 78, 0.35);
+  }
+}
+
+/* Energized ring – faster rotation */
+.ai-orb-ring--energized {
+  animation-duration: 3s;
+}
+
+/* Listening ring – very slow, contemplative */
+.ai-orb-ring--listening {
+  animation-duration: 14s;
+}
+
+/* ---------------------------------------------------------------------------
+   Celebrating Particles – small glowing dots orbiting the orb
+   --------------------------------------------------------------------------- */
+.ai-orb-particle {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
 /* ---------------------------------------------------------------------------
    Rotating Ring (8s cycle)
    --------------------------------------------------------------------------- */
@@ -284,12 +372,18 @@
   .ai-orb-core--mini,
   .ai-orb-core--thinking,
   .ai-orb-core--notification,
-  .ai-orb-core--celebration {
+  .ai-orb-core--celebration,
+  .ai-orb-core--greeting,
+  .ai-orb-core--listening,
+  .ai-orb-core--energized {
     animation: none;
     box-shadow: 0 0 24px rgba(0, 166, 81, 0.30);
+    transform: none;
   }
 
-  .ai-orb-ring {
+  .ai-orb-ring,
+  .ai-orb-ring--energized,
+  .ai-orb-ring--listening {
     animation: none;
     transform: translate(-50%, -50%) rotate(0deg);
   }
@@ -301,5 +395,256 @@
   .ai-orb-typing-dot {
     animation: none;
     opacity: 0.6;
+  }
+
+  .ai-orb-particle {
+    display: none;
+  }
+}
+
+/* =============================================================================
+   Cosmos Companion Animations
+   Next-generation AI Orb with multi-layer fluid blobs, ambient glow,
+   dual rotating rings, and celebration fireworks.
+   ============================================================================= */
+
+/* ---------------------------------------------------------------------------
+   Blob Layer Morphing – 3 layers with offset animation cycles
+   Each blob morphs its border-radius organically (4-6s per cycle).
+   Using only transform + border-radius for GPU acceleration.
+   --------------------------------------------------------------------------- */
+.cosmos-blob {
+  will-change: border-radius, transform;
+  filter: blur(2px);
+  transition: opacity 0.5s ease;
+}
+
+.cosmos-blob--1 {
+  animation: cosmosBlobMorph1 6s ease-in-out infinite alternate;
+}
+
+.cosmos-blob--2 {
+  animation: cosmosBlobMorph2 5s ease-in-out infinite alternate;
+  animation-delay: -1.5s;
+}
+
+.cosmos-blob--3 {
+  animation: cosmosBlobMorph3 4.5s ease-in-out infinite alternate;
+  animation-delay: -3s;
+}
+
+@keyframes cosmosBlobMorph1 {
+  0% {
+    border-radius: 50% 40% 60% 45%;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  25% {
+    border-radius: 45% 55% 50% 40%;
+    transform: translate(3px, -2px) scale(1.03) rotate(2deg);
+  }
+  50% {
+    border-radius: 55% 45% 40% 60%;
+    transform: translate(-2px, 3px) scale(0.97) rotate(-1deg);
+  }
+  75% {
+    border-radius: 40% 60% 55% 45%;
+    transform: translate(2px, 2px) scale(1.02) rotate(1deg);
+  }
+  100% {
+    border-radius: 60% 42% 48% 55%;
+    transform: translate(-3px, -2px) scale(1) rotate(-2deg);
+  }
+}
+
+@keyframes cosmosBlobMorph2 {
+  0% {
+    border-radius: 40% 55% 50% 60%;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  25% {
+    border-radius: 55% 42% 58% 45%;
+    transform: translate(-3px, 2px) scale(1.04) rotate(-2deg);
+  }
+  50% {
+    border-radius: 48% 60% 42% 50%;
+    transform: translate(4px, -2px) scale(0.96) rotate(3deg);
+  }
+  75% {
+    border-radius: 60% 45% 55% 42%;
+    transform: translate(-2px, -3px) scale(1.01) rotate(-1deg);
+  }
+  100% {
+    border-radius: 42% 52% 60% 48%;
+    transform: translate(2px, 3px) scale(1) rotate(2deg);
+  }
+}
+
+@keyframes cosmosBlobMorph3 {
+  0% {
+    border-radius: 55% 45% 52% 48%;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  25% {
+    border-radius: 42% 58% 45% 55%;
+    transform: translate(2px, 3px) scale(1.05) rotate(3deg);
+  }
+  50% {
+    border-radius: 60% 40% 58% 42%;
+    transform: translate(-4px, -2px) scale(0.95) rotate(-2deg);
+  }
+  75% {
+    border-radius: 45% 55% 40% 60%;
+    transform: translate(3px, -3px) scale(1.03) rotate(1deg);
+  }
+  100% {
+    border-radius: 48% 52% 55% 45%;
+    transform: translate(-2px, 2px) scale(1) rotate(-3deg);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Cosmos Core – Center icon with breathing glow
+   --------------------------------------------------------------------------- */
+.cosmos-core {
+  animation: cosmosCoreGlow 3s ease-in-out infinite;
+  will-change: box-shadow;
+}
+
+@keyframes cosmosCoreGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(0, 166, 81, 0.35),
+      0 0 40px rgba(0, 166, 81, 0.12);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(0, 166, 81, 0.50),
+      0 0 60px rgba(0, 166, 81, 0.20),
+      0 0 8px rgba(199, 168, 78, 0.25);
+  }
+}
+
+/* Mini core in the split-view header */
+.cosmos-core-mini {
+  animation: cosmosCoreGlowMini 3s ease-in-out infinite;
+}
+
+@keyframes cosmosCoreGlowMini {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(0, 166, 81, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(0, 166, 81, 0.40);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Ambient Page Glow – Radiates energy onto the page edge
+   --------------------------------------------------------------------------- */
+.cosmos-ambient-glow {
+  animation: cosmosAmbientPulse 4s ease-in-out infinite;
+  will-change: opacity;
+}
+
+@keyframes cosmosAmbientPulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: translate(-40px, -40px) scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: translate(-40px, -40px) scale(1.08);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Dual Rotating Rings
+   --------------------------------------------------------------------------- */
+.cosmos-ring {
+  animation: cosmosRingRotate 10s linear infinite;
+  will-change: transform;
+}
+
+.cosmos-ring-reverse {
+  animation: cosmosRingRotateReverse 15s linear infinite;
+  will-change: transform;
+}
+
+@keyframes cosmosRingRotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes cosmosRingRotateReverse {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(-360deg); }
+}
+
+.cosmos-ring--fast {
+  animation-duration: 4s;
+}
+
+.cosmos-ring--slow {
+  animation-duration: 18s;
+}
+
+/* ---------------------------------------------------------------------------
+   Notification Dot – enhanced pulsing
+   --------------------------------------------------------------------------- */
+.cosmos-notification-dot {
+  animation: cosmosNotifPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes cosmosNotifPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.75; }
+}
+
+/* ---------------------------------------------------------------------------
+   Firework particle base
+   --------------------------------------------------------------------------- */
+.cosmos-firework-particle {
+  will-change: transform, opacity;
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced Motion – Cosmos Companion
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .cosmos-blob,
+  .cosmos-blob--1,
+  .cosmos-blob--2,
+  .cosmos-blob--3 {
+    animation: none;
+    border-radius: 50%;
+    transform: none;
+    filter: none;
+  }
+
+  .cosmos-core,
+  .cosmos-core-mini {
+    animation: none;
+    box-shadow: 0 0 20px rgba(0, 166, 81, 0.30);
+  }
+
+  .cosmos-ambient-glow {
+    animation: none;
+    opacity: 0.3;
+  }
+
+  .cosmos-ring,
+  .cosmos-ring-reverse,
+  .cosmos-ring--fast,
+  .cosmos-ring--slow {
+    animation: none;
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  .cosmos-notification-dot {
+    animation: none;
+  }
+
+  .cosmos-firework-particle {
+    display: none;
   }
 }

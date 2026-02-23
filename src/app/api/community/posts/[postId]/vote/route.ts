@@ -13,6 +13,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { awardCommunityXP } from "@/lib/gamification/xp";
 import { checkAndAwardBadges } from "@/lib/gamification/badges";
+import { checkAndUnlockAchievements } from "@/lib/gamification/achievements";
 
 // ---------------------------------------------------------------------------
 // Route params type
@@ -90,7 +91,10 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       // Only if the voter is not the author themselves
       if (post.author_id !== auth.userId) {
         awardCommunityXP(supabase, post.author_id, "UPVOTE_RECEIVED").then(
-          () => checkAndAwardBadges(supabase, post.author_id),
+          () => {
+            checkAndAwardBadges(supabase, post.author_id);
+            checkAndUnlockAchievements(supabase, post.author_id).catch(() => {});
+          },
         );
       }
 

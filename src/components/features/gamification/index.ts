@@ -26,3 +26,6 @@ export type {
   ActivityEvent,
   ActivityEventType,
 } from "./activity-timeline";
+
+export { StreakWidget } from "./streak-widget";
+export type { StreakWidgetProps } from "./streak-widget";

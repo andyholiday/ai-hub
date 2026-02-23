@@ -30,6 +30,10 @@ import {
   Zap,
 } from "lucide-react";
 import type { DifficultyLevel } from "@/lib/validators/learn-hub";
+import {
+  DIFFICULTY_LABELS,
+  DIFFICULTY_COLORS,
+} from "@/constants/learn-hub";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -75,18 +79,6 @@ interface CourseDetail {
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-
-const DIFFICULTY_LABELS: Record<DifficultyLevel, string> = {
-  beginner: "Einsteiger",
-  intermediate: "Fortgeschritten",
-  advanced: "Experte",
-};
-
-const DIFFICULTY_COLORS: Record<DifficultyLevel, "green" | "gold" | "red"> = {
-  beginner: "green",
-  intermediate: "gold",
-  advanced: "red",
-};
 
 const LESSON_TYPE_ICONS: Record<string, typeof FileText> = {
   text: FileText,

@@ -7,6 +7,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getAIRouter } from "@/lib/ai/router";
+import { requireAuth } from "@/lib/api/require-auth";
+import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import type { AIProvider, ChatMessage } from "@/lib/ai/types";
 
 // ---------------------------------------------------------------------------
@@ -35,25 +37,16 @@ interface ChatRequestBody {
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     // --- Auth check: Ensure the user is authenticated ---
-    const { createServerClient } = await import("@supabase/ssr");
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return req.cookies.get(name)?.value;
-          },
-          set() {},
-          remove() {},
-        },
-      }
-    );
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const auth = await requireAuth(req);
+    if ("response" in auth) return auth.response;
+    const { userId } = auth;
+
+    // --- Rate limiting ---
+    const rl = await rateLimit(req, "ai", userId);
+    if (!rl.success) {
       return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
+        { data: null, error: { code: "RATE_LIMITED", message: "Rate limit exceeded. Please try again later." } },
+        { status: 429, headers: rateLimitHeaders(rl) },
       );
     }
 
@@ -104,7 +97,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         temperature: body.temperature,
         maxTokens: body.maxTokens,
         stream: true,
-      });
+      }, userId);
     }
 
     // --- Non-streaming response ---
@@ -119,8 +112,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       stream: false,
     });
 
-    // Log token usage (preparation for ai_cost_log table)
-    logTokenUsage(result.provider, result.model, result.usage);
+    // Log token usage into ai_cost_log (fire-and-forget)
+    logTokenUsage(result.provider, result.model, result.usage, userId);
 
     return NextResponse.json(result);
   } catch (error) {
@@ -140,7 +133,8 @@ export async function POST(req: NextRequest): Promise<Response> {
 
 function handleStreamingResponse(
   router: ReturnType<typeof getAIRouter>,
-  request: Parameters<ReturnType<typeof getAIRouter>["chatStream"]>[0]
+  request: Parameters<ReturnType<typeof getAIRouter>["chatStream"]>[0],
+  userId: string,
 ): Response {
   const encoder = new TextEncoder();
 
@@ -178,13 +172,13 @@ function handleStreamingResponse(
           }
         }
 
-        // Log token usage after stream completes
+        // Log token usage after stream completes (fire-and-forget)
         if (provider && model) {
           logTokenUsage(provider as AIProvider, model, {
             promptTokens: 0,
             completionTokens: 0,
             totalTokens: totalTokens ?? 0,
-          });
+          }, userId);
         }
 
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
@@ -216,25 +210,74 @@ function handleStreamingResponse(
 // ---------------------------------------------------------------------------
 
 /**
- * Log token usage for cost tracking.
- * This is a placeholder; a future implementation will insert into
- * the ai_cost_log Supabase table.
+ * Approximate cost per 1K tokens by provider key.
+ */
+const COST_PER_1K: Record<string, { input: number; output: number }> = {
+  gemini: { input: 0.00025, output: 0.0005 },
+  openai: { input: 0.0005, output: 0.0015 },
+  claude: { input: 0.003, output: 0.015 },
+  copilot: { input: 0.001, output: 0.002 },
+};
+
+/**
+ * Log token usage into the ai_cost_log Supabase table.
+ *
+ * This is intentionally fire-and-forget: we do NOT await the result so the
+ * chat response is never delayed by cost logging. Errors are caught and
+ * logged to the console but never propagated.
  */
 function logTokenUsage(
-  _provider: AIProvider | string,
+  provider: AIProvider | string,
   _model: string,
-  _usage: { promptTokens: number; completionTokens: number; totalTokens: number }
+  usage: { promptTokens: number; completionTokens: number; totalTokens: number },
+  userId?: string,
 ): void {
-  // TODO: Replace with Supabase ai_cost_log table insert
-  // const supabase = createServerClient();
-  // await supabase.from("ai_cost_log").insert({
-  //   provider,
-  //   model,
-  //   prompt_tokens: usage.promptTokens,
-  //   completion_tokens: usage.completionTokens,
-  //   total_tokens: usage.totalTokens,
-  //   estimated_cost: calculateCost(provider, model, usage),
-  // });
+  // Fire-and-forget -- the IIFE is intentionally not awaited.
+  void (async () => {
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const supabase = createAdminClient();
+
+      // --- Look up the provider_id from ai_providers ---
+      const providerKey = typeof provider === "string" ? provider : provider;
+      const { data: providerRow, error: providerError } = await supabase
+        .from("ai_providers")
+        .select("id")
+        .eq("provider_key", providerKey)
+        .single();
+
+      if (providerError || !providerRow) {
+        console.warn(
+          `[logTokenUsage] Provider "${providerKey}" not found in ai_providers – skipping cost log.`,
+        );
+        return;
+      }
+
+      // --- Calculate estimated cost ---
+      const rates = COST_PER_1K[providerKey] ?? { input: 0, output: 0 };
+      const estimatedCost =
+        (usage.promptTokens / 1000) * rates.input +
+        (usage.completionTokens / 1000) * rates.output;
+
+      // --- Insert cost log row ---
+      const { error: insertError } = await supabase
+        .from("ai_cost_log")
+        .insert({
+          provider_id: providerRow.id,
+          feature: "mentor_chat" as const,
+          tokens_input: usage.promptTokens,
+          tokens_output: usage.completionTokens,
+          estimated_cost: Math.round(estimatedCost * 1_000_000) / 1_000_000,
+          user_id: userId ?? null,
+        });
+
+      if (insertError) {
+        console.error("[logTokenUsage] Insert failed:", insertError.message);
+      }
+    } catch (err) {
+      console.error("[logTokenUsage] Unexpected error:", err);
+    }
+  })();
 }
 
 /**

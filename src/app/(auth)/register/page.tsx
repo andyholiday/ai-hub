@@ -1,12 +1,42 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    const supabase = createClient();
+
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name },
+      },
+    });
+
+    if (signUpError) {
+      setError(signUpError.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface-50 p-4">
@@ -18,7 +48,13 @@ export default function RegisterPage() {
           Erstelle dein LR AI Hub Konto.
         </p>
 
-        <form className="mt-6 space-y-4" onSubmit={(e) => e.preventDefault()}>
+        {error && (
+          <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-surface-700">
               Name
@@ -26,6 +62,7 @@ export default function RegisterPage() {
             <input
               id="name"
               type="text"
+              required
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
@@ -40,6 +77,7 @@ export default function RegisterPage() {
             <input
               id="email"
               type="email"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
@@ -54,6 +92,8 @@ export default function RegisterPage() {
             <input
               id="password"
               type="password"
+              required
+              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
@@ -63,9 +103,10 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-lr-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-lr-green-700"
+            disabled={loading}
+            className="w-full rounded-lg bg-lr-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-lr-green-700 disabled:opacity-50"
           >
-            Konto erstellen
+            {loading ? "Wird erstellt..." : "Konto erstellen"}
           </button>
         </form>
 

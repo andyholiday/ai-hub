@@ -84,6 +84,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
             "pl-1": isAI,
             "pr-1 text-right": !isAI,
           })}
+          suppressHydrationWarning
         >
           {format(message.timestamp, "HH:mm", { locale: de })}
         </span>

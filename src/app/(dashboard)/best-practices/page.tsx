@@ -299,14 +299,25 @@ export default function BestPracticesPage() {
           ))}
         </div>
       ) : (
-        <div className="mt-8 rounded-[14px] border border-dashed border-surface-300 bg-white p-12 text-center">
-          <Search className="mx-auto h-10 w-10 text-surface-300" />
-          <h3 className="mt-3 font-heading text-title font-semibold text-surface-700">
-            Keine Ergebnisse
+        <div className="mt-8 rounded-2xl border-2 border-dashed border-surface-200 bg-surface-50/50 p-12 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-lr-green-100 shadow-sm">
+            <Sparkles className="h-8 w-8 text-lr-green-600" />
+          </div>
+          <h3 className="font-heading text-title-md font-semibold text-surface-900">
+            {searchQuery || activeCategory !== "all"
+              ? "Keine passenden Best Practices gefunden"
+              : "Noch keine Best Practices vorhanden"}
           </h3>
-          <p className="mt-1 text-body-sm text-surface-500">
-            Versuche einen anderen Suchbegriff oder waehle eine andere Kategorie.
+          <p className="mx-auto mb-6 mt-2 max-w-sm text-body text-surface-500">
+            {searchQuery || activeCategory !== "all"
+              ? "Versuche einen anderen Suchbegriff oder waehle eine andere Kategorie aus."
+              : "Teile dein Wissen mit der Community! Erstelle die erste Best Practice und erhalte 50 XP als Belohnung."}
           </p>
+          <Link href="/best-practices/new">
+            <Button size="lg" iconLeft={<Plus />}>
+              Best Practice erstellen
+            </Button>
+          </Link>
         </div>
       )}
     </div>

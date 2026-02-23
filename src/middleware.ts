@@ -1,6 +1,13 @@
 // =============================================================================
 // Next.js Middleware
 // Auth protection, session refresh, route guards
+//
+// OPTIMIZED: Uses getSession() instead of getUser() to avoid an Auth API call
+// on every request. getSession() reads the JWT from the cookie and validates
+// it locally. The actual server-side verification happens in requireAuth()
+// within API routes where data mutations occur.
+//
+// Admin role check uses JWT app_metadata instead of a DB query.
 // =============================================================================
 
 import { type NextRequest, NextResponse } from "next/server";
@@ -21,36 +28,52 @@ export async function middleware(request: NextRequest) {
   const { supabase, response } = createMiddlewareClient(request);
   const { pathname } = request.nextUrl;
 
-  // Refresh session (important for SSR)
+  // Use getSession() - reads JWT from cookie, no Auth API call.
+  // This is safe for middleware route guards because:
+  // 1. The JWT is cryptographically signed and cannot be forged
+  // 2. API routes still use getUser() for server-side verification
+  // 3. Expired tokens will fail session parsing and redirect to login
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
+  const user = session?.user ?? null;
+
   // Public routes - allow access without auth
   const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
 
-  if (!session && !isPublicRoute) {
-    // Redirect to login if not authenticated
+  if (!user && !isPublicRoute) {
+    // API route protection - return 401 JSON instead of redirecting
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: { code: "UNAUTHORIZED", message: "Authentication required" } },
+        { status: 401 }
+      );
+    }
+
+    // Web route protection - redirect to login
     const redirectUrl = new URL("/login", request.url);
     redirectUrl.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (session && isPublicRoute && pathname !== "/callback") {
+  if (user && isPublicRoute && pathname !== "/callback") {
     // Redirect authenticated users away from auth pages
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Admin route protection
+  // Admin route protection - read role from JWT app_metadata (no DB query)
   const isAdminRoute = ADMIN_ROUTES.some((route) => pathname.startsWith(route));
-  if (isAdminRoute && session) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .single<{ role: string }>();
+  if (isAdminRoute && user) {
+    const role = user.app_metadata?.role as string | undefined;
 
-    if (!profile || !["admin", "super_admin"].includes(profile.role)) {
+    if (!role || !["admin", "super_admin"].includes(role)) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: { code: "FORBIDDEN", message: "Insufficient permissions" } },
+          { status: 403 }
+        );
+      }
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }

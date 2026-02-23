@@ -1,4 +1,9 @@
-"use client";
+// Server Component (no client-side interactivity needed for this placeholder)
+
+export const metadata = {
+  title: "Benachrichtigungen | LR AI Hub",
+  description: "Deine Benachrichtigungen im LR AI Hub",
+};
 
 export default function NotificationsPage() {
   return (

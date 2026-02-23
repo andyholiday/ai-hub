@@ -16,6 +16,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createCommentSchema } from "@/lib/validators/community";
 import { awardCommunityXP } from "@/lib/gamification/xp";
 import { checkAndAwardBadges } from "@/lib/gamification/badges";
+import { checkAndUnlockAchievements } from "@/lib/gamification/achievements";
 
 // ---------------------------------------------------------------------------
 // Route params type
@@ -137,9 +138,10 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     // The DB trigger will increment comments_count on the post automatically
 
     // Award XP for comment creation (fire-and-forget)
-    awardCommunityXP(supabase, auth.userId, "COMMENT_CREATED").then(() =>
-      checkAndAwardBadges(supabase, auth.userId),
-    );
+    awardCommunityXP(supabase, auth.userId, "COMMENT_CREATED").then(() => {
+      checkAndAwardBadges(supabase, auth.userId);
+      checkAndUnlockAchievements(supabase, auth.userId).catch(() => {});
+    });
 
     // Notify the post author about the comment (if commenter is not the author)
     if (post.author_id !== auth.userId) {

@@ -2,6 +2,8 @@
 # Supabase Local Development Configuration
 # =============================================================================
 
+project_id = "ziwqxnzsrnyhzhsircqh"
+
 [api]
 enabled = true
 port = 54321

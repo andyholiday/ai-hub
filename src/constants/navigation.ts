@@ -32,12 +32,26 @@ export const MAIN_NAVIGATION: NavItem[] = [
     href: ROUTES.LEARN_HUB,
     icon: "GraduationCap",
     description: "Kurse und Lernpfade",
+    children: [
+      {
+        title: "Lernpfade",
+        href: ROUTES.LEARNING_PATHS,
+        icon: "Route",
+        description: "Strukturierte Kurs-Reihenfolgen",
+      },
+    ],
   },
   {
     title: "Community",
     href: ROUTES.COMMUNITY,
     icon: "Users",
     description: "Austausch und Diskussionen",
+  },
+  {
+    title: "Ideen-Board",
+    href: ROUTES.COMMUNITY_IDEAS,
+    icon: "Lightbulb",
+    description: "Ideen entdecken und bewerten",
   },
   {
     title: "AI Mentor",
@@ -63,6 +77,12 @@ export const MAIN_NAVIGATION: NavItem[] = [
     href: ROUTES.CHALLENGES,
     icon: "Target",
     description: "Wettbewerbe und Aufgaben",
+  },
+  {
+    title: "Achievements",
+    href: ROUTES.PROFILE_ACHIEVEMENTS,
+    icon: "Award",
+    description: "Erfolge und Meilensteine",
   },
 ];
 

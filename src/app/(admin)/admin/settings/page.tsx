@@ -1,4 +1,9 @@
-"use client";
+// Server Component (no client-side interactivity needed for this placeholder)
+
+export const metadata = {
+  title: "System-Einstellungen | Admin",
+  description: "System-Einstellungen fuer die LR AI Hub Administration",
+};
 
 export default function AdminSettingsPage() {
   return (

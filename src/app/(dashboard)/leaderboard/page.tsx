@@ -5,7 +5,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils/cn";
 import { StatCard } from "@/components/ui";
 import {
@@ -14,6 +14,7 @@ import {
   type TopThreeUser,
   type LeaderboardUser,
 } from "@/components/features/gamification";
+import { LEVELS } from "@/constants/gamification";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -21,117 +22,37 @@ import {
 
 type Period = "week" | "month" | "all";
 
+interface LeaderboardEntry {
+  rank: number;
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  department: string | null;
+  level: number;
+  xp: number;
+  isCurrentUser: boolean;
+}
+
+interface LeaderboardApiResponse {
+  data: {
+    entries: LeaderboardEntry[];
+    totalActiveUsers: number;
+    currentUserRank: number | null;
+    currentUserXp: number | null;
+    currentUserLevel: number | null;
+    period: Period;
+  };
+  error: null;
+}
+
 // -----------------------------------------------------------------------------
-// Demo Data
+// Level Title Helper
 // -----------------------------------------------------------------------------
 
-const CURRENT_USER_NAME = "Sarah Hoffmann";
-
-const leaderboardData: LeaderboardUser[] = [
-  {
-    rank: 1,
-    name: "Lisa Peters",
-    department: "Produktentwicklung",
-    level: 9,
-    levelTitle: "KI-Virtuose",
-    xpTotal: 5200,
-    xpPeriod: 320,
-  },
-  {
-    rank: 2,
-    name: "Markus Koenig",
-    department: "Marketing",
-    level: 9,
-    levelTitle: "KI-Virtuose",
-    xpTotal: 4800,
-    xpPeriod: 280,
-  },
-  {
-    rank: 3,
-    name: "Julia Richter",
-    department: "HR",
-    level: 8,
-    levelTitle: "KI-Meister",
-    xpTotal: 3900,
-    xpPeriod: 245,
-  },
-  {
-    rank: 4,
-    name: "Thomas Wagner",
-    department: "IT",
-    level: 8,
-    levelTitle: "KI-Meister",
-    xpTotal: 3200,
-    xpPeriod: 190,
-  },
-  {
-    rank: 5,
-    name: "Anna Mueller",
-    department: "Finance",
-    level: 7,
-    levelTitle: "KI-Spezialist",
-    xpTotal: 2800,
-    xpPeriod: 175,
-  },
-  {
-    rank: 6,
-    name: "David Schneider",
-    department: "Logistik",
-    level: 7,
-    levelTitle: "KI-Spezialist",
-    xpTotal: 2500,
-    xpPeriod: 155,
-  },
-  {
-    rank: 7,
-    name: CURRENT_USER_NAME,
-    department: "Vertrieb",
-    level: 7,
-    levelTitle: "KI-Spezialist",
-    xpTotal: 2340,
-    xpPeriod: 140,
-    isCurrentUser: true,
-  },
-  {
-    rank: 8,
-    name: "Michael Braun",
-    department: "Einkauf",
-    level: 6,
-    levelTitle: "KI-Experte",
-    xpTotal: 2100,
-    xpPeriod: 120,
-  },
-  {
-    rank: 9,
-    name: "Laura Fischer",
-    department: "Qualitaet",
-    level: 6,
-    levelTitle: "KI-Experte",
-    xpTotal: 1950,
-    xpPeriod: 105,
-  },
-  {
-    rank: 10,
-    name: "Christian Weber",
-    department: "Kundenservice",
-    level: 5,
-    levelTitle: "KI-Kenner",
-    xpTotal: 1800,
-    xpPeriod: 90,
-  },
-];
-
-const topThreeData: TopThreeUser[] = leaderboardData.slice(0, 3).map((u) => ({
-  rank: u.rank as 1 | 2 | 3,
-  name: u.name,
-  xp: u.xpTotal,
-  level: u.level,
-  levelTitle: u.levelTitle,
-  department: u.department,
-}));
-
-// Current user data for stats
-const currentUser = leaderboardData.find((u) => u.isCurrentUser)!;
+function getLevelTitle(level: number): string {
+  const clamped = Math.max(1, Math.min(level, LEVELS.length));
+  return LEVELS[clamped - 1]?.title ?? "KI-Neuling";
+}
 
 // -----------------------------------------------------------------------------
 // Period Tabs
@@ -185,11 +106,168 @@ function UsersIcon() {
 }
 
 // -----------------------------------------------------------------------------
+// Loading Skeleton
+// -----------------------------------------------------------------------------
+
+function LeaderboardSkeleton() {
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 animate-fade-in">
+      {/* Header skeleton */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="h-8 w-48 rounded-lg bg-surface-200 animate-pulse" />
+          <div className="mt-2 h-5 w-72 rounded-lg bg-surface-100 animate-pulse" />
+        </div>
+        <div className="h-10 w-64 rounded-xl bg-surface-100 animate-pulse" />
+      </div>
+
+      {/* Stats cards skeleton */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="rounded-[14px] border border-surface-200 bg-white p-5 shadow-card"
+          >
+            <div className="flex items-start justify-between">
+              <div className="h-4 w-20 rounded bg-surface-100 animate-pulse" />
+              <div className="h-10 w-10 rounded-xl bg-surface-100 animate-pulse" />
+            </div>
+            <div className="mt-3 h-7 w-16 rounded bg-surface-200 animate-pulse" />
+            <div className="mt-2 h-3.5 w-24 rounded bg-surface-100 animate-pulse" />
+          </div>
+        ))}
+      </div>
+
+      {/* Podium skeleton */}
+      <div className="rounded-2xl border border-surface-200 bg-white p-6 shadow-card">
+        <div className="flex items-end justify-center gap-5 pt-16 pb-4">
+          {[2, 1, 3].map((rank) => (
+            <div key={rank} className="flex flex-col items-center">
+              <div
+                className={cn(
+                  "w-[180px] rounded-2xl border border-surface-200 bg-white p-5 pt-14",
+                  rank === 1 ? "-mt-6" : ""
+                )}
+              >
+                <div className="mx-auto h-6 w-6 rounded-full bg-surface-200 animate-pulse" />
+                <div className="mx-auto mt-3 h-5 w-24 rounded bg-surface-200 animate-pulse" />
+                <div className="mx-auto mt-1 h-3 w-16 rounded bg-surface-100 animate-pulse" />
+                <div className="mx-auto mt-3 h-6 w-20 rounded bg-surface-200 animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Table skeleton */}
+      <div>
+        <div className="mb-3 h-6 w-28 rounded bg-surface-200 animate-pulse" />
+        <div className="rounded-2xl border border-surface-200 bg-white shadow-card overflow-hidden">
+          <div className="border-b border-surface-200 bg-surface-50 px-4 py-3">
+            <div className="h-4 w-full rounded bg-surface-100 animate-pulse" />
+          </div>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-4 border-b border-surface-100 px-4 py-3.5"
+            >
+              <div className="h-8 w-8 rounded-full bg-surface-100 animate-pulse" />
+              <div className="h-8 w-8 rounded-full bg-surface-200 animate-pulse" />
+              <div className="flex-1">
+                <div className="h-4 w-32 rounded bg-surface-200 animate-pulse" />
+              </div>
+              <div className="h-4 w-16 rounded bg-surface-100 animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// -----------------------------------------------------------------------------
 // Page Component
 // -----------------------------------------------------------------------------
 
 export default function LeaderboardPage() {
   const [period, setPeriod] = useState<Period>("month");
+  const [loading, setLoading] = useState(true);
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [totalActiveUsers, setTotalActiveUsers] = useState(0);
+  const [currentUserRank, setCurrentUserRank] = useState<number | null>(null);
+  const [currentUserXp, setCurrentUserXp] = useState<number | null>(null);
+  const [currentUserLevel, setCurrentUserLevel] = useState<number | null>(null);
+
+  // ---------------------------------------------------------------------------
+  // Fetch leaderboard data
+  // ---------------------------------------------------------------------------
+
+  const fetchLeaderboard = useCallback(async (selectedPeriod: Period) => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/leaderboard?period=${selectedPeriod}&limit=50`
+      );
+      if (!res.ok) {
+        console.error("Leaderboard fetch failed:", res.status);
+        return;
+      }
+
+      const json = (await res.json()) as LeaderboardApiResponse;
+      const data = json.data;
+
+      setEntries(data.entries);
+      setTotalActiveUsers(data.totalActiveUsers);
+      setCurrentUserRank(data.currentUserRank);
+      setCurrentUserXp(data.currentUserXp);
+      setCurrentUserLevel(data.currentUserLevel);
+    } catch (err) {
+      console.error("Leaderboard fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLeaderboard(period);
+  }, [period, fetchLeaderboard]);
+
+  // ---------------------------------------------------------------------------
+  // Map API data to component types
+  // ---------------------------------------------------------------------------
+
+  const topThreeData: TopThreeUser[] = entries
+    .slice(0, 3)
+    .map((entry) => ({
+      rank: entry.rank as 1 | 2 | 3,
+      name: entry.name,
+      avatarUrl: entry.avatarUrl ?? undefined,
+      xp: entry.xp,
+      level: entry.level,
+      levelTitle: getLevelTitle(entry.level),
+      department: entry.department ?? "",
+    }));
+
+  const leaderboardData: LeaderboardUser[] = entries.map((entry) => ({
+    rank: entry.rank,
+    name: entry.name,
+    avatarUrl: entry.avatarUrl ?? undefined,
+    department: entry.department ?? "",
+    level: entry.level,
+    levelTitle: getLevelTitle(entry.level),
+    xpTotal: entry.xp,
+    // NOTE: xpPeriod is the same as xpTotal until an xp_history table is added
+    xpPeriod: entry.xp,
+    isCurrentUser: entry.isCurrentUser,
+  }));
+
+  // ---------------------------------------------------------------------------
+  // Loading state
+  // ---------------------------------------------------------------------------
+
+  if (loading) {
+    return <LeaderboardSkeleton />;
+  }
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 animate-fade-in">
@@ -227,50 +305,70 @@ export default function LeaderboardPage() {
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard
           label="Dein Rang"
-          value={`#${currentUser.rank}`}
-          change="+2 Plaetze"
-          changeDirection="up"
+          value={currentUserRank ? `#${currentUserRank}` : "-"}
+          changeDirection="neutral"
           icon={<RankIcon />}
           iconVariant="green"
         />
         <StatCard
           label="Deine XP"
-          value={currentUser.xpTotal.toLocaleString("de-DE")}
-          change={`+${currentUser.xpPeriod} diese Woche`}
-          changeDirection="up"
+          value={
+            currentUserXp !== null
+              ? currentUserXp.toLocaleString("de-DE")
+              : "-"
+          }
+          changeDirection="neutral"
           icon={<XPIcon />}
           iconVariant="gold"
         />
         <StatCard
           label="Dein Level"
-          value={`Lvl ${currentUser.level}`}
-          change={currentUser.levelTitle}
+          value={
+            currentUserLevel !== null ? `Lvl ${currentUserLevel}` : "-"
+          }
+          change={
+            currentUserLevel !== null
+              ? getLevelTitle(currentUserLevel)
+              : undefined
+          }
           changeDirection="neutral"
           icon={<LevelIcon />}
           iconVariant="purple"
         />
         <StatCard
           label="Aktive User"
-          value="142"
-          change="+12 diese Woche"
-          changeDirection="up"
+          value={totalActiveUsers.toLocaleString("de-DE")}
+          changeDirection="neutral"
           icon={<UsersIcon />}
           iconVariant="blue"
         />
       </div>
 
       {/* Top 3 Podium */}
-      <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-card sm:p-6">
-        <TopThree users={topThreeData} />
-      </div>
+      {topThreeData.length >= 3 && (
+        <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-card sm:p-6">
+          <TopThree users={topThreeData} />
+        </div>
+      )}
 
       {/* Full Leaderboard Table */}
-      <div>
-        <h2 className="mb-3 font-heading text-title-lg font-semibold text-surface-900">
-          Rangliste
-        </h2>
-        <LeaderboardTable users={leaderboardData} />
-      </div>
+      {leaderboardData.length > 0 && (
+        <div>
+          <h2 className="mb-3 font-heading text-title-lg font-semibold text-surface-900">
+            Rangliste
+          </h2>
+          <LeaderboardTable users={leaderboardData} />
+        </div>
+      )}
+
+      {/* Empty state */}
+      {entries.length === 0 && !loading && (
+        <div className="rounded-2xl border border-surface-200 bg-white p-12 text-center shadow-card">
+          <p className="text-body text-surface-500">
+            Noch keine Daten vorhanden. Sammle XP, um im Leaderboard zu erscheinen!
+          </p>
+        </div>
+      )}
     </div>
   );
 }

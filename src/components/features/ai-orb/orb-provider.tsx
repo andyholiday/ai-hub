@@ -10,7 +10,9 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -28,7 +30,34 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-export type OrbState = "idle" | "thinking" | "notification" | "celebration";
+export type OrbState =
+  | "idle"
+  | "thinking"
+  | "notification"
+  | "celebration"
+  | "greeting"
+  | "listening"
+  | "energized";
+
+/** States that auto-reset to idle after a timeout */
+const TRANSIENT_STATES: ReadonlySet<OrbState> = new Set([
+  "celebration",
+  "greeting",
+]);
+
+/** Duration in ms before transient states reset to idle */
+const TRANSIENT_RESET_MS = 3_000;
+
+/** Human-readable tooltip labels per orb state (German) */
+export const ORB_STATE_LABELS: Record<OrbState, string> = {
+  idle: "Ich bin fuer dich da!",
+  thinking: "Die KI denkt nach...",
+  notification: "Ich habe etwas fuer dich!",
+  celebration: "Gratulation!",
+  greeting: "Willkommen zurueck!",
+  listening: "Ich hoere zu...",
+  energized: "Du bist auf Feuer!",
+};
 
 interface OrbContextValue {
   /** Whether the chat panel is expanded */
@@ -67,29 +96,33 @@ interface OrbContextValue {
 
 // -----------------------------------------------------------------------------
 // Default demo messages
+// Uses a factory function to avoid SSR/client timestamp mismatch (hydration error)
 // -----------------------------------------------------------------------------
 
-const DEMO_MESSAGES: ChatMessage[] = [
-  {
-    id: "msg-1",
-    role: "ai",
-    content: "Hi Sarah! Was moechtest du heute lernen?",
-    timestamp: new Date(Date.now() - 120_000),
-  },
-  {
-    id: "msg-2",
-    role: "user",
-    content: "Zeig mir den besten Prompt Engineering Kurs",
-    timestamp: new Date(Date.now() - 60_000),
-  },
-  {
-    id: "msg-3",
-    role: "ai",
-    content:
-      "Ich empfehle dir den Kurs 'Advanced Prompt Engineering'. Du bist zu 72% durch dein aktuelles Modul.",
-    timestamp: new Date(Date.now() - 30_000),
-  },
-];
+function createDemoMessages(): ChatMessage[] {
+  const now = Date.now();
+  return [
+    {
+      id: "msg-1",
+      role: "ai",
+      content: "Hi! Was moechtest du heute lernen?",
+      timestamp: new Date(now - 120_000),
+    },
+    {
+      id: "msg-2",
+      role: "user",
+      content: "Zeig mir den besten Prompt Engineering Kurs",
+      timestamp: new Date(now - 60_000),
+    },
+    {
+      id: "msg-3",
+      role: "ai",
+      content:
+        "Ich empfehle dir den Kurs 'Advanced Prompt Engineering'. Du bist zu 72% durch dein aktuelles Modul.",
+      timestamp: new Date(now - 30_000),
+    },
+  ];
+}
 
 // -----------------------------------------------------------------------------
 // Context
@@ -112,14 +145,49 @@ export function OrbProvider({
   initialContext = "Dashboard",
 }: OrbProviderProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [orbState, setOrbState] = useState<OrbState>("idle");
+  const [orbState, setOrbStateInternal] = useState<OrbState>("idle");
   const [pageContext, setPageContext] = useState(initialContext);
-  const [messages, setMessages] = useState<ChatMessage[]>(DEMO_MESSAGES);
+  // Initialize with empty array so the premium welcome screen is shown
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [tooltipText, setTooltipText] = useState(
     "Ich habe einen Tipp fuer dich!"
   );
   const [hasNotification, setHasNotification] = useState(false);
+
+  // Auto-reset timer ref for transient states (celebration, greeting)
+  const transientTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setOrbState = useCallback((state: OrbState) => {
+    // Clear any existing transient timer
+    if (transientTimerRef.current) {
+      clearTimeout(transientTimerRef.current);
+      transientTimerRef.current = null;
+    }
+
+    setOrbStateInternal(state);
+
+    // Update tooltip to match the new state
+    setTooltipText(ORB_STATE_LABELS[state]);
+
+    // If the new state is transient, schedule auto-reset to idle
+    if (TRANSIENT_STATES.has(state)) {
+      transientTimerRef.current = setTimeout(() => {
+        setOrbStateInternal("idle");
+        setTooltipText(ORB_STATE_LABELS.idle);
+        transientTimerRef.current = null;
+      }, TRANSIENT_RESET_MS);
+    }
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (transientTimerRef.current) {
+        clearTimeout(transientTimerRef.current);
+      }
+    };
+  }, []);
 
   const toggle = useCallback(() => {
     setIsExpanded((prev) => !prev);
@@ -170,6 +238,7 @@ export function OrbProvider({
       expand,
       minimize,
       orbState,
+      setOrbState,
       pageContext,
       messages,
       addMessage,

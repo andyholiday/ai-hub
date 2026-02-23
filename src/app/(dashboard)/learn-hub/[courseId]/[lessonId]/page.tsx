@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { quizContentSchema } from "@/lib/validators/learn-hub";
 import type { QuizContent } from "@/lib/validators/learn-hub";
+import { sanitizeHtml } from "@/lib/utils/sanitize";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -355,7 +356,7 @@ export default function LessonDetailPage() {
             <div
               className="prose prose-surface max-w-none prose-headings:font-heading prose-headings:text-surface-900 prose-p:text-surface-700 prose-strong:text-surface-900 prose-code:rounded prose-code:bg-surface-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-lr-green-700 prose-pre:rounded-lg prose-pre:bg-surface-900"
               dangerouslySetInnerHTML={{
-                __html: renderMarkdown(lesson.content),
+                __html: sanitizeHtml(renderMarkdown(lesson.content)),
               }}
             />
           </div>

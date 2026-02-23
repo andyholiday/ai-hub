@@ -5,10 +5,8 @@
 
 "use client";
 
-import { cn } from "@/lib/utils/cn";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import {
   X,

@@ -72,3 +72,29 @@ export const quizContentSchema = z.object({
 
 export type QuizQuestion = z.infer<typeof quizQuestionSchema>;
 export type QuizContent = z.infer<typeof quizContentSchema>;
+
+// ---------------------------------------------------------------------------
+// Learning Paths - Listing Query
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /api/learn-hub/paths - Query parameters for listing learning paths
+ */
+export const listLearningPathsQuerySchema = z.object({
+  difficulty: z.enum(difficultyLevels).optional(),
+});
+
+export type ListLearningPathsQuery = z.infer<typeof listLearningPathsQuerySchema>;
+
+// ---------------------------------------------------------------------------
+// Learning Paths - Enroll
+// ---------------------------------------------------------------------------
+
+/**
+ * POST /api/learn-hub/paths/[pathId] - Enroll in a learning path
+ */
+export const enrollLearningPathSchema = z.object({
+  action: z.literal("enroll"),
+});
+
+export type EnrollLearningPathInput = z.infer<typeof enrollLearningPathSchema>;

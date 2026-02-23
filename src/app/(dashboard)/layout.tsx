@@ -1,13 +1,26 @@
 // =============================================================================
 // Dashboard Layout
 // Grid layout combining Sidebar, Header, and Main content area.
-// Includes the persistent AI Orb (Living Cloud) floating element.
+// Includes the persistent Cosmos Companion floating element.
 // =============================================================================
 
+import dynamic from "next/dynamic";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { MobileNav } from "@/components/layout/mobile-nav";
-import { OrbProvider, AiOrb } from "@/components/features/ai-orb";
+import { OrbProvider } from "@/components/features/ai-orb";
+
+// ---------------------------------------------------------------------------
+// Lazy-load the Cosmos Companion (pulls in framer-motion ~45 kB gzipped).
+// SSR disabled because the orb is a purely client-side floating overlay.
+// ---------------------------------------------------------------------------
+const CosmosCompanionLazy = dynamic(
+  () =>
+    import("@/components/features/ai-orb/cosmos-companion").then(
+      (m) => m.CosmosCompanion,
+    ),
+  { ssr: false },
+);
 
 export default function DashboardLayout({
   children,
@@ -39,8 +52,8 @@ export default function DashboardLayout({
         <MobileNav />
       </div>
 
-      {/* AI Orb – persistent floating KI companion, rendered outside the layout flow */}
-      <AiOrb />
+      {/* Cosmos Companion – lazy-loaded floating KI companion */}
+      <CosmosCompanionLazy />
     </OrbProvider>
   );
 }

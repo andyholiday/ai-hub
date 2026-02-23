@@ -1,4 +1,9 @@
-"use client";
+// Server Component (no client-side interactivity needed for this placeholder)
+
+export const metadata = {
+  title: "Benutzer-Verwaltung | Admin",
+  description: "Benutzer-Verwaltung fuer die LR AI Hub Administration",
+};
 
 export default function AdminUsersPage() {
   return (

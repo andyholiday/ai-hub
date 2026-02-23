@@ -1,20 +1,45 @@
 // =============================================================================
 // Challenges Page
-// Active and completed challenges with card grid
+// Active and completed challenges with card grid - connected to real API
 // =============================================================================
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { StatCard } from "@/components/ui";
 import { ChallengeCard } from "@/components/features/gamification";
+import type { ChallengeParticipant } from "@/components/features/gamification";
 
 // -----------------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------------
 
 type Tab = "active" | "completed";
+
+interface ApiChallenge {
+  id: string;
+  title: string;
+  description: string;
+  challengeType: "daily" | "weekly" | "special";
+  difficulty: "beginner" | "intermediate" | "advanced";
+  xpReward: number;
+  badgeReward: string | null;
+  startsAt: string;
+  endsAt: string;
+  maxParticipants: number | null;
+  isActive: boolean;
+  daysRemaining: number;
+  totalDays: number;
+  frequency: "wochentlich" | "monatlich";
+  participantCount: number;
+  participants: { name: string; avatarUrl?: string }[];
+  userProgress: number | null;
+  userJoined: boolean;
+  userCompletedAt: string | null;
+  isCompleted: boolean;
+}
 
 // -----------------------------------------------------------------------------
 // Challenge Icon Components
@@ -87,117 +112,154 @@ function FlameIcon() {
 }
 
 // -----------------------------------------------------------------------------
-// Demo Data
+// Icon Picker Helper
 // -----------------------------------------------------------------------------
 
-const participants = [
-  { name: "Lisa Peters" },
-  { name: "Markus Koenig" },
-  { name: "Julia Richter" },
-  { name: "Thomas Wagner" },
-  { name: "Anna Mueller" },
-];
+const challengeIcons: Record<string, React.ReactNode> = {
+  daily: <FlameIcon />,
+  weekly: <TargetIcon />,
+  special: <TrophyIcon />,
+};
 
-const activeChallenges = [
-  {
-    id: "ch-1",
-    title: "KI-Prozessoptimierung",
-    description:
-      "Identifiziere einen Prozess in deiner Abteilung, der mit KI optimiert werden kann, und dokumentiere den Use Case.",
-    icon: <ProcessIcon />,
-    xpReward: 75,
-    daysRemaining: 4,
-    totalDays: 7,
-    participants: participants.slice(0, 4),
-    totalParticipants: 18,
-    progress: 35,
-    frequency: "wochentlich" as const,
-  },
-  {
-    id: "ch-2",
-    title: "5 Best Practices lesen",
-    description:
-      "Lies diese Woche 5 Best Practices aus der Bibliothek und bewerte mindestens 3 davon.",
-    icon: <BookIcon />,
-    xpReward: 25,
-    daysRemaining: 2,
-    totalDays: 7,
-    participants: participants.slice(0, 3),
-    totalParticipants: 32,
-    progress: 60,
-    frequency: "wochentlich" as const,
-  },
-  {
-    id: "ch-3",
-    title: "AI Mentor 10x fragen",
-    description:
-      "Stelle dem AI Mentor in dieser Woche mindestens 10 Fragen zu KI-Themen.",
-    icon: <ChatIcon />,
-    xpReward: 30,
-    daysRemaining: 5,
-    totalDays: 7,
-    participants: participants.slice(1, 4),
-    totalParticipants: 25,
-    progress: 0,
-    frequency: "wochentlich" as const,
-  },
-  {
-    id: "ch-4",
-    title: "KI-Idee mit Score >80 einreichen",
-    description:
-      "Reiche eine KI-Idee beim AI Mentor ein und erreiche einen Bewertungsscore von mindestens 80 Punkten.",
-    icon: <LightbulbIcon />,
-    xpReward: 100,
-    daysRemaining: 15,
-    totalDays: 30,
-    participants: participants.slice(0, 2),
-    totalParticipants: 8,
-    progress: 0,
-    frequency: "monatlich" as const,
-  },
-];
+function getChallengeIcon(
+  challengeType: string,
+  index: number
+): React.ReactNode {
+  const iconPool = [
+    <ProcessIcon key="process" />,
+    <BookIcon key="book" />,
+    <ChatIcon key="chat" />,
+    <LightbulbIcon key="lightbulb" />,
+    <TrophyIcon key="trophy" />,
+    <TargetIcon key="target" />,
+    <FlameIcon key="flame" />,
+  ];
 
-const completedChallenges = [
-  {
-    id: "ch-5",
-    title: "Erste Best Practice schreiben",
-    description: "Verfasse und veroeffentliche deine erste Best Practice in der Bibliothek.",
-    icon: <TrophyIcon />,
-    xpReward: 50,
-    daysRemaining: 0,
-    totalDays: 7,
-    participants: participants.slice(0, 3),
-    totalParticipants: 45,
-    progress: 100,
-    isCompleted: true,
-    result: "Erfolgreich abgeschlossen am 12.02.2026",
-    frequency: "wochentlich" as const,
-  },
-  {
-    id: "ch-6",
-    title: "7-Tage Login-Streak",
-    description: "Logge dich 7 Tage hintereinander in die Plattform ein.",
-    icon: <FlameIcon />,
-    xpReward: 35,
-    daysRemaining: 0,
-    totalDays: 7,
-    participants: participants.slice(0, 2),
-    totalParticipants: 67,
-    progress: 100,
-    isCompleted: true,
-    result: "Erfolgreich abgeschlossen am 08.02.2026",
-    frequency: "wochentlich" as const,
-  },
-];
+  return challengeIcons[challengeType] ?? iconPool[index % iconPool.length];
+}
+
+// -----------------------------------------------------------------------------
+// Loading Skeleton
+// -----------------------------------------------------------------------------
+
+function ChallengeCardSkeleton() {
+  return (
+    <div className="flex flex-col rounded-2xl border border-surface-200 bg-white p-5 shadow-card animate-pulse">
+      <div className="flex items-start gap-3">
+        <div className="h-11 w-11 rounded-xl bg-surface-200" />
+        <div className="flex-1 space-y-2">
+          <div className="h-5 w-3/4 rounded bg-surface-200" />
+          <div className="h-4 w-full rounded bg-surface-100" />
+          <div className="h-4 w-2/3 rounded bg-surface-100" />
+        </div>
+      </div>
+      <div className="mt-4 h-2 w-full rounded-full bg-surface-200" />
+      <div className="mt-4 flex items-center justify-between">
+        <div className="flex -space-x-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-6 w-6 rounded-full bg-surface-200 ring-2 ring-white" />
+          ))}
+        </div>
+        <div className="h-8 w-24 rounded-lg bg-surface-200" />
+      </div>
+    </div>
+  );
+}
 
 // -----------------------------------------------------------------------------
 // Page Component
 // -----------------------------------------------------------------------------
 
 export default function ChallengesPage() {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("active");
+  const [challenges, setChallenges] = useState<ApiChallenge[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [joining, setJoining] = useState<string | null>(null);
 
-  const challenges = tab === "active" ? activeChallenges : completedChallenges;
+  // Stats derived from data
+  const [allActiveChallenges, setAllActiveChallenges] = useState<ApiChallenge[]>([]);
+  const [allCompletedChallenges, setAllCompletedChallenges] = useState<ApiChallenge[]>([]);
+
+  // ---- Fetch challenges from API ----
+  const fetchChallenges = useCallback(async (status: Tab) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/challenges?status=${status}`);
+      const json = await res.json();
+
+      if (json.data) {
+        setChallenges(json.data);
+      } else {
+        setChallenges([]);
+      }
+    } catch {
+      setChallenges([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch stats for both tabs on mount
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const [activeRes, completedRes] = await Promise.all([
+          fetch("/api/challenges?status=active"),
+          fetch("/api/challenges?status=completed"),
+        ]);
+        const [activeJson, completedJson] = await Promise.all([
+          activeRes.json(),
+          completedRes.json(),
+        ]);
+        setAllActiveChallenges(activeJson.data ?? []);
+        setAllCompletedChallenges(completedJson.data ?? []);
+      } catch {
+        // Stats will stay at 0
+      }
+    }
+    fetchStats();
+  }, []);
+
+  // Fetch challenges when tab changes
+  useEffect(() => {
+    fetchChallenges(tab);
+  }, [tab, fetchChallenges]);
+
+  // ---- Join handler ----
+  const handleJoin = async (challengeId: string) => {
+    setJoining(challengeId);
+    try {
+      const res = await fetch(`/api/challenges/${challengeId}`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        // Refresh the list and stats
+        await fetchChallenges(tab);
+        // Update stats
+        const activeRes = await fetch("/api/challenges?status=active");
+        const activeJson = await activeRes.json();
+        setAllActiveChallenges(activeJson.data ?? []);
+      }
+    } catch {
+      // Silently fail for now
+    } finally {
+      setJoining(null);
+    }
+  };
+
+  // ---- Continue handler ----
+  const handleContinue = (challengeId: string) => {
+    router.push(`/challenges/${challengeId}`);
+  };
+
+  // ---- Compute stats ----
+  const activeCount = allActiveChallenges.length;
+  const completedCount = allCompletedChallenges.length;
+  const earnedXP = allCompletedChallenges.reduce(
+    (sum, c) => sum + c.xpReward,
+    0
+  );
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 animate-fade-in">
@@ -225,7 +287,7 @@ export default function ChallengesPage() {
           >
             Aktive
             <span className="ml-1.5 rounded-full bg-lr-green-100 px-1.5 py-0.5 text-overline font-semibold text-lr-green-700">
-              {activeChallenges.length}
+              {activeCount}
             </span>
           </button>
           <button
@@ -239,7 +301,7 @@ export default function ChallengesPage() {
           >
             Abgeschlossene
             <span className="ml-1.5 rounded-full bg-surface-200 px-1.5 py-0.5 text-overline font-semibold text-surface-600">
-              {completedChallenges.length}
+              {completedCount}
             </span>
           </button>
         </div>
@@ -249,13 +311,13 @@ export default function ChallengesPage() {
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard
           label="Aktive Challenges"
-          value={activeChallenges.length}
+          value={activeCount}
           icon={<TargetIcon />}
           iconVariant="green"
         />
         <StatCard
           label="Abgeschlossen"
-          value={completedChallenges.length}
+          value={completedCount}
           change="Insgesamt"
           changeDirection="neutral"
           icon={<TrophyIcon />}
@@ -263,36 +325,76 @@ export default function ChallengesPage() {
         />
         <StatCard
           label="Verdiente XP"
-          value="85"
+          value={earnedXP.toString()}
           change="Durch Challenges"
           changeDirection="neutral"
           icon={<FlameIcon />}
           iconVariant="purple"
         />
         <StatCard
-          label="Aktuelle Streak"
-          value="12 Tage"
-          change="+3 seit letzter Woche"
-          changeDirection="up"
+          label="Teilnahmen"
+          value={allActiveChallenges.filter((c) => c.userJoined).length + completedCount}
+          change="Aktiv + Abgeschlossen"
+          changeDirection="neutral"
           icon={<FlameIcon />}
           iconVariant="blue"
         />
       </div>
 
-      {/* Challenge Cards Grid */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {challenges.map((challenge) => (
-          <ChallengeCard
-            key={challenge.id}
-            {...challenge}
-            onJoin={() => { /* TODO: implement join handler */ }}
-            onContinue={() => { /* TODO: implement continue handler */ }}
-          />
-        ))}
-      </div>
+      {/* Loading Skeleton */}
+      {loading && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[1, 2, 3, 4].map((i) => (
+            <ChallengeCardSkeleton key={i} />
+          ))}
+        </div>
+      )}
 
-      {/* Empty state for completed */}
-      {challenges.length === 0 && (
+      {/* Challenge Cards Grid */}
+      {!loading && challenges.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {challenges.map((challenge, index) => {
+            const participants: ChallengeParticipant[] = challenge.participants.map(
+              (p) => ({
+                name: p.name,
+                avatarUrl: p.avatarUrl,
+              })
+            );
+
+            return (
+              <ChallengeCard
+                key={challenge.id}
+                id={challenge.id}
+                title={challenge.title}
+                description={challenge.description}
+                icon={getChallengeIcon(challenge.challengeType, index)}
+                xpReward={challenge.xpReward}
+                daysRemaining={challenge.daysRemaining}
+                totalDays={challenge.totalDays}
+                participants={participants}
+                totalParticipants={challenge.participantCount}
+                progress={challenge.userProgress ?? 0}
+                isCompleted={challenge.isCompleted}
+                result={
+                  challenge.userCompletedAt
+                    ? `Erfolgreich abgeschlossen am ${new Date(challenge.userCompletedAt).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}`
+                    : undefined
+                }
+                frequency={challenge.frequency}
+                onJoin={() => {
+                  if (joining !== challenge.id) {
+                    handleJoin(challenge.id);
+                  }
+                }}
+                onContinue={() => handleContinue(challenge.id)}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && challenges.length === 0 && (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-surface-300 bg-white px-6 py-16 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-100">
             <TrophyIcon />

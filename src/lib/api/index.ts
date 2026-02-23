@@ -16,3 +16,6 @@ export {
   apiInternalError,
   apiValidationError,
 } from "./response";
+
+export { rateLimit, rateLimitHeaders } from "./rate-limit";
+export type { RateLimitTier, RateLimitResult, RateLimitHeaders } from "./rate-limit";

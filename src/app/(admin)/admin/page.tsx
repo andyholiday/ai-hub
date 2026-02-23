@@ -13,10 +13,13 @@ import {
   ProviderCard,
   FallbackChain,
   CostDashboard,
+  ProviderSandbox,
   SystemPrompts,
   FeatureToggles,
-  ProviderSandbox,
 } from "@/components/features/admin";
+import { AdminUsersTab } from "@/components/features/admin/admin-users";
+import { AdminContentTab } from "@/components/features/admin/admin-content";
+import { AdminGamificationTab } from "@/components/features/admin/admin-gamification";
 import { useAdminData } from "@/hooks/use-admin-data";
 
 // -----------------------------------------------------------------------------
@@ -287,30 +290,15 @@ export default function AdminPage() {
       )}
 
       {/* Placeholder for other tabs */}
-      {activeTab === "users" && (
-        <PlaceholderTab
-          title="Benutzer-Verwaltung"
-          description="Benutzerliste, Rollen und Berechtigungen verwalten."
-        />
-      )}
+      {activeTab === "users" && <AdminUsersTab />}
       {activeTab === "analytics" && (
         <PlaceholderTab
           title="Analytics Dashboard"
           description="Nutzungsstatistiken, Content-Metriken und KI-Auswertungen."
         />
       )}
-      {activeTab === "gamification" && (
-        <PlaceholderTab
-          title="Gamification-Management"
-          description="XP-Werte, Levels, Badges und Challenges konfigurieren."
-        />
-      )}
-      {activeTab === "content" && (
-        <PlaceholderTab
-          title="Content-Management"
-          description="Best Practices moderieren, Kurse und Kategorien verwalten."
-        />
-      )}
+      {activeTab === "gamification" && <AdminGamificationTab />}
+      {activeTab === "content" && <AdminContentTab />}
       {activeTab === "system" && (
         <PlaceholderTab
           title="System-Einstellungen"
