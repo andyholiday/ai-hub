@@ -8,6 +8,7 @@
 import { Bell, Plus } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
+import { useAuth } from "@/hooks/use-auth";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -45,11 +46,13 @@ function getGreeting(): string {
 // ---------------------------------------------------------------------------
 
 export function Header({
-  userName = "Max",
+  userName,
   subtitle = "Hier ist deine Uebersicht fuer heute.",
   notificationCount = 0,
   className,
 }: HeaderProps) {
+  const { firstName, isLoaded } = useAuth();
+  const resolvedName = userName ?? (isLoaded ? firstName : "...");
   const greeting = getGreeting();
 
   return (
@@ -62,7 +65,7 @@ export function Header({
       {/* Left: Greeting */}
       <div className="min-w-0 flex-1">
         <h1 className="truncate font-display text-[26px] font-bold leading-tight text-surface-900">
-          {greeting}, {userName}
+          {greeting}, {resolvedName}
         </h1>
         {subtitle && (
           <p className="mt-1 text-[14px] text-surface-500">{subtitle}</p>

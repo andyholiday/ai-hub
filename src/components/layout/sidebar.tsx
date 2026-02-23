@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils/cn";
 import { MAIN_NAVIGATION, ADMIN_NAVIGATION } from "@/constants/navigation";
 import type { NavItem } from "@/constants/navigation";
 import { LogoutButton } from "@/app/(auth)/login/logout";
+import { useAuth } from "@/hooks/use-auth";
 
 // ---------------------------------------------------------------------------
 // Icon Map – maps string icon names from navigation constants to components
@@ -75,14 +76,13 @@ const NAV_SECTIONS: NavSection[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Mock Data – replace with real user data from auth context
+// User role label mapping
 // ---------------------------------------------------------------------------
 
-const MOCK_USER = {
-  name: "Max Mustermann",
-  initials: "MM",
-  level: 12,
-  role: "KI-Enthusiast",
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Admin",
+  moderator: "Moderator",
+  user: "KI-Enthusiast",
 };
 
 // Badge counts – replace with real data from API
@@ -191,6 +191,11 @@ function SidebarSectionLabel({ label }: { label: string }) {
 }
 
 function SidebarUserCard() {
+  const { user, isLoaded, initials, displayName } = useAuth();
+
+  const level = user?.level ?? 1;
+  const roleLabel = ROLE_LABELS[user?.role ?? "user"] ?? "KI-Enthusiast";
+
   return (
     <div className="border-t border-surface-200 p-4">
       <Link
@@ -200,17 +205,21 @@ function SidebarUserCard() {
         {/* Avatar */}
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-lr-gradient">
           <span className="text-[12px] font-bold leading-none text-white">
-            {MOCK_USER.initials}
+            {isLoaded ? initials : "..."}
           </span>
         </div>
 
         {/* User Info */}
         <div className="flex flex-1 flex-col overflow-hidden">
           <span className="truncate text-[13px] font-semibold text-surface-900">
-            {MOCK_USER.name}
+            {isLoaded ? displayName : "\u00A0"}
           </span>
           <span className="text-[11px] text-surface-500">
-            Level {MOCK_USER.level} &middot; {MOCK_USER.role}
+            {isLoaded ? (
+              <>Level {level} &middot; {roleLabel}</>
+            ) : (
+              "\u00A0"
+            )}
           </span>
         </div>
 

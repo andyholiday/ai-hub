@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Users, Shield, CheckCircle, XCircle, Plus, X } from "lucide-react";
+import { Loader2, Users, Shield, CheckCircle, XCircle, Plus, X, Pencil, Trash2 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,6 +32,16 @@ export function AdminUsersTab() {
     const [role, setRole] = useState("user");
     const [isApproved, setIsApproved] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
+
+    // Edit User State
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<UserRow | null>(null);
+    const [editFullName, setEditFullName] = useState("");
+    const [editDepartment, setEditDepartment] = useState("");
+    const [editPosition, setEditPosition] = useState("");
+    const [editRole, setEditRole] = useState("user");
+    const [editIsApproved, setEditIsApproved] = useState(true);
+    const [isSavingEdit, setIsSavingEdit] = useState(false);
 
     const fetchUsers = () => {
         setIsLoading(true);
@@ -92,6 +102,72 @@ export function AdminUsersTab() {
         }
     };
 
+    const handleEditUser = (user: UserRow) => {
+        setEditingUser(user);
+        setEditFullName(user.full_name);
+        setEditDepartment(user.department || "");
+        setEditPosition(user.position || "");
+        setEditRole(user.role);
+        setEditIsApproved(user.is_approved);
+        setIsEditModalOpen(true);
+    };
+
+    const handleSaveEdit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingUser) return;
+        setIsSavingEdit(true);
+        try {
+            const res = await fetch("/api/admin/users", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: editingUser.id,
+                    full_name: editFullName,
+                    department: editDepartment,
+                    position: editPosition,
+                    role: editRole,
+                    is_approved: editIsApproved,
+                })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error.message);
+
+            // Update local state
+            setUsers(users.map(u => u.id === editingUser.id ? {
+                ...u,
+                full_name: editFullName,
+                department: editDepartment,
+                position: editPosition,
+                role: editRole,
+                is_approved: editIsApproved,
+            } : u));
+            setIsEditModalOpen(false);
+            setEditingUser(null);
+        } catch (err: unknown) {
+            alert("Fehler beim Speichern: " + (err instanceof Error ? err.message : String(err)));
+        } finally {
+            setIsSavingEdit(false);
+        }
+    };
+
+    const handleDeleteUser = async (id: string) => {
+        if (!window.confirm("Benutzer wirklich löschen?")) return;
+        try {
+            const res = await fetch("/api/admin/users", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error.message);
+
+            // Remove from local state
+            setUsers(users.filter(u => u.id !== id));
+        } catch (err: unknown) {
+            alert("Fehler beim Löschen: " + (err instanceof Error ? err.message : String(err)));
+        }
+    };
+
     if (isLoading && users.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center gap-3 py-20 animate-fade-in">
@@ -140,6 +216,7 @@ export function AdminUsersTab() {
                                 <th className="px-6 py-4 font-semibold uppercase">Freigabe</th>
                                 <th className="px-6 py-4 font-semibold uppercase">XP / Level</th>
                                 <th className="px-6 py-4 font-semibold uppercase">Rolle</th>
+                                <th className="px-6 py-4 font-semibold uppercase">Aktionen</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-surface-100">
@@ -192,6 +269,24 @@ export function AdminUsersTab() {
                                             {user.role}
                                         </span>
                                     </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handleEditUser(user)}
+                                                className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-lr-green-600"
+                                                title="Bearbeiten"
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteUser(user.id)}
+                                                className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                                                title="Löschen"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -201,6 +296,108 @@ export function AdminUsersTab() {
                     )}
                 </div>
             </div>
+
+            {/* Edit User Modal */}
+            {isEditModalOpen && editingUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-900/50 p-4 backdrop-blur-sm">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl animate-scale-up">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-surface-900">Benutzer bearbeiten</h3>
+                            <button
+                                onClick={() => { setIsEditModalOpen(false); setEditingUser(null); }}
+                                className="rounded-full p-1 text-surface-400 hover:bg-surface-100 hover:text-surface-700"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSaveEdit} className="space-y-4">
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-surface-700">E-Mail Adresse</label>
+                                <input
+                                    type="email"
+                                    readOnly
+                                    value={editingUser.email}
+                                    className="w-full rounded-xl border border-surface-200 bg-surface-100 px-4 py-2 text-surface-400 outline-none cursor-not-allowed"
+                                />
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-surface-700">Vollständiger Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={editFullName}
+                                    onChange={e => setEditFullName(e.target.value)}
+                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    placeholder="Max Mustermann"
+                                />
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-surface-700">Abteilung</label>
+                                <input
+                                    type="text"
+                                    value={editDepartment}
+                                    onChange={e => setEditDepartment(e.target.value)}
+                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    placeholder="z.B. Marketing"
+                                />
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-surface-700">Position</label>
+                                <input
+                                    type="text"
+                                    value={editPosition}
+                                    onChange={e => setEditPosition(e.target.value)}
+                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    placeholder="z.B. Team Lead"
+                                />
+                            </div>
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="mb-1 block text-sm font-medium text-surface-700">Rolle</label>
+                                    <select
+                                        value={editRole}
+                                        onChange={e => setEditRole(e.target.value)}
+                                        className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    >
+                                        <option value="user">User</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                                <div className="flex flex-col justify-center pt-5">
+                                    <label className="flex items-center gap-2 text-sm font-medium text-surface-700 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={editIsApproved}
+                                            onChange={e => setEditIsApproved(e.target.checked)}
+                                            className="h-4 w-4 rounded border-surface-300 text-lr-green-600 focus:ring-lr-green-500"
+                                        />
+                                        Freigegeben
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="mt-6 flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => { setIsEditModalOpen(false); setEditingUser(null); }}
+                                    className="rounded-xl border border-surface-200 px-4 py-2 font-medium text-surface-600 hover:bg-surface-50"
+                                >
+                                    Abbrechen
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSavingEdit}
+                                    className="flex items-center rounded-xl bg-lr-green-600 px-4 py-2 font-medium text-white hover:bg-lr-green-700 disabled:opacity-50"
+                                >
+                                    {isSavingEdit && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Speichern
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Create User Modal */}
             {isCreateModalOpen && (

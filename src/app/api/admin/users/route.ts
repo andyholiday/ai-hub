@@ -49,13 +49,16 @@ export async function PATCH(req: NextRequest) {
         if ("response" in auth) return auth.response;
 
         const body = await req.json();
-        const { id, is_approved, role } = body;
+        const { id, is_approved, role, full_name, department, position } = body;
 
         if (!id) return apiInternalError("Missing user id");
 
         const updateData: Record<string, unknown> = {};
         if (typeof is_approved === "boolean") updateData.is_approved = is_approved;
         if (role) updateData.role = role;
+        if (typeof full_name === "string") updateData.full_name = full_name;
+        if (typeof department === "string") updateData.department = department;
+        if (typeof position === "string") updateData.position = position;
 
         const supabase = createAdminClient();
         const { data, error } = await supabase
@@ -111,6 +114,36 @@ export async function POST(req: NextRequest) {
         }
 
         return apiSuccess(userData.user);
+    } catch (err) {
+        return apiInternalError(err instanceof Error ? err.message : "Unknown error");
+    }
+}
+
+export async function DELETE(req: NextRequest) {
+    try {
+        const auth = await requireAdmin(req);
+        if ("response" in auth) return auth.response;
+
+        const body = await req.json();
+        const { id } = body;
+
+        if (!id) return apiInternalError("Missing user id");
+
+        const supabase = createAdminClient();
+
+        // 1. Delete from Supabase Auth
+        const { error: authError } = await supabase.auth.admin.deleteUser(id);
+        if (authError) return apiInternalError(authError.message);
+
+        // 2. Delete profile row (may already be cascaded, but ensure cleanup)
+        const { error: profileError } = await supabase
+            .from("profiles")
+            .delete()
+            .eq("id", id);
+
+        if (profileError) return apiInternalError(profileError.message);
+
+        return apiSuccess({ deleted: true });
     } catch (err) {
         return apiInternalError(err instanceof Error ? err.message : "Unknown error");
     }
