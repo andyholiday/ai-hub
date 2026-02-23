@@ -40,7 +40,7 @@ export default function LoginPage() {
         .eq("id", authData.user.id)
         .single();
 
-      if (profile && !(profile as any).is_approved) {
+      if (profile && !(profile as { is_approved: boolean }).is_approved) {
         await supabase.auth.signOut();
         setError("Dein Account wurde noch nicht von einem Administrator freigegeben.");
         setLoading(false);
