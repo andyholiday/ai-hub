@@ -287,7 +287,7 @@ async function fetchActiveCommunityPosts(
 async function fetchMatchingChallenges(
   supabase: ReturnType<typeof createAdminClient>,
   userId: string,
-  suitableDifficulties: Difficulty[],
+  _suitableDifficulties: Difficulty[],
 ): Promise<Recommendation[]> {
   const now = new Date().toISOString();
 

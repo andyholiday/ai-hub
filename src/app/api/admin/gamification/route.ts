@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
             badges: badges || [],
             challenges: challenges || [],
         });
-    } catch (err) {
+    } catch {
         return apiInternalError();
     }
 }

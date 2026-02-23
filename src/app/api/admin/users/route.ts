@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
         }));
 
         return apiSuccess(users);
-    } catch (err) {
+    } catch {
         return apiInternalError();
     }
 }
@@ -51,7 +51,7 @@ export async function PATCH(req: NextRequest) {
 
         if (!id) return apiInternalError("Missing user id");
 
-        const updateData: any = {};
+        const updateData: Record<string, unknown> = {};
         if (typeof is_approved === "boolean") updateData.is_approved = is_approved;
         if (role) updateData.role = role;
 
@@ -66,8 +66,8 @@ export async function PATCH(req: NextRequest) {
         if (error) return apiInternalError(error.message);
 
         return apiSuccess(data);
-    } catch (err: any) {
-        return apiInternalError(err.message || "Unknown error");
+    } catch (err) {
+        return apiInternalError(err instanceof Error ? err.message : "Unknown error");
     }
 }
 
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
 
         // Update the profile manually via trigger or explicitly to set is_approved and role
         if (userData.user && (is_approved || role)) {
-            const updateResult = await supabase
+            await supabase
                 .from("profiles")
                 .update({
                     is_approved: is_approved ?? true,
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
         }
 
         return apiSuccess(userData.user);
-    } catch (err: any) {
-        return apiInternalError(err.message || "Unknown error");
+    } catch (err) {
+        return apiInternalError(err instanceof Error ? err.message : "Unknown error");
     }
 }

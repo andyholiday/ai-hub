@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
             bestPractices: practices,
             communityPosts: posts
         });
-    } catch (err) {
+    } catch {
         return apiInternalError();
     }
 }

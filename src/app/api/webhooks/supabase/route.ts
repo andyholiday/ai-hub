@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     // - INSERT on best_practices: Trigger auto-tagging
     // - INSERT on xp_log: Check for level-up
 
+    // eslint-disable-next-line no-console
     console.log("[Supabase Webhook] Received:", payload.type, payload.table);
 
     return NextResponse.json({
