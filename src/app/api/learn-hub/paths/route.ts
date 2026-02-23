@@ -13,6 +13,8 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listLearningPathsQuerySchema } from "@/lib/validators/learn-hub";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // GET - List published learning paths with optional difficulty filter
 // ---------------------------------------------------------------------------

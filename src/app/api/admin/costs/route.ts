@@ -13,6 +13,8 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { costQuerySchema } from "@/lib/validators/admin";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------

@@ -21,6 +21,8 @@ import { checkAndAwardBadges } from "@/lib/gamification/badges";
 import { checkAndUnlockAchievements } from "@/lib/gamification/achievements";
 import type { PaginationMeta } from "@/types/api";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // GET - List community posts
 // ---------------------------------------------------------------------------

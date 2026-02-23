@@ -17,6 +17,8 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updatePostSchema } from "@/lib/validators/community";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // Route params type
 // ---------------------------------------------------------------------------

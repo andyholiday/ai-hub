@@ -16,6 +16,8 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enrollLearningPathSchema } from "@/lib/validators/learn-hub";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // GET - Single learning path with courses and user progress
 // ---------------------------------------------------------------------------

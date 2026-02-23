@@ -15,6 +15,8 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateFeatureSchema } from "@/lib/validators/admin";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // GET - List all feature flags
 // ---------------------------------------------------------------------------

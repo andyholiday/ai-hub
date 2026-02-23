@@ -16,6 +16,8 @@ import { testProviderSchema } from "@/lib/validators/admin";
 import { getAIRouter } from "@/lib/ai/router";
 import type { AIProvider } from "@/lib/ai/types";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // POST - Test provider connectivity
 // ---------------------------------------------------------------------------

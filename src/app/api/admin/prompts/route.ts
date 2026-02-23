@@ -14,6 +14,8 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updatePromptSchema } from "@/lib/validators/admin";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // GET - List all active prompts (latest version per key)
 // ---------------------------------------------------------------------------

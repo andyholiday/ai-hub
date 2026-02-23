@@ -19,6 +19,8 @@ import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import { semanticSearchSchema } from "@/lib/validators/search";
 import type { Database } from "@/lib/supabase/types";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------

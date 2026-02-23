@@ -7,6 +7,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   // Verify the cron secret to prevent unauthorized access
   const authHeader = request.headers.get("authorization");

@@ -20,6 +20,8 @@ import { evaluateUseCase } from "@/lib/ai/use-case-evaluator";
 import { awardXP } from "@/lib/gamification/xp";
 import { checkAndAwardBadges } from "@/lib/gamification/badges";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // POST handler
 // ---------------------------------------------------------------------------

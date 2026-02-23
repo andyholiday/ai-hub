@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/require-auth";
 import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     // --- Auth check ---

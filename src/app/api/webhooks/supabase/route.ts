@@ -6,6 +6,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   // Verify webhook signature
   const signature = request.headers.get("x-supabase-signature");

@@ -14,6 +14,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { recommendationsQuerySchema } from "@/lib/validators/recommendations";
 import type { Recommendation } from "@/types/recommendations";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // Difficulty mapping for level-based filtering
 // ---------------------------------------------------------------------------

@@ -16,6 +16,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { updateProgressSchema } from "@/lib/validators/challenges";
 import { awardXP } from "@/lib/gamification/xp";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // Route context type
 // ---------------------------------------------------------------------------

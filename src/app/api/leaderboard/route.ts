@@ -16,6 +16,8 @@ import { apiInternalError, apiValidationError } from "@/lib/api/response";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { leaderboardQuerySchema } from "@/lib/validators/leaderboard";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------

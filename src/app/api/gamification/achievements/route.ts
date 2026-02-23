@@ -13,6 +13,8 @@ import { requireAuth } from "@/lib/api/require-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAchievementProgress } from "@/lib/gamification/achievements";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------

@@ -3,6 +3,8 @@ import { requireAdmin } from "@/lib/api/admin-auth";
 import { apiSuccess, apiInternalError } from "@/lib/api/response";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
     try {
         const auth = await requireAdmin(req);

@@ -11,6 +11,8 @@ import { requireAuth } from "@/lib/api/require-auth";
 import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import type { AIProvider, ChatMessage } from "@/lib/ai/types";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // Request validation types
 // ---------------------------------------------------------------------------

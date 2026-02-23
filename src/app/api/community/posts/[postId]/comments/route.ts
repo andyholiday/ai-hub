@@ -18,6 +18,8 @@ import { awardCommunityXP } from "@/lib/gamification/xp";
 import { checkAndAwardBadges } from "@/lib/gamification/badges";
 import { checkAndUnlockAchievements } from "@/lib/gamification/achievements";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // Route params type
 // ---------------------------------------------------------------------------

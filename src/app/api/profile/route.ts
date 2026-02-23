@@ -19,6 +19,8 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateProfileSchema } from "@/lib/validators/profile";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // GET - Fetch authenticated user's full profile
 // ---------------------------------------------------------------------------

@@ -8,6 +8,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/require-auth";
 
+export const dynamic = 'force-dynamic';
+
 // Note: mentor_signals table types will be fully available after running
 // migration 00010 and regenerating types with `supabase gen types`.
 // Until then, we use explicit typing for insert/update operations.

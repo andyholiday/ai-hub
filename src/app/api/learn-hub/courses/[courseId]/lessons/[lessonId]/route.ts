@@ -22,6 +22,8 @@ import {
   quizContentSchema,
 } from "@/lib/validators/learn-hub";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------

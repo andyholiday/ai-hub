@@ -18,6 +18,8 @@ import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import { autoTagSchema } from "@/lib/validators/auto-tag";
 import type { Database } from "@/lib/supabase/types";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // Response Types
 // ---------------------------------------------------------------------------

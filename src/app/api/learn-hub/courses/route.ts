@@ -14,6 +14,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { listCoursesQuerySchema } from "@/lib/validators/learn-hub";
 import type { PaginationMeta } from "@/types/api";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // GET - List published courses with optional filters and user progress
 // ---------------------------------------------------------------------------

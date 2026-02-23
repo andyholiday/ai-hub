@@ -13,6 +13,8 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listChallengesQuerySchema } from "@/lib/validators/challenges";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // GET - List challenges
 // ---------------------------------------------------------------------------

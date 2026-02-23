@@ -13,6 +13,8 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listRadarItemsQuerySchema } from "@/lib/validators/innovation-radar";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // GET - List innovation radar items
 // ---------------------------------------------------------------------------

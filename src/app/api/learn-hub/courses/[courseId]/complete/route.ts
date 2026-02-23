@@ -16,6 +16,8 @@ import { awardXP } from "@/lib/gamification/xp";
 import { checkAndAwardBadges } from "@/lib/gamification/badges";
 import { checkAndUnlockAchievements } from "@/lib/gamification/achievements";
 
+export const dynamic = 'force-dynamic';
+
 // ---------------------------------------------------------------------------
 // POST - Mark course as completed (all lessons must be done)
 // ---------------------------------------------------------------------------
