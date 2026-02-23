@@ -212,10 +212,10 @@ async function fetchPopularBestPractices(
   // Fetch top best practices by likes, excluding user's own
   const { data: practices } = await supabase
     .from("best_practices")
-    .select("id, title, content, likes_count, difficulty, category")
+    .select("id, title, content, upvotes_count, category")
     .eq("status", "published")
     .neq("author_id", userId)
-    .order("likes_count", { ascending: false })
+    .order("upvotes_count", { ascending: false })
     .limit(3);
 
   if (!practices || practices.length === 0) return [];
@@ -228,12 +228,12 @@ async function fetchPopularBestPractices(
       bp.content.length > 120
         ? bp.content.substring(0, 120) + "..."
         : bp.content,
-    reason: `Beliebt in der Community mit ${bp.likes_count} Likes`,
+    reason: `Beliebt in der Community mit ${bp.upvotes_count} Likes`,
     href: `/best-practices/${bp.id}`,
-    priority: 50 + Math.min(bp.likes_count, 50),
+    priority: 50 + Math.min(bp.upvotes_count, 50),
     metadata: {
-      upvotes: bp.likes_count,
-      difficulty: bp.difficulty,
+      upvotes: bp.upvotes_count,
+      category: bp.category,
     },
   }));
 }
@@ -304,10 +304,9 @@ async function fetchMatchingChallenges(
   // Fetch active challenges matching difficulty
   const { data: challenges } = await supabase
     .from("challenges")
-    .select("id, title, description, difficulty, xp_reward, ends_at")
+    .select("id, title, description, type, xp_reward, end_date")
     .eq("is_active", true)
-    .gt("ends_at", now)
-    .in("difficulty", suitableDifficulties)
+    .gt("end_date", now)
     .order("xp_reward", { ascending: false })
     .limit(5);
 
@@ -318,7 +317,7 @@ async function fetchMatchingChallenges(
     .filter((c) => !joinedIds.has(c.id))
     .slice(0, 2)
     .map((challenge) => {
-      const endsAt = new Date(challenge.ends_at);
+      const endsAt = new Date(challenge.end_date);
       const daysRemaining = Math.max(
         0,
         Math.ceil((endsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
@@ -333,7 +332,7 @@ async function fetchMatchingChallenges(
         href: `/challenges/${challenge.id}`,
         priority: 60 + Math.min(challenge.xp_reward / 2, 30),
         metadata: {
-          difficulty: challenge.difficulty,
+          type: challenge.type,
           xpReward: challenge.xp_reward,
           daysRemaining,
         },

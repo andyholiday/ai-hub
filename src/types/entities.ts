@@ -125,7 +125,6 @@ export interface RadarItemWithVote extends InnovationRadarItem {
 // User Progress / Gamification
 // ---------------------------------------------------------------------------
 
-export type UserProgress = Tables<"user_progress">;
 
 export interface GamificationStats {
   totalXP: number;

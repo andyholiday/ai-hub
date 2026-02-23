@@ -47,7 +47,7 @@ export interface RecommendationMetadata {
   /** Upvote / like count for best_practice or community_post */
   upvotes?: number;
   /** Difficulty level for courses and challenges */
-  difficulty?: "beginner" | "intermediate" | "advanced";
+  difficulty?: "beginner" | "intermediate" | "advanced" | "expert";
   /** XP reward for challenges */
   xpReward?: number;
   /** Number of comments for community posts */

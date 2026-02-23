@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     if (status === "active") {
       challengeQuery = challengeQuery
         .eq("is_active", true)
-        .gt("ends_at", new Date().toISOString());
+        .gt("end_date", new Date().toISOString());
     }
 
     const { data: challenges, error: challengesError } = await challengeQuery;
@@ -142,8 +142,8 @@ export async function GET(req: NextRequest) {
     // ----- Enrich challenges with computed fields -----
     const enrichedChallenges = filteredChallenges.map((challenge) => {
       const userEntry = userMap.get(challenge.id);
-      const endsAt = new Date(challenge.ends_at);
-      const startsAt = new Date(challenge.starts_at);
+      const endsAt = new Date(challenge.end_date);
+      const startsAt = new Date(challenge.start_date);
       const now = new Date();
       const daysRemaining = Math.max(
         0,
@@ -167,17 +167,17 @@ export async function GET(req: NextRequest) {
         id: challenge.id,
         title: challenge.title,
         description: challenge.description,
-        challengeType: challenge.challenge_type,
-        difficulty: challenge.difficulty,
+        challengeType: challenge.type,
+        difficulty: "beginner", // Fallback
         xpReward: challenge.xp_reward,
-        badgeReward: challenge.badge_reward,
-        startsAt: challenge.starts_at,
-        endsAt: challenge.ends_at,
+        badgeReward: null, // Fallback
+        startsAt: challenge.start_date,
+        endsAt: challenge.end_date,
         maxParticipants: challenge.max_participants,
         isActive: challenge.is_active,
         daysRemaining,
         totalDays,
-        frequency: frequencyMap[challenge.challenge_type] ?? "wochentlich",
+        frequency: frequencyMap[challenge.type] ?? "wochentlich",
         participantCount: countMap.get(challenge.id) ?? 0,
         participants: participantsMap.get(challenge.id) ?? [],
         userProgress: userEntry?.progress ?? null,

@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
 
     // --- Try optimized RPC first (requires migration 00009) ---
     const { data: rawData, error: rpcError } = await supabase.rpc("get_leaderboard_optimized", {
-      current_user_id: currentUserId,
+      current_user_id: currentUserId ?? undefined,
       limit_count: cappedLimit,
     });
 

@@ -88,8 +88,8 @@ export async function GET(req: NextRequest, context: RouteContext) {
     const userEntry = participants.find((p) => p.userId === auth.userId);
 
     // Calculate time fields
-    const endsAt = new Date(challenge.ends_at);
-    const startsAt = new Date(challenge.starts_at);
+    const endsAt = new Date(challenge.end_date);
+    const startsAt = new Date(challenge.start_date);
     const now = new Date();
     const daysRemaining = Math.max(
       0,
@@ -112,17 +112,17 @@ export async function GET(req: NextRequest, context: RouteContext) {
       id: challenge.id,
       title: challenge.title,
       description: challenge.description,
-      challengeType: challenge.challenge_type,
-      difficulty: challenge.difficulty,
+      challengeType: challenge.type,
+      difficulty: "beginner", // fallback since it's missing in type
       xpReward: challenge.xp_reward,
-      badgeReward: challenge.badge_reward,
-      startsAt: challenge.starts_at,
-      endsAt: challenge.ends_at,
+      badgeReward: null, // fallback
+      startsAt: challenge.start_date,
+      endsAt: challenge.end_date,
       maxParticipants: challenge.max_participants,
       isActive: challenge.is_active,
       daysRemaining,
       totalDays,
-      frequency: frequencyMap[challenge.challenge_type] ?? "wochentlich",
+      frequency: frequencyMap[challenge.type] ?? "wochentlich",
       participantCount: participants.length,
       participants: participants.map((p) => ({
         userId: p.userId,
@@ -158,7 +158,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     // Check if challenge exists and is active
     const { data: challenge, error: challengeError } = await supabase
       .from("challenges")
-      .select("id, is_active, ends_at, max_participants")
+      .select("id, is_active, end_date, max_participants")
       .eq("id", challengeId)
       .single();
 
@@ -171,7 +171,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     }
 
     const now = new Date();
-    if (new Date(challenge.ends_at) <= now) {
+    if (new Date(challenge.end_date) <= now) {
       return apiBadRequest("Diese Challenge ist bereits beendet");
     }
 

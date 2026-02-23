@@ -176,7 +176,7 @@ export async function POST(
     // Handle quiz scoring
     let quizScore: number | null = null;
 
-    if (lesson.lesson_type === "quiz" && parsed.data.quiz_answers) {
+    if (lesson.type === "quiz" && parsed.data.quiz_answers) {
       const quizParsed = quizContentSchema.safeParse(
         JSON.parse(lesson.content),
       );
@@ -244,7 +244,7 @@ export async function POST(
     awardXP(supabase, auth.userId, "lesson_completed", LESSON_XP_REWARD).then(
       () => {
         checkAndAwardBadges(supabase, auth.userId);
-        checkAndUnlockAchievements(supabase, auth.userId).catch(() => {});
+        checkAndUnlockAchievements(supabase, auth.userId).catch(() => { });
       },
     );
 
