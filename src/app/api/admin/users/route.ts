@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
         // The profiles table has all necessary fields via triggers and manual inserts.
         const { data: profileData, error: profileError } = await supabase
             .from("profiles")
-            .select("id, full_name, role, created_at, last_login_at, xp, level, department, position")
+            .select("id, full_name, role, created_at, last_login_at, xp, level, department, position, is_approved")
             .order("created_at", { ascending: false });
 
         if (profileError) return apiInternalError(profileError.message);
@@ -31,11 +31,85 @@ export async function GET(req: NextRequest) {
             xp: p.xp || 0,
             level: p.level || 1,
             department: p.department || '',
-            position: p.position || ''
+            position: p.position || '',
+            is_approved: p.is_approved
         }));
 
         return apiSuccess(users);
     } catch (err) {
         return apiInternalError();
+    }
+}
+
+export async function PATCH(req: NextRequest) {
+    try {
+        const auth = await requireAdmin(req);
+        if ("response" in auth) return auth.response;
+
+        const body = await req.json();
+        const { id, is_approved, role } = body;
+
+        if (!id) return apiInternalError("Missing user id");
+
+        const updateData: any = {};
+        if (typeof is_approved === "boolean") updateData.is_approved = is_approved;
+        if (role) updateData.role = role;
+
+        const supabase = createAdminClient();
+        const { data, error } = await supabase
+            .from("profiles")
+            .update(updateData)
+            .eq("id", id)
+            .select()
+            .single();
+
+        if (error) return apiInternalError(error.message);
+
+        return apiSuccess(data);
+    } catch (err: any) {
+        return apiInternalError(err.message || "Unknown error");
+    }
+}
+
+export async function POST(req: NextRequest) {
+    try {
+        const auth = await requireAdmin(req);
+        if ("response" in auth) return auth.response;
+
+        const body = await req.json();
+        const { email, password, full_name, is_approved, role } = body;
+
+        if (!email || !password || !full_name) {
+            return apiInternalError("Email, password and full name are required");
+        }
+
+        const supabase = createAdminClient();
+
+        // Ensure email isn't fake if it needs to be verified, but auto-verify it anyway
+        const { data: userData, error: createError } = await supabase.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true,
+            user_metadata: {
+                full_name,
+            }
+        });
+
+        if (createError) return apiInternalError(createError.message);
+
+        // Update the profile manually via trigger or explicitly to set is_approved and role
+        if (userData.user && (is_approved || role)) {
+            const updateResult = await supabase
+                .from("profiles")
+                .update({
+                    is_approved: is_approved ?? true,
+                    role: role || 'user'
+                })
+                .eq("id", userData.user.id);
+        }
+
+        return apiSuccess(userData.user);
+    } catch (err: any) {
+        return apiInternalError(err.message || "Unknown error");
     }
 }

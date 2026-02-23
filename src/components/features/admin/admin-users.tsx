@@ -1,12 +1,22 @@
 import { useState, useEffect } from "react";
-import { Loader2, Users, Search, Shield } from "lucide-react";
+import { Loader2, Users, Search, Shield, CheckCircle, XCircle, Plus, X } from "lucide-react";
 
 export function AdminUsersTab() {
     const [users, setUsers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-    useEffect(() => {
+    // Create User Form State
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [fullName, setFullName] = useState("");
+    const [role, setRole] = useState("user");
+    const [isApproved, setIsApproved] = useState(true);
+    const [isCreating, setIsCreating] = useState(false);
+
+    const fetchUsers = () => {
+        setIsLoading(true);
         fetch("/api/admin/users")
             .then((res) => res.json())
             .then((data) => {
@@ -15,9 +25,56 @@ export function AdminUsersTab() {
             })
             .catch((err) => setError(err.message))
             .finally(() => setIsLoading(false));
+    };
+
+    useEffect(() => {
+        fetchUsers();
     }, []);
 
-    if (isLoading) {
+    const toggleApproval = async (id: string, currentStatus: boolean) => {
+        try {
+            const res = await fetch("/api/admin/users", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, is_approved: !currentStatus })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error.message);
+
+            // Update local state
+            setUsers(users.map(u => u.id === id ? { ...u, is_approved: !currentStatus } : u));
+        } catch (err: any) {
+            alert("Fehler beim Aktualisieren: " + err.message);
+        }
+    };
+
+    const handleCreateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsCreating(true);
+        try {
+            const res = await fetch("/api/admin/users", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password, full_name: fullName, role, is_approved: isApproved })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error.message);
+
+            setIsCreateModalOpen(false);
+            setEmail("");
+            setPassword("");
+            setFullName("");
+            setRole("user");
+
+            fetchUsers();
+        } catch (err: any) {
+            alert("Fehler beim Erstellen: " + err.message);
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    if (isLoading && users.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center gap-3 py-20 animate-fade-in">
                 <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
@@ -46,6 +103,13 @@ export function AdminUsersTab() {
                         <p className="text-sm text-surface-500">{users.length} Registrierte Accounts</p>
                     </div>
                 </div>
+                <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="flex items-center gap-2 rounded-xl bg-lr-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-lr-green-700"
+                >
+                    <Plus className="h-4 w-4" />
+                    Neuer Benutzer
+                </button>
             </div>
 
             <div className="overflow-hidden rounded-[14px] border border-surface-200 bg-white shadow-sm">
@@ -55,6 +119,7 @@ export function AdminUsersTab() {
                             <tr>
                                 <th className="px-6 py-4 font-semibold uppercase">Benutzer</th>
                                 <th className="px-6 py-4 font-semibold uppercase">Details</th>
+                                <th className="px-6 py-4 font-semibold uppercase">Freigabe</th>
                                 <th className="px-6 py-4 font-semibold uppercase">XP / Level</th>
                                 <th className="px-6 py-4 font-semibold uppercase">Rolle</th>
                             </tr>
@@ -78,6 +143,21 @@ export function AdminUsersTab() {
                                         )}
                                     </td>
                                     <td className="px-6 py-4">
+                                        <button
+                                            onClick={() => toggleApproval(user.id, user.is_approved)}
+                                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${user.is_approved
+                                                    ? "bg-green-100 text-green-700 hover:bg-green-200"
+                                                    : "bg-red-100 text-red-700 hover:bg-red-200"
+                                                }`}
+                                        >
+                                            {user.is_approved ? (
+                                                <><CheckCircle className="h-3 w-3" /> Freigegeben</>
+                                            ) : (
+                                                <><XCircle className="h-3 w-3" /> Gesperrt</>
+                                            )}
+                                        </button>
+                                    </td>
+                                    <td className="px-6 py-4">
                                         <div className="flex items-center gap-1.5 font-medium text-surface-900">
                                             <span className="text-amber-500">★</span> {user.xp} XP
                                         </div>
@@ -86,8 +166,8 @@ export function AdminUsersTab() {
                                     <td className="px-6 py-4">
                                         <span
                                             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${user.role === "admin"
-                                                    ? "bg-purple-100 text-purple-700"
-                                                    : "bg-surface-100 text-surface-600"
+                                                ? "bg-purple-100 text-purple-700"
+                                                : "bg-surface-100 text-surface-600"
                                                 }`}
                                         >
                                             {user.role === "admin" && <Shield className="h-3 w-3" />}
@@ -103,6 +183,102 @@ export function AdminUsersTab() {
                     )}
                 </div>
             </div>
+
+            {/* Create User Modal */}
+            {isCreateModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-900/50 p-4 backdrop-blur-sm">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl animate-scale-up">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-surface-900">Neuen Benutzer anlegen</h3>
+                            <button
+                                onClick={() => setIsCreateModalOpen(false)}
+                                className="rounded-full p-1 text-surface-400 hover:bg-surface-100 hover:text-surface-700"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCreateUser} className="space-y-4">
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-surface-700">Vollständiger Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={fullName}
+                                    onChange={e => setFullName(e.target.value)}
+                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    placeholder="Max Mustermann"
+                                />
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-surface-700">E-Mail Adresse</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    placeholder="max@example.com"
+                                />
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-surface-700">Passwort</label>
+                                <input
+                                    type="password"
+                                    required
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    placeholder="Mind. 6 Zeichen"
+                                    minLength={6}
+                                />
+                            </div>
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="mb-1 block text-sm font-medium text-surface-700">Rolle</label>
+                                    <select
+                                        value={role}
+                                        onChange={e => setRole(e.target.value)}
+                                        className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    >
+                                        <option value="user">User</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                                <div className="flex flex-col justify-center pt-5">
+                                    <label className="flex items-center gap-2 text-sm font-medium text-surface-700 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={isApproved}
+                                            onChange={e => setIsApproved(e.target.checked)}
+                                            className="h-4 w-4 rounded border-surface-300 text-lr-green-600 focus:ring-lr-green-500"
+                                        />
+                                        Direkt freigeben
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="mt-6 flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCreateModalOpen(false)}
+                                    className="rounded-xl border border-surface-200 px-4 py-2 font-medium text-surface-600 hover:bg-surface-50"
+                                >
+                                    Abbrechen
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isCreating}
+                                    className="flex items-center rounded-xl bg-lr-green-600 px-4 py-2 font-medium text-white hover:bg-lr-green-700 disabled:opacity-50"
+                                >
+                                    {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Benutzer anlegen
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

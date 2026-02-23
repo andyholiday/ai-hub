@@ -21,7 +21,7 @@ export default function LoginPage() {
 
     const supabase = createClient();
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -30,6 +30,22 @@ export default function LoginPage() {
       setError(signInError.message);
       setLoading(false);
       return;
+    }
+
+    // Check if user is approved
+    if (authData.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_approved")
+        .eq("id", authData.user.id)
+        .single();
+
+      if (profile && !profile.is_approved) {
+        await supabase.auth.signOut();
+        setError("Dein Account wurde noch nicht von einem Administrator freigegeben.");
+        setLoading(false);
+        return;
+      }
     }
 
     router.push(redirectTo);
