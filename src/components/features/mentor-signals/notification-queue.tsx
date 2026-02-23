@@ -9,7 +9,7 @@
 
 import { cn } from "@/lib/utils/cn";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, ChevronRight, Sparkles, X } from "lucide-react";
+import { Bell, ChevronRight, X } from "lucide-react";
 import { useMentorSignals, type MentorSignal } from "@/hooks/use-mentor-signals";
 import { useCallback } from "react";
 

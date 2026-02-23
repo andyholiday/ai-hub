@@ -1,8 +1,36 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import { Loader2, Medal, Target, BookOpen } from "lucide-react";
+import { Loader2, Medal, BookOpen } from "lucide-react";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface BadgeRow {
+    id: string;
+    name: string;
+    description: string;
+    category: string;
+    xp_threshold: number;
+}
+
+interface CourseRow {
+    id: string;
+    title: string;
+    category: string;
+    difficulty: string;
+    xp_reward: number;
+    is_published: boolean;
+}
+
+interface ChallengeRow {
+    id: string;
+    title: string;
+}
 
 export function AdminGamificationTab() {
-    const [data, setData] = useState<{ courses: any[], badges: any[], challenges: any[] } | null>(null);
+    const [data, setData] = useState<{ courses: CourseRow[], badges: BadgeRow[], challenges: ChallengeRow[] } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 

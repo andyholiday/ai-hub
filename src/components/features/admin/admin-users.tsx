@@ -1,8 +1,26 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import { Loader2, Users, Search, Shield, CheckCircle, XCircle, Plus, X } from "lucide-react";
+import { Loader2, Users, Shield, CheckCircle, XCircle, Plus, X } from "lucide-react";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface UserRow {
+    id: string;
+    full_name: string;
+    email: string;
+    department: string | null;
+    position: string | null;
+    is_approved: boolean;
+    xp: number;
+    level: number;
+    role: string;
+}
 
 export function AdminUsersTab() {
-    const [users, setUsers] = useState<any[]>([]);
+    const [users, setUsers] = useState<UserRow[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -43,8 +61,8 @@ export function AdminUsersTab() {
 
             // Update local state
             setUsers(users.map(u => u.id === id ? { ...u, is_approved: !currentStatus } : u));
-        } catch (err: any) {
-            alert("Fehler beim Aktualisieren: " + err.message);
+        } catch (err: unknown) {
+            alert("Fehler beim Aktualisieren: " + (err instanceof Error ? err.message : String(err)));
         }
     };
 
@@ -67,8 +85,8 @@ export function AdminUsersTab() {
             setRole("user");
 
             fetchUsers();
-        } catch (err: any) {
-            alert("Fehler beim Erstellen: " + err.message);
+        } catch (err: unknown) {
+            alert("Fehler beim Erstellen: " + (err instanceof Error ? err.message : String(err)));
         } finally {
             setIsCreating(false);
         }

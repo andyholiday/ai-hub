@@ -6,7 +6,6 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,7 +84,6 @@ const SORT_LABELS: Record<SortOption, string> = {
 // ---------------------------------------------------------------------------
 
 export default function CommunityPage() {
-  const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

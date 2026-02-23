@@ -6,7 +6,6 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
@@ -66,7 +65,6 @@ interface CourseWithProgress {
 // ---------------------------------------------------------------------------
 
 export default function LearnHubPage() {
-  const router = useRouter();
   const [courses, setCourses] = useState<CourseWithProgress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

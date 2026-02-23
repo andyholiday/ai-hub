@@ -20,7 +20,6 @@ import {
   MessageSquare,
   FileText,
   Zap,
-  Bot,
   Flame,
   Trophy,
 } from "lucide-react";

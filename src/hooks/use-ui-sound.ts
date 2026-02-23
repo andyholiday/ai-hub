@@ -12,7 +12,7 @@ export function useUiSound() {
     const playSuccessChime = useCallback(() => {
         try {
             // AudioContext creation ensures we only play if the browser supports it
-            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+            const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
             if (!AudioCtx) return;
 
             const ctx = new AudioCtx();
@@ -54,7 +54,7 @@ export function useUiSound() {
                 }
             }, 1000);
 
-        } catch (e) {
+        } catch {
             // Silently fail if auto-play is blocked or AudioContext is unavailable
         }
     }, []);

@@ -95,36 +95,6 @@ interface OrbContextValue {
 }
 
 // -----------------------------------------------------------------------------
-// Default demo messages
-// Uses a factory function to avoid SSR/client timestamp mismatch (hydration error)
-// -----------------------------------------------------------------------------
-
-function createDemoMessages(): ChatMessage[] {
-  const now = Date.now();
-  return [
-    {
-      id: "msg-1",
-      role: "ai",
-      content: "Hi! Was moechtest du heute lernen?",
-      timestamp: new Date(now - 120_000),
-    },
-    {
-      id: "msg-2",
-      role: "user",
-      content: "Zeig mir den besten Prompt Engineering Kurs",
-      timestamp: new Date(now - 60_000),
-    },
-    {
-      id: "msg-3",
-      role: "ai",
-      content:
-        "Ich empfehle dir den Kurs 'Advanced Prompt Engineering'. Du bist zu 72% durch dein aktuelles Modul.",
-      timestamp: new Date(now - 30_000),
-    },
-  ];
-}
-
-// -----------------------------------------------------------------------------
 // Context
 // -----------------------------------------------------------------------------
 

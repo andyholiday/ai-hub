@@ -1,9 +1,42 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { Loader2, FileText, CheckCircle, ExternalLink, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface ProfileRef {
+    full_name: string | null;
+}
+
+interface BestPracticeRow {
+    id: string;
+    title: string;
+    category: string;
+    status: string;
+    views_count: number;
+    upvotes_count: number;
+    profiles: ProfileRef | null;
+}
+
+interface CommunityPostRow {
+    id: string;
+    title: string;
+    type: string;
+    views_count: number;
+    upvotes_count: number;
+    profiles: ProfileRef | null;
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 export function AdminContentTab() {
-    const [data, setData] = useState<{ bestPractices: any[], communityPosts: any[] } | null>(null);
+    const [data, setData] = useState<{ bestPractices: BestPracticeRow[], communityPosts: CommunityPostRow[] } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
