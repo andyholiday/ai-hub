@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { useBrandingStore } from "@/stores/branding-store";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,6 +14,9 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+
+  const { branding, hydrate } = useBrandingStore();
+  useEffect(() => { hydrate(); }, [hydrate]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,7 +63,7 @@ export default function LoginPage() {
           Anmelden
         </h1>
         <p className="mt-2 text-sm text-surface-500">
-          Melde dich bei deinem LR AI Hub Konto an.
+          {branding.loginSubtext}
         </p>
 
         {error && (

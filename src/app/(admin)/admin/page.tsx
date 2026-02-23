@@ -20,6 +20,7 @@ import {
 import { AdminUsersTab } from "@/components/features/admin/admin-users";
 import { AdminContentTab } from "@/components/features/admin/admin-content";
 import { AdminGamificationTab } from "@/components/features/admin/admin-gamification";
+import { AdminBrandingTab } from "@/components/features/admin/admin-branding";
 import { useAdminData } from "@/hooks/use-admin-data";
 
 // -----------------------------------------------------------------------------
@@ -305,6 +306,7 @@ export default function AdminPage() {
           description="E-Mail-Konfiguration, Wartungsmodus und Audit-Log."
         />
       )}
+      {activeTab === "branding" && <AdminBrandingTab />}
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
   Gamepad2,
   BookOpen,
   Settings,
+  Palette,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -46,6 +47,7 @@ export const ADMIN_TABS: AdminTab[] = [
   { id: "gamification", label: "Gamification", icon: Gamepad2 },
   { id: "content", label: "Content", icon: BookOpen },
   { id: "system", label: "System", icon: Settings },
+  { id: "branding", label: "Branding", icon: Palette },
 ];
 
 // -----------------------------------------------------------------------------

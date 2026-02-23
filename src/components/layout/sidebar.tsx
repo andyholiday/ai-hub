@@ -5,6 +5,7 @@
 // Main navigation sidebar for the LR AI Hub dashboard
 // =============================================================================
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -23,6 +24,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useBrandingStore } from "@/stores/branding-store";
 import { MAIN_NAVIGATION, ADMIN_NAVIGATION } from "@/constants/navigation";
 import type { NavItem } from "@/constants/navigation";
 import { LogoutButton } from "@/app/(auth)/login/logout";
@@ -95,12 +97,24 @@ const BADGE_COUNTS: Record<string, number> = {
 // ---------------------------------------------------------------------------
 
 function SidebarLogo() {
+  const { branding, isHydrated, hydrate } = useBrandingStore();
+
+  // Hydrate from localStorage on first render
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
   return (
     <div className="flex items-center gap-3 px-5 py-5">
-      {/* LR Brand Mark */}
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-lr-gradient">
+      {/* Brand Mark */}
+      <div
+        className={cn(
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]",
+          isHydrated ? branding.logoGradient : "bg-lr-gradient",
+        )}
+      >
         <span className="font-display text-[15px] font-bold leading-none text-white">
-          LR
+          {isHydrated ? branding.logoText : "LR"}
         </span>
       </div>
 
@@ -110,10 +124,10 @@ function SidebarLogo() {
       {/* Platform Name */}
       <div className="flex flex-col">
         <span className="font-display text-[13px] font-bold leading-tight text-surface-900">
-          AI Hub
+          {isHydrated ? branding.appName : "AI Hub"}
         </span>
         <span className="text-[11px] leading-tight text-surface-500">
-          Community Platform
+          {isHydrated ? branding.appSubtitle : "Community Platform"}
         </span>
       </div>
     </div>

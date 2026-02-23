@@ -86,7 +86,7 @@ export async function awardXP(
       const currentDailyXp = (await redis.get<number>(redisKey)) || 0;
 
       if (currentDailyXp >= DAILY_XP_LIMIT) {
-        console.log(`[XP] User ${userId} hit daily cap (${currentDailyXp}/${DAILY_XP_LIMIT}). Action: ${action} ignored.`);
+        console.warn(`[XP] User ${userId} hit daily cap (${currentDailyXp}/${DAILY_XP_LIMIT}). Action: ${action} ignored.`);
         return null;
       }
 

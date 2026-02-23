@@ -33,3 +33,5 @@ export type {
   ProviderSandboxProps,
   SandboxResult,
 } from "./provider-sandbox";
+
+export { AdminBrandingTab } from "./admin-branding";
