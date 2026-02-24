@@ -80,6 +80,28 @@ const DEFAULT_RESULTS: SandboxResult[] = [
     available: true,
   },
   {
+    id: "groq",
+    providerName: "Groq (Llama 3.3)",
+    providerIcon: "\u26A1",
+    response:
+      "Prompt Engineering ist der gezielte Entwurf von Eingabeaufforderungen an KI-Modelle, um praezise und nuetzliche Ergebnisse zu erzielen. Es kombiniert sprachliche Klarheit mit strukturierten Techniken wie Kontext-Setting und Schritt-fuer-Schritt-Anleitungen.",
+    latency: "0.3s",
+    tokens: "78 Tokens",
+    cost: "\u20AC0.0001",
+    available: true,
+  },
+  {
+    id: "mistral",
+    providerName: "Mistral Large",
+    providerIcon: "\uD83C\uDF0A",
+    response:
+      "Prompt Engineering bezeichnet die Methodik, Anweisungen an generative KI-Systeme so zu formulieren, dass sie optimale Antworten erzeugen. Dazu gehoeren Techniken wie Rollenanweisungen, Few-Shot-Beispiele und die Strukturierung komplexer Aufgaben in Teilschritte.",
+    latency: "1.4s",
+    tokens: "89 Tokens",
+    cost: "\u20AC0.0014",
+    available: true,
+  },
+  {
     id: "copilot",
     providerName: "Copilot (Azure)",
     providerIcon: "\uD83D\uDD37",
@@ -119,7 +141,7 @@ export function ProviderSandbox({
     >
       {/* Section Title */}
       <div className="mb-4 flex items-center gap-2">
-        <div className="h-4 w-[3px] rounded-sm bg-lr-green-500" />
+        <div className="h-4 w-[3px] rounded-sm bg-brand-primary-500" />
         <FlaskConical className="h-4 w-4 text-surface-500" />
         <h3 className="font-display text-base font-semibold text-surface-900">
           Provider-Vergleich (Sandbox)
@@ -164,7 +186,7 @@ export function ProviderSandbox({
 
       {/* Results Grid */}
       {results.length > 0 && (
-        <div className="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
           {results.map((result) => (
             <div
               key={result.id}

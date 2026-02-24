@@ -33,6 +33,8 @@ const DEFAULT_CHAIN: ChainItem[] = [
   { id: "gemini", name: "Gemini", icon: "\u2728", role: "primary", label: "Primaer" },
   { id: "claude", name: "Claude", icon: "\uD83D\uDFE0", role: "fallback", label: "Fallback 1" },
   { id: "chatgpt", name: "ChatGPT", icon: "\uD83D\uDCAC", role: "fallback", label: "Fallback 2" },
+  { id: "groq", name: "Groq", icon: "\u26A1", role: "fallback", label: "Fallback 3" },
+  { id: "mistral", name: "Mistral", icon: "\uD83C\uDF0A", role: "fallback", label: "Fallback 4" },
   { id: "copilot", name: "Copilot", icon: "\uD83D\uDD37", role: "inactive", label: "Inaktiv" },
 ];
 
@@ -41,7 +43,7 @@ const DEFAULT_CHAIN: ChainItem[] = [
 // -----------------------------------------------------------------------------
 
 const roleStyles: Record<string, string> = {
-  primary: "border-lr-green-500/20 bg-lr-green-50 text-lr-green-600",
+  primary: "border-brand-primary-500/20 bg-brand-primary-50 text-brand-primary-600",
   fallback: "border-amber-300 bg-orange-50 text-amber-500",
   inactive: "border-surface-200 bg-surface-50 text-surface-400",
 };
@@ -63,7 +65,7 @@ export function FallbackChain({
     >
       {/* Section Title */}
       <div className="mb-4 flex items-center gap-2">
-        <div className="h-4 w-[3px] rounded-sm bg-lr-green-500" />
+        <div className="h-4 w-[3px] rounded-sm bg-brand-primary-500" />
         <RefreshCw className="h-4 w-4 text-surface-500" />
         <h3 className="font-display text-base font-semibold text-surface-900">
           Fallback-Kette

@@ -105,6 +105,60 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       supportsFunctionCalling: false,
     },
   ],
+
+  groq: [
+    {
+      id: "llama-3.3-70b-versatile",
+      provider: "groq",
+      name: "llama-3.3-70b-versatile",
+      displayName: "Llama 3.3 70B Versatile",
+      maxTokens: 8192,
+      inputCostPer1k: 0.00059,
+      outputCostPer1k: 0.00079,
+      supportsStreaming: true,
+      supportsVision: false,
+      supportsFunctionCalling: true,
+    },
+    {
+      id: "mixtral-8x7b-32768",
+      provider: "groq",
+      name: "mixtral-8x7b-32768",
+      displayName: "Mixtral 8x7B",
+      maxTokens: 32768,
+      inputCostPer1k: 0.00024,
+      outputCostPer1k: 0.00024,
+      supportsStreaming: true,
+      supportsVision: false,
+      supportsFunctionCalling: true,
+    },
+  ],
+
+  mistral: [
+    {
+      id: "mistral-large-latest",
+      provider: "mistral",
+      name: "mistral-large-latest",
+      displayName: "Mistral Large",
+      maxTokens: 8192,
+      inputCostPer1k: 0.002,
+      outputCostPer1k: 0.006,
+      supportsStreaming: true,
+      supportsVision: false,
+      supportsFunctionCalling: true,
+    },
+    {
+      id: "mistral-small-latest",
+      provider: "mistral",
+      name: "mistral-small-latest",
+      displayName: "Mistral Small",
+      maxTokens: 8192,
+      inputCostPer1k: 0.0002,
+      outputCostPer1k: 0.0006,
+      supportsStreaming: true,
+      supportsVision: false,
+      supportsFunctionCalling: true,
+    },
+  ],
 };
 
 // ---------------------------------------------------------------------------
@@ -117,6 +171,8 @@ export const DEFAULT_FALLBACK_CHAIN: AIProvider[] = [
   "gemini",
   "openai",
   "claude",
+  "groq",
+  "mistral",
   "copilot",
 ];
 
@@ -153,6 +209,20 @@ export function getRouterConfig(): RouterConfig {
         defaultModel: "copilot",
         models: AI_MODELS.copilot,
         enabled: !!process.env.COPILOT_API_KEY,
+      },
+      groq: {
+        provider: "groq",
+        apiKey: process.env.GROQ_API_KEY || "",
+        defaultModel: "llama-3.3-70b-versatile",
+        models: AI_MODELS.groq,
+        enabled: !!process.env.GROQ_API_KEY,
+      },
+      mistral: {
+        provider: "mistral",
+        apiKey: process.env.MISTRAL_API_KEY || "",
+        defaultModel: "mistral-large-latest",
+        models: AI_MODELS.mistral,
+        enabled: !!process.env.MISTRAL_API_KEY,
       },
     },
   };

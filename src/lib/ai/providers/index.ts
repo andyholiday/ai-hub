@@ -8,6 +8,8 @@ import { GeminiProvider } from "./gemini";
 import { ClaudeProvider } from "./claude";
 import { OpenAIProvider } from "./openai";
 import { CopilotProvider } from "./copilot";
+import { GroqProvider } from "./groq";
+import { MistralProvider } from "./mistral";
 
 // ---------------------------------------------------------------------------
 // Re-exports for convenience
@@ -18,6 +20,8 @@ export { GeminiProvider } from "./gemini";
 export { ClaudeProvider } from "./claude";
 export { OpenAIProvider } from "./openai";
 export { CopilotProvider } from "./copilot";
+export { GroqProvider } from "./groq";
+export { MistralProvider } from "./mistral";
 
 // ---------------------------------------------------------------------------
 // Provider Factory
@@ -35,6 +39,8 @@ const PROVIDER_REGISTRY: Record<
   claude: ClaudeProvider,
   openai: OpenAIProvider,
   copilot: CopilotProvider,
+  groq: GroqProvider,
+  mistral: MistralProvider,
 };
 
 /**

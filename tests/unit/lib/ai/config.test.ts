@@ -15,15 +15,17 @@ import {
 // ---------------------------------------------------------------------------
 
 describe("AI_MODELS", () => {
-  it("should contain entries for all four providers", () => {
+  it("should contain entries for all six providers", () => {
     expect(AI_MODELS).toHaveProperty("gemini");
     expect(AI_MODELS).toHaveProperty("claude");
     expect(AI_MODELS).toHaveProperty("openai");
     expect(AI_MODELS).toHaveProperty("copilot");
+    expect(AI_MODELS).toHaveProperty("groq");
+    expect(AI_MODELS).toHaveProperty("mistral");
   });
 
   it("should have at least one model per provider", () => {
-    for (const provider of ["gemini", "claude", "openai", "copilot"] as const) {
+    for (const provider of ["gemini", "claude", "openai", "copilot", "groq", "mistral"] as const) {
       expect(AI_MODELS[provider].length).toBeGreaterThanOrEqual(1);
     }
   });
@@ -57,11 +59,13 @@ describe("DEFAULT_ROUTING_STRATEGY", () => {
 });
 
 describe("DEFAULT_FALLBACK_CHAIN", () => {
-  it("should contain all four providers in order", () => {
+  it("should contain all six providers in order", () => {
     expect(DEFAULT_FALLBACK_CHAIN).toEqual([
       "gemini",
       "openai",
       "claude",
+      "groq",
+      "mistral",
       "copilot",
     ]);
   });
@@ -80,6 +84,8 @@ describe("getRouterConfig", () => {
     vi.stubEnv("ANTHROPIC_API_KEY", "");
     vi.stubEnv("OPENAI_API_KEY", "");
     vi.stubEnv("COPILOT_API_KEY", "");
+    vi.stubEnv("GROQ_API_KEY", "");
+    vi.stubEnv("MISTRAL_API_KEY", "");
   });
 
   afterEach(() => {
@@ -113,6 +119,8 @@ describe("getRouterConfig", () => {
     expect(config.providers.claude.enabled).toBe(false);
     expect(config.providers.openai.enabled).toBe(false);
     expect(config.providers.copilot.enabled).toBe(false);
+    expect(config.providers.groq.enabled).toBe(false);
+    expect(config.providers.mistral.enabled).toBe(false);
   });
 
   it("should mark provider as enabled when API key is set", () => {
@@ -134,6 +142,8 @@ describe("getRouterConfig", () => {
     );
     expect(config.providers.openai.defaultModel).toBe("gpt-4o-mini");
     expect(config.providers.copilot.defaultModel).toBe("copilot");
+    expect(config.providers.groq.defaultModel).toBe("llama-3.3-70b-versatile");
+    expect(config.providers.mistral.defaultModel).toBe("mistral-large-latest");
   });
 
   it("should include model lists for each provider", () => {
@@ -142,5 +152,7 @@ describe("getRouterConfig", () => {
     expect(config.providers.claude.models).toBe(AI_MODELS.claude);
     expect(config.providers.openai.models).toBe(AI_MODELS.openai);
     expect(config.providers.copilot.models).toBe(AI_MODELS.copilot);
+    expect(config.providers.groq.models).toBe(AI_MODELS.groq);
+    expect(config.providers.mistral.models).toBe(AI_MODELS.mistral);
   });
 });

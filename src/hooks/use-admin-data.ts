@@ -87,6 +87,8 @@ const PROVIDER_DISPLAY_META: Record<
   claude: { icon: "\uD83D\uDFE0", iconBg: "#FFF3E0" },
   openai: { icon: "\uD83D\uDCAC", iconBg: "#E3F2FD" },
   copilot: { icon: "\uD83D\uDD37", iconBg: "#F3E5F5" },
+  groq: { icon: "\u26A1", iconBg: "#FFF8E1" },
+  mistral: { icon: "\uD83C\uDF0A", iconBg: "#E0F2F1" },
 };
 
 const DEFAULT_ICON = { icon: "\uD83E\uDD16", iconBg: "#F5F5F5" };
@@ -204,10 +206,12 @@ function mapCostsToItems(data: CostsResponse): CostItem[] {
   ];
 
   const colorMap: Record<string, string> = {
-    gemini: "text-lr-green-500",
+    gemini: "text-brand-primary-500",
     claude: "text-amber-500",
     openai: "text-blue-500",
     copilot: "text-purple-500",
+    groq: "text-yellow-500",
+    mistral: "text-teal-500",
   };
 
   for (const bp of data.by_provider) {
