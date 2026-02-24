@@ -2,9 +2,11 @@
 // This approach uses the project's database connection via supabase-js admin client
 
 import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
 
-const SUPABASE_URL = 'https://ziwqxnzsrnyhzhsircqh.supabase.co';
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inppd3F4bnpzcm55aHpoc2lyY3FoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTY2ODAyMiwiZXhwIjoyMDg3MjQ0MDIyfQ.qeR5RVvj118JNxYWYQUsfwYL4eilQedKYiMIVT_gQHM';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
