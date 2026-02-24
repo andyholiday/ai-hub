@@ -38,19 +38,22 @@ const jetBrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "LR AI Hub – KI-Community-Plattform",
-    template: "%s | LR AI Hub",
+    default: "AI Hub – KI-Community-Plattform",
+    template: "%s | AI Hub",
   },
   description:
-    "Die KI-Community-Plattform fuer LR Health & Beauty Systems – Best Practices, Lernpfade, AI Mentor und mehr.",
+    "KI-Community-Plattform fuer Teams und Unternehmen – Best Practices, Lernpfade, AI Mentor und mehr.",
   keywords: [
-    "LR Health & Beauty",
     "KI",
     "AI",
     "Community",
     "Best Practices",
     "Kuenstliche Intelligenz",
   ],
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 // ---------------------------------------------------------------------------

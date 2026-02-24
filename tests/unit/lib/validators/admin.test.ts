@@ -235,7 +235,7 @@ describe("updatePromptSchema", () => {
   it("should accept valid prompt input", () => {
     const result = updatePromptSchema.safeParse({
       prompt_key: "mentor_system",
-      prompt_text: "You are a helpful mentor for LR partners.",
+      prompt_text: "You are a helpful mentor for community partners.",
     });
     expect(result.success).toBe(true);
   });

@@ -64,13 +64,13 @@ export function MentorMini({
     >
       {/* Top gradient border */}
       <div
-        className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-lr-green-500 to-lr-gold-500"
+        className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-brand-primary-500 to-brand-accent-500"
         aria-hidden="true"
       />
 
       {/* Title */}
       <h3 className="flex items-center gap-1.5 text-body font-semibold text-surface-900">
-        <Bot className="h-4 w-4 text-lr-green-500" aria-hidden="true" />
+        <Bot className="h-4 w-4 text-brand-primary-500" aria-hidden="true" />
         AI Mentor
       </h3>
 
@@ -90,7 +90,7 @@ export function MentorMini({
             "flex-1 rounded-lg border border-surface-300 bg-surface-50 px-3.5 py-2.5",
             "font-sans text-caption text-surface-900 placeholder:text-surface-400",
             "transition-colors duration-150",
-            "focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
+            "focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
           )}
           aria-label="Nachricht an den AI Mentor"
         />
@@ -99,11 +99,11 @@ export function MentorMini({
           disabled={!inputValue.trim()}
           className={cn(
             "flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg",
-            "bg-lr-green-500 text-white",
+            "bg-brand-primary-500 text-white",
             "transition-all duration-150",
-            "hover:bg-lr-green-600",
+            "hover:bg-brand-primary-600",
             "disabled:opacity-50 disabled:cursor-not-allowed",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-2"
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2"
           )}
           aria-label="Nachricht senden"
         >
@@ -122,8 +122,8 @@ export function MentorMini({
               "rounded-md border border-surface-300 bg-surface-50 px-2.5 py-1",
               "font-sans text-[10px] text-surface-500",
               "transition-all duration-150",
-              "hover:border-lr-green-500 hover:text-lr-green-600",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-1"
+              "hover:border-brand-primary-500 hover:text-brand-primary-600",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-1"
             )}
           >
             {chip.icon} {chip.label}

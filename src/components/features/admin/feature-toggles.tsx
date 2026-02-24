@@ -102,7 +102,7 @@ export function FeatureToggles({
     >
       {/* Section Title */}
       <div className="mb-4 flex items-center gap-2">
-        <div className="h-4 w-[3px] rounded-sm bg-lr-green-500" />
+        <div className="h-4 w-[3px] rounded-sm bg-brand-primary-500" />
         <SlidersHorizontal className="h-4 w-4 text-surface-500" />
         <h3 className="font-display text-base font-semibold text-surface-900">
           Feature-Schalter

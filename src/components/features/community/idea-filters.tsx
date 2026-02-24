@@ -63,7 +63,7 @@ export function IdeaFilters({
             onClick={() => onSortChange(option.value)}
             className={`rounded-lg px-3 py-1 text-caption font-medium transition-colors ${
               sort === option.value
-                ? "bg-lr-gold-50 text-lr-gold-800"
+                ? "bg-brand-accent-50 text-brand-accent-800"
                 : "text-surface-500 hover:text-surface-700"
             }`}
           >

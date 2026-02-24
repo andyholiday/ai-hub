@@ -20,19 +20,19 @@ export function TypingIndicator() {
   return (
     <div className="flex items-start gap-2.5 px-4 py-1.5">
       {/* AI Avatar */}
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lr-green-500 to-lr-gold-500">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary-500 to-brand-accent-500">
         <Bot className="h-3.5 w-3.5 text-white" />
       </div>
 
       {/* Dots */}
-      <div className="flex items-center gap-1 rounded-2xl rounded-tl-sm bg-lr-green-50 px-4 py-3">
-        <span className="ai-orb-typing-dot h-1.5 w-1.5 rounded-full bg-lr-green-500/60" />
+      <div className="flex items-center gap-1 rounded-2xl rounded-tl-sm bg-brand-primary-50 px-4 py-3">
+        <span className="ai-orb-typing-dot h-1.5 w-1.5 rounded-full bg-brand-primary-500/60" />
         <span
-          className="ai-orb-typing-dot h-1.5 w-1.5 rounded-full bg-lr-green-500/60"
+          className="ai-orb-typing-dot h-1.5 w-1.5 rounded-full bg-brand-primary-500/60"
           style={{ animationDelay: "150ms" }}
         />
         <span
-          className="ai-orb-typing-dot h-1.5 w-1.5 rounded-full bg-lr-green-500/60"
+          className="ai-orb-typing-dot h-1.5 w-1.5 rounded-full bg-brand-primary-500/60"
           style={{ animationDelay: "300ms" }}
         />
       </div>
@@ -59,7 +59,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
     >
       {/* Avatar (AI only) */}
       {isAI && (
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lr-green-500 to-lr-gold-500">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary-500 to-brand-accent-500">
           <Bot className="h-3.5 w-3.5 text-white" />
         </div>
       )}
@@ -69,7 +69,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         <div
           className={cn("rounded-2xl px-3.5 py-2.5 text-body-sm leading-relaxed", {
             // AI bubble
-            "rounded-tl-sm border-l-2 border-lr-green-400 bg-lr-green-50 text-surface-800":
+            "rounded-tl-sm border-l-2 border-brand-primary-400 bg-brand-primary-50 text-surface-800":
               isAI,
             // User bubble
             "rounded-tr-sm bg-surface-100 text-surface-800": !isAI,

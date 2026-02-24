@@ -294,7 +294,7 @@ function generateBriefingContent(page: string): {
             return {
                 title: "Innovation Radar 🌐",
                 content:
-                    "Entdecke die neuesten KI-Trends und wie sie bei LR eingesetzt werden können.",
+                    "Entdecke die neuesten KI-Trends und wie sie im Unternehmen eingesetzt werden koennen.",
             };
         case "best-practices":
             return {

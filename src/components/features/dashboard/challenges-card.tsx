@@ -37,8 +37,8 @@ const challenges: ChallengeItem[] = [
     reward: "75 XP",
     daysLeft: "4 Tage",
     progress: 60,
-    icon: <Target className="h-4.5 w-4.5 text-lr-green-600" />,
-    iconBg: "bg-lr-green-50",
+    icon: <Target className="h-4.5 w-4.5 text-brand-primary-600" />,
+    iconBg: "bg-brand-primary-50",
   },
   {
     id: "2",
@@ -76,7 +76,7 @@ export function ChallengesCard({ className }: ChallengesCardProps) {
       {/* Section Title */}
       <h3 className="mb-3 flex items-center gap-2 font-display text-base font-semibold text-surface-900">
         <span
-          className="h-4 w-[3px] rounded-full bg-lr-green-500"
+          className="h-4 w-[3px] rounded-full bg-brand-primary-500"
           aria-hidden="true"
         />
         Aktive Challenges
@@ -105,7 +105,7 @@ export function ChallengesCard({ className }: ChallengesCardProps) {
               <div className="truncate text-caption font-semibold text-surface-900">
                 {challenge.name}
               </div>
-              <div className="text-[10px] font-medium text-lr-gold-500">
+              <div className="text-[10px] font-medium text-brand-accent-500">
                 <span aria-hidden="true">&#x26A1;</span> {challenge.reward} · {challenge.daysLeft}
               </div>
             </div>
@@ -121,7 +121,7 @@ export function ChallengesCard({ className }: ChallengesCardProps) {
                 aria-label={`${challenge.name}: ${challenge.progress}%`}
               >
                 <div
-                  className="h-full rounded-full bg-lr-green-500 transition-all duration-500"
+                  className="h-full rounded-full bg-brand-primary-500 transition-all duration-500"
                   style={{ width: `${challenge.progress}%` }}
                 />
               </div>

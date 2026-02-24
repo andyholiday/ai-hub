@@ -1,6 +1,6 @@
 // =============================================================================
 // Card Component
-// LR AI Hub Design System
+// AI Hub Design System
 // =============================================================================
 
 import React, { forwardRef, type HTMLAttributes, type ReactNode } from "react";
@@ -42,8 +42,8 @@ export interface CardFooterProps extends HTMLAttributes<HTMLDivElement> {
 // -----------------------------------------------------------------------------
 
 const accentColors: Record<CardAccentColor, string> = {
-  green: "before:bg-lr-gradient",
-  gold: "before:bg-lr-gradient-gold",
+  green: "before:bg-brand-gradient",
+  gold: "before:bg-brand-gradient-gold",
   blue: "before:bg-gradient-to-r before:from-info before:to-blue-600",
   red: "before:bg-gradient-to-r before:from-error before:to-red-700",
   purple: "before:bg-gradient-to-r before:from-purple-500 before:to-purple-700",

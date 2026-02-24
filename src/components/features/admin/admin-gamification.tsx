@@ -48,7 +48,7 @@ export function AdminGamificationTab() {
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center gap-3 py-20 animate-fade-in">
-                <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
                 <p className="text-sm text-surface-500">Gamification-Daten werden geladen...</p>
             </div>
         );
@@ -137,7 +137,7 @@ export function AdminGamificationTab() {
                                     </td>
                                     <td className="px-6 py-4">
                                         {course.is_published ? (
-                                            <span className="text-lr-green-600 text-xs font-medium">Published</span>
+                                            <span className="text-brand-primary-600 text-xs font-medium">Published</span>
                                         ) : (
                                             <span className="text-surface-400 text-xs font-medium">Draft</span>
                                         )}

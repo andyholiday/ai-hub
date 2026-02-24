@@ -79,9 +79,9 @@ interface ColorScheme {
 }
 
 const DEFAULT_COLOR: ColorScheme = {
-  bg: "bg-lr-green-50",
-  icon: "text-lr-green-600",
-  gradient: "from-lr-green-500 to-lr-green-600",
+  bg: "bg-brand-primary-50",
+  icon: "text-brand-primary-600",
+  gradient: "from-brand-primary-500 to-brand-primary-600",
 };
 
 const COLOR_MAP: Record<string, ColorScheme> = {
@@ -92,9 +92,9 @@ const COLOR_MAP: Record<string, ColorScheme> = {
     gradient: "from-blue-500 to-blue-600",
   },
   gold: {
-    bg: "bg-lr-gold-50",
-    icon: "text-lr-gold-600",
-    gradient: "from-lr-gold-500 to-lr-gold-600",
+    bg: "bg-brand-accent-50",
+    icon: "text-brand-accent-600",
+    gradient: "from-brand-accent-500 to-brand-accent-600",
   },
   purple: {
     bg: "bg-purple-50",
@@ -175,7 +175,7 @@ export default function LearningPathDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
       </div>
     );
   }
@@ -327,12 +327,12 @@ export default function LearningPathDetailPage() {
 
               {/* Completed State */}
               {path.isCompleted && (
-                <div className="rounded-lg bg-lr-green-50 p-4 text-center">
-                  <Trophy className="mx-auto h-8 w-8 text-lr-green-600" />
-                  <p className="mt-2 text-body-sm font-semibold text-lr-green-700">
+                <div className="rounded-lg bg-brand-primary-50 p-4 text-center">
+                  <Trophy className="mx-auto h-8 w-8 text-brand-primary-600" />
+                  <p className="mt-2 text-body-sm font-semibold text-brand-primary-700">
                     Lernpfad abgeschlossen!
                   </p>
-                  <p className="mt-0.5 text-caption text-lr-green-600">
+                  <p className="mt-0.5 text-caption text-brand-primary-600">
                     Alle Kurse erfolgreich bearbeitet
                   </p>
                 </div>
@@ -343,8 +343,8 @@ export default function LearningPathDetailPage() {
           {/* XP Card */}
           <Card>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-lr-gold-50">
-                <Star className="h-5 w-5 text-lr-gold-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-accent-50">
+                <Star className="h-5 w-5 text-brand-accent-600" />
               </div>
               <div>
                 <p className="text-caption text-surface-500">

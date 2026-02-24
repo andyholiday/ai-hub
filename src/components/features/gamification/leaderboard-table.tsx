@@ -37,7 +37,7 @@ export interface LeaderboardTableProps {
 function getRankStyle(rank: number): string {
   switch (rank) {
     case 1:
-      return "bg-gradient-to-br from-lr-gold-400 to-lr-gold-600 text-white font-bold";
+      return "bg-gradient-to-br from-brand-accent-400 to-brand-accent-600 text-white font-bold";
     case 2:
       return "bg-gradient-to-br from-surface-400 to-surface-500 text-white font-bold";
     case 3:
@@ -116,7 +116,7 @@ export function LeaderboardTable({ users, className }: LeaderboardTableProps) {
                 className={cn(
                   "transition-colors duration-150",
                   user.isCurrentUser
-                    ? "bg-lr-green-50/60 hover:bg-lr-green-50"
+                    ? "bg-brand-primary-50/60 hover:bg-brand-primary-50"
                     : "hover:bg-surface-50"
                 )}
               >
@@ -143,11 +143,11 @@ export function LeaderboardTable({ users, className }: LeaderboardTableProps) {
                     <div className="min-w-0">
                       <p className={cn(
                         "truncate font-heading text-body font-semibold text-surface-900",
-                        user.isCurrentUser && "text-lr-green-700"
+                        user.isCurrentUser && "text-brand-primary-700"
                       )}>
                         {user.name}
                         {user.isCurrentUser && (
-                          <span className="ml-1.5 text-caption font-medium text-lr-green-600">(Du)</span>
+                          <span className="ml-1.5 text-caption font-medium text-brand-primary-600">(Du)</span>
                         )}
                       </p>
                       {/* Department shown on mobile */}
@@ -184,7 +184,7 @@ export function LeaderboardTable({ users, className }: LeaderboardTableProps) {
 
                 {/* XP Period */}
                 <td className="hidden px-4 py-3.5 text-right lg:table-cell">
-                  <span className="text-body-sm font-medium tabular-nums text-lr-green-600">
+                  <span className="text-body-sm font-medium tabular-nums text-brand-primary-600">
                     +{user.xpPeriod.toLocaleString("de-DE")}
                   </span>
                 </td>

@@ -1,6 +1,6 @@
 // =============================================================================
 // StatCard Component
-// LR AI Hub Design System
+// AI Hub Design System
 // Dashboard statistics card with label, value, change indicator, and icon
 // =============================================================================
 
@@ -33,14 +33,14 @@ export interface StatCardProps extends HTMLAttributes<HTMLDivElement> {
 // -----------------------------------------------------------------------------
 
 const iconVariantStyles = {
-  green: "bg-lr-green-50 text-lr-green-600",
-  gold: "bg-lr-gold-50 text-lr-gold-700",
+  green: "bg-brand-primary-50 text-brand-primary-600",
+  gold: "bg-brand-accent-50 text-brand-accent-700",
   blue: "bg-info-light text-info-dark",
   purple: "bg-purple-50 text-purple-600",
 };
 
 const changeDirectionStyles: Record<StatChangeDirection, string> = {
-  up: "text-lr-green-600",
+  up: "text-brand-primary-600",
   down: "text-error",
   neutral: "text-surface-500",
 };

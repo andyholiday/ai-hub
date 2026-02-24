@@ -83,7 +83,7 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
+              className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
               placeholder="deine@email.de"
             />
           </div>
@@ -98,7 +98,7 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
+              className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
               placeholder="Dein Passwort"
             />
           </div>
@@ -106,7 +106,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-between">
             <Link
               href="/forgot-password"
-              className="text-sm text-lr-green-600 hover:text-lr-green-700"
+              className="text-sm text-brand-primary-600 hover:text-brand-primary-700"
             >
               Passwort vergessen?
             </Link>
@@ -115,7 +115,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-lr-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-lr-green-700 disabled:opacity-50"
+            className="w-full rounded-lg bg-brand-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-700 disabled:opacity-50"
           >
             {loading ? "Wird angemeldet..." : "Anmelden"}
           </button>
@@ -123,7 +123,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-surface-500">
           Noch kein Konto?{" "}
-          <Link href="/register" className="font-medium text-lr-green-600 hover:text-lr-green-700">
+          <Link href="/register" className="font-medium text-brand-primary-600 hover:text-brand-primary-700">
             Jetzt registrieren
           </Link>
         </p>

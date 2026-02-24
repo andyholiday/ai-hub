@@ -1,6 +1,6 @@
 // =============================================================================
 // ProgressBar Component
-// LR AI Hub Design System
+// AI Hub Design System
 // =============================================================================
 
 "use client";
@@ -40,9 +40,9 @@ const sizeStyles = {
 };
 
 const variantStyles = {
-  gradient: "bg-gradient-to-r from-lr-green-500 to-lr-gold-500",
-  green: "bg-lr-green-500",
-  gold: "bg-lr-gold-500",
+  gradient: "bg-gradient-to-r from-brand-primary-500 to-brand-accent-500",
+  green: "bg-brand-primary-500",
+  gold: "bg-brand-accent-500",
   blue: "bg-info",
 };
 

@@ -1,19 +1,19 @@
 // =============================================================================
 // Site Configuration
-// Central configuration for the LR AI Hub application
+// Central configuration for the AI Hub application
 // =============================================================================
 
 export const siteConfig = {
-  name: "LR AI Hub",
+  name: "AI Hub",
   description:
-    "Die KI-Community-Plattform fuer LR Health & Beauty Systems Partner. Lernen, teilen und wachsen mit kuenstlicher Intelligenz.",
+    "Die KI-Community-Plattform zum Lernen, Teilen und Wachsen mit kuenstlicher Intelligenz.",
   url: process.env.NEXT_PUBLIC_APP_URL || (process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : "http://localhost:3000"),
   ogImage: "/images/og-image.png",
 
-  // LR Branding
+  // Company Branding
   company: {
-    name: "LR Health & Beauty Systems",
-    website: "https://www.lrworld.com",
+    name: "AppManufaktor",
+    website: "https://www.appmanufaktor.com",
   },
 
   // Feature Flags

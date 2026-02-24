@@ -1,6 +1,6 @@
 // =============================================================================
 // Toggle (Switch) Component
-// LR AI Hub Design System
+// AI Hub Design System
 // =============================================================================
 
 "use client";
@@ -96,10 +96,10 @@ export const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
           // Track
           "relative inline-flex shrink-0 cursor-pointer rounded-full",
           "transition-colors duration-200 ease-out",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-2",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50",
           styles.track,
-          checked ? "bg-lr-green-500" : "bg-surface-300"
+          checked ? "bg-brand-primary-500" : "bg-surface-300"
         )}
       >
         {/* Thumb */}

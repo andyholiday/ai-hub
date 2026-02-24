@@ -77,7 +77,7 @@ export function ProviderCard({
       className={cn(
         "relative rounded-[14px] border bg-white p-6 shadow-card transition-all duration-200",
         "hover:shadow-card-hover",
-        isPrimary && "border-lr-green-500 shadow-[0_0_0_2px_rgba(0,166,81,0.1)]",
+        isPrimary && "border-brand-primary-500 shadow-[0_0_0_2px_rgba(0,166,81,0.1)]",
         !isPrimary && !isInactive && "border-surface-200",
         isInactive && "border-surface-200 opacity-70",
         className
@@ -85,7 +85,7 @@ export function ProviderCard({
     >
       {/* Green top bar for primary provider */}
       {isPrimary && (
-        <div className="absolute inset-x-0 top-0 h-[3px] rounded-t-[14px] bg-lr-green-500" />
+        <div className="absolute inset-x-0 top-0 h-[3px] rounded-t-[14px] bg-brand-primary-500" />
       )}
 
       {/* Header */}
@@ -169,7 +169,7 @@ export function ProviderCard({
           <div
             className={cn(
               "mt-0.5 text-[13px] font-semibold",
-              isPrimary && "text-lr-green-500",
+              isPrimary && "text-brand-primary-500",
               provider.status === "fallback" && "text-amber-500",
               isInactive && "text-surface-400"
             )}

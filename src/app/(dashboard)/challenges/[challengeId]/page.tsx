@@ -336,7 +336,7 @@ export default function ChallengeDetailPage() {
                   {challenge.title}
                 </h1>
                 {challenge.isCompleted && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-lr-green-50 px-3 py-1 text-body-sm font-semibold text-lr-green-700">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary-50 px-3 py-1 text-body-sm font-semibold text-brand-primary-700">
                     <span className="h-4 w-4"><CheckCircleIcon /></span>
                     Abgeschlossen
                   </span>
@@ -384,7 +384,7 @@ export default function ChallengeDetailPage() {
                 "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
                 isTimeUrgent
                   ? "bg-red-50 text-red-500"
-                  : "bg-lr-green-50 text-lr-green-600",
+                  : "bg-brand-primary-50 text-brand-primary-600",
                 "[&>svg]:h-5 [&>svg]:w-5"
               )}
             >
@@ -409,7 +409,7 @@ export default function ChallengeDetailPage() {
                   "h-full rounded-full transition-all duration-500",
                   isTimeUrgent
                     ? "bg-gradient-to-r from-red-400 to-orange-400"
-                    : "bg-gradient-to-r from-lr-green-400 to-lr-green-500"
+                    : "bg-gradient-to-r from-brand-primary-400 to-brand-primary-500"
                 )}
                 style={{ width: `${timePercentage}%` }}
               />
@@ -438,7 +438,7 @@ export default function ChallengeDetailPage() {
         {/* XP Reward */}
         <Card>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-lr-gold-50 text-lr-gold-600 [&>svg]:h-5 [&>svg]:w-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-accent-50 text-brand-accent-600 [&>svg]:h-5 [&>svg]:w-5">
               <StarIcon />
             </div>
             <div>
@@ -459,7 +459,7 @@ export default function ChallengeDetailPage() {
               Dein Fortschritt
             </h2>
             {challenge.isCompleted && challenge.userCompletedAt && (
-              <span className="text-body-sm font-medium text-lr-green-600">
+              <span className="text-body-sm font-medium text-brand-primary-600">
                 Abgeschlossen am{" "}
                 {new Date(challenge.userCompletedAt).toLocaleDateString("de-DE", {
                   day: "2-digit",
@@ -496,7 +496,7 @@ export default function ChallengeDetailPage() {
       {!challenge.userJoined && (
         <Card>
           <div className="flex flex-col items-center gap-4 py-4 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-lr-green-50 text-lr-green-600 [&>svg]:h-7 [&>svg]:w-7">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-primary-50 text-brand-primary-600 [&>svg]:h-7 [&>svg]:w-7">
               <TrophyIcon />
             </div>
             <div>
@@ -555,7 +555,7 @@ export default function ChallengeDetailPage() {
                       {participant.name}
                     </p>
                     {participant.completedAt && (
-                      <p className="text-caption text-lr-green-600">
+                      <p className="text-caption text-brand-primary-600">
                         Abgeschlossen
                       </p>
                     )}

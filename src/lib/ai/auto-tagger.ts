@@ -34,7 +34,7 @@ export interface AutoTagResult {
 }
 
 // ---------------------------------------------------------------------------
-// Known categories and common tags for the LR AI Hub platform
+// Known categories and common tags for the AI Hub platform
 // ---------------------------------------------------------------------------
 
 const KNOWN_CATEGORIES = [
@@ -69,7 +69,7 @@ const COMMON_TAGS = [
   "Kundenservice",
   "Marketing",
   "Vertrieb",
-  "LR Partner",
+  "Community",
   "Anfaenger",
   "Fortgeschritten",
   "Experte",
@@ -84,7 +84,7 @@ function buildAutoTagSystemPrompt(existingTags?: string[]): string {
     ? `\n\nBereits verwendete Tags auf der Plattform:\n${existingTags.join(", ")}`
     : `\n\nHaeufig verwendete Tags:\n${COMMON_TAGS.join(", ")}`;
 
-  return `Du bist ein intelligenter Auto-Tagging-Assistent fuer die LR AI Hub Plattform.
+  return `Du bist ein intelligenter Auto-Tagging-Assistent fuer die AI Hub Plattform.
 Deine Aufgabe ist es, passende Tags fuer Best-Practice-Beitraege vorzuschlagen.
 
 Verfuegbare Kategorien: ${KNOWN_CATEGORIES.join(", ")}

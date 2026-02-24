@@ -38,13 +38,13 @@ const ChatPanel = dynamic(
 // -----------------------------------------------------------------------------
 
 const STATE_GRADIENT: Record<OrbState, string> = {
-  idle: "from-lr-green-500 to-lr-gold-500",
-  thinking: "from-lr-gold-400 to-lr-gold-600",
-  notification: "from-lr-green-500 to-lr-gold-500",
-  celebration: "from-lr-gold-400 to-lr-gold-500",
-  greeting: "from-lr-gold-400 to-lr-gold-500",
-  listening: "from-lr-green-400 to-lr-green-600",
-  energized: "from-lr-green-400 to-lr-gold-400",
+  idle: "from-brand-primary-500 to-brand-accent-500",
+  thinking: "from-brand-accent-400 to-brand-accent-600",
+  notification: "from-brand-primary-500 to-brand-accent-500",
+  celebration: "from-brand-accent-400 to-brand-accent-500",
+  greeting: "from-brand-accent-400 to-brand-accent-500",
+  listening: "from-brand-primary-400 to-brand-primary-600",
+  energized: "from-brand-primary-400 to-brand-accent-400",
 };
 
 // -----------------------------------------------------------------------------
@@ -164,13 +164,13 @@ export function AiOrb() {
             <div
               className={cn(
                 "ai-orb-ring pointer-events-none absolute inset-1/2 h-[88px] w-[88px] -translate-x-1/2 -translate-y-1/2 rounded-full",
-                "border border-lr-green-500/15",
+                "border border-brand-primary-500/15",
                 STATE_RING_CLASS[orbState]
               )}
               aria-hidden="true"
             >
               {/* Gold Particle on the ring */}
-              <span className="absolute -top-[3px] left-1/2 h-[6px] w-[6px] -translate-x-1/2 rounded-full bg-lr-gold-500 shadow-lr-gold" />
+              <span className="absolute -top-[3px] left-1/2 h-[6px] w-[6px] -translate-x-1/2 rounded-full bg-brand-accent-500 shadow-brand-accent" />
             </div>
 
             {/* Orb Button */}
@@ -185,7 +185,7 @@ export function AiOrb() {
                 STATE_GRADIENT[orbState],
                 "cursor-pointer outline-none transition-all duration-500 ease-out",
                 "hover:scale-110",
-                "focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-2",
+                "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2",
                 STATE_CORE_CLASS[orbState]
               )}
               aria-label="AI Mentor oeffnen"
@@ -198,8 +198,8 @@ export function AiOrb() {
                 className={cn(
                   "absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white",
                   {
-                    "bg-lr-green-400": !hasNotification,
-                    "bg-lr-gold-500 ai-orb-notification-dot": hasNotification,
+                    "bg-brand-primary-400": !hasNotification,
+                    "bg-brand-accent-500 ai-orb-notification-dot": hasNotification,
                   }
                 )}
                 aria-hidden="true"

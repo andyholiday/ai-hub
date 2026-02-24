@@ -94,8 +94,8 @@ export function IdeaCard({ idea, onVote, isVoting, className }: IdeaCardProps) {
         {/* Header: Icon + Upvotes */}
         <div className="flex items-start justify-between gap-3">
           {/* Idea Icon */}
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-lr-gold-50">
-            <Lightbulb className="h-5 w-5 text-lr-gold-600" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-accent-50">
+            <Lightbulb className="h-5 w-5 text-brand-accent-600" />
           </div>
 
           {/* Upvote Button */}
@@ -109,7 +109,7 @@ export function IdeaCard({ idea, onVote, isVoting, className }: IdeaCardProps) {
             className={cn(
               "flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 transition-colors",
               idea.hasUpvoted
-                ? "bg-lr-green-50 text-lr-green-600"
+                ? "bg-brand-primary-50 text-brand-primary-600"
                 : "bg-surface-100 text-surface-400 hover:bg-surface-200 hover:text-surface-600",
             )}
             aria-label="Upvote"

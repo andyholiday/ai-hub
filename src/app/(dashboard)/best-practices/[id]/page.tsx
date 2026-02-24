@@ -96,7 +96,7 @@ Erstelle einen Instagram-Post fuer [Produkt].
 - Interest: Beschreibe das Problem, das das Produkt loest
 - Desire: Zeige den emotionalen Nutzen
 - Action: Schliesse mit einem klaren Call-to-Action
-Tonalitaet: Freundlich, motivierend, LR-Markenstimme
+Tonalitaet: Freundlich, motivierend, authentische Markenstimme
 Laenge: Max. 150 Woerter
 \`\`\`
 
@@ -124,10 +124,10 @@ Fuer maximale Interaktion empfehlen wir folgende Prompt-Elemente:
 
 ## 4. Brand Voice Anpassung
 
-Damit ChatGPT die LR-Markenstimme trifft, nutzen wir einen vordefinierten System-Kontext:
+Damit ChatGPT die Markenstimme trifft, nutzen wir einen vordefinierten System-Kontext:
 
 \`\`\`
-Du schreibst als Content Creator fuer LR Health & Beauty.
+Du schreibst als Content Creator fuer die Community-Plattform.
 Markenstimme: Positiv, motivierend, gesundheitsbewusst
 Werte: Qualitaet, Gemeinschaft, persoenliches Wachstum
 Vermeide: Uebertreibungen, medizinische Versprechen, Negativitaet
@@ -238,14 +238,14 @@ function StarRating() {
           onClick={() => setRating(star)}
           onMouseEnter={() => setHoverRating(star)}
           onMouseLeave={() => setHoverRating(0)}
-          className="rounded-sm p-0.5 transition-transform duration-150 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lr-green-500"
+          className="rounded-sm p-0.5 transition-transform duration-150 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500"
           aria-label={`${star} Stern${star > 1 ? "e" : ""}`}
         >
           <Star
             className={cn(
               "h-5 w-5 transition-colors duration-150",
               (hoverRating || rating) >= star
-                ? "fill-lr-gold-500 text-lr-gold-500"
+                ? "fill-brand-accent-500 text-brand-accent-500"
                 : "text-surface-300"
             )}
           />
@@ -292,7 +292,7 @@ export default function BestPracticeDetailPage() {
           <li>
             <Link
               href="/best-practices"
-              className="flex items-center gap-1 transition-colors hover:text-lr-green-600"
+              className="flex items-center gap-1 transition-colors hover:text-brand-primary-600"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Best Practices
@@ -376,22 +376,22 @@ export default function BestPracticeDetailPage() {
 
             {/* Content Area with Prose Styling */}
             <div className="border-t border-surface-200 p-6 sm:p-8">
-              <div className="prose prose-surface max-w-none prose-headings:font-heading prose-headings:text-surface-900 prose-h2:text-title-lg prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-title prose-h3:font-semibold prose-p:text-body-lg prose-p:text-surface-700 prose-p:leading-relaxed prose-strong:text-surface-800 prose-code:rounded prose-code:bg-surface-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-body-sm prose-code:text-lr-green-700 prose-code:before:content-none prose-code:after:content-none prose-pre:rounded-xl prose-pre:bg-surface-900 prose-pre:p-4 prose-table:border-collapse prose-th:bg-surface-50 prose-th:p-3 prose-th:text-left prose-th:text-body-sm prose-th:font-semibold prose-td:border-t prose-td:border-surface-200 prose-td:p-3 prose-td:text-body-sm prose-blockquote:border-l-lr-green-500 prose-blockquote:bg-lr-green-50/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:px-4 prose-blockquote:not-italic prose-a:text-lr-green-600 prose-a:no-underline hover:prose-a:underline prose-li:text-body-lg prose-li:text-surface-700">
+              <div className="prose prose-surface max-w-none prose-headings:font-heading prose-headings:text-surface-900 prose-h2:text-title-lg prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-title prose-h3:font-semibold prose-p:text-body-lg prose-p:text-surface-700 prose-p:leading-relaxed prose-strong:text-surface-800 prose-code:rounded prose-code:bg-surface-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-body-sm prose-code:text-brand-primary-700 prose-code:before:content-none prose-code:after:content-none prose-pre:rounded-xl prose-pre:bg-surface-900 prose-pre:p-4 prose-table:border-collapse prose-th:bg-surface-50 prose-th:p-3 prose-th:text-left prose-th:text-body-sm prose-th:font-semibold prose-td:border-t prose-td:border-surface-200 prose-td:p-3 prose-td:text-body-sm prose-blockquote:border-l-brand-primary-500 prose-blockquote:bg-brand-primary-50/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:px-4 prose-blockquote:not-italic prose-a:text-brand-primary-600 prose-a:no-underline hover:prose-a:underline prose-li:text-body-lg prose-li:text-surface-700">
                 <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(markdownToHtml(data.content)) }} />
               </div>
             </div>
           </Card>
 
           {/* XP Reward Banner */}
-          <div className="mt-4 flex items-center gap-3 rounded-[14px] border border-lr-green-200 bg-lr-green-50 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-lr-green-500">
+          <div className="mt-4 flex items-center gap-3 rounded-[14px] border border-brand-primary-200 bg-brand-primary-50 p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-primary-500">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="text-body font-semibold text-lr-green-800">
+              <p className="text-body font-semibold text-brand-primary-800">
                 +{data.xpReward} XP fuer das Lesen dieser Best Practice
               </p>
-              <p className="text-body-sm text-lr-green-600">
+              <p className="text-body-sm text-brand-primary-600">
                 Lese weitere Best Practices, um dein Level zu steigern.
               </p>
             </div>
@@ -410,8 +410,8 @@ export default function BestPracticeDetailPage() {
             <Card accent="green" noPadding>
               <div className="p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lr-green-50">
-                    <Bot className="h-4 w-4 text-lr-green-600" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary-50">
+                    <Bot className="h-4 w-4 text-brand-primary-600" />
                   </div>
                   <div>
                     <h3 className="text-body font-semibold text-surface-900">
@@ -442,8 +442,8 @@ export default function BestPracticeDetailPage() {
                     className={cn(
                       "flex items-center gap-2 rounded-xl border px-4 py-2.5 transition-all duration-200",
                       isUpvoted
-                        ? "border-lr-green-500 bg-lr-green-50 text-lr-green-700"
-                        : "border-surface-300 text-surface-500 hover:border-lr-green-300 hover:bg-lr-green-50 hover:text-lr-green-600"
+                        ? "border-brand-primary-500 bg-brand-primary-50 text-brand-primary-700"
+                        : "border-surface-300 text-surface-500 hover:border-brand-primary-300 hover:bg-brand-primary-50 hover:text-brand-primary-600"
                     )}
                     aria-label="Upvote"
                   >
@@ -518,7 +518,7 @@ export default function BestPracticeDetailPage() {
                         <Badge variant={simCatConfig.variant} size="sm">
                           {simCatConfig.label}
                         </Badge>
-                        <p className="mt-2 text-body-sm font-medium text-surface-800 group-hover/similar:text-lr-green-600 transition-colors">
+                        <p className="mt-2 text-body-sm font-medium text-surface-800 group-hover/similar:text-brand-primary-600 transition-colors">
                           {item.title}
                         </p>
                         <div className="mt-1.5 flex items-center gap-1 text-caption text-surface-400">

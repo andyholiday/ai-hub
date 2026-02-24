@@ -2,7 +2,7 @@
 
 export const metadata = {
   title: "System-Einstellungen | Admin",
-  description: "System-Einstellungen fuer die LR AI Hub Administration",
+  description: "System-Einstellungen fuer die Administration",
 };
 
 export default function AdminSettingsPage() {

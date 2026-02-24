@@ -1,6 +1,6 @@
 // =============================================================================
 // Badge Component
-// LR AI Hub Design System
+// AI Hub Design System
 // =============================================================================
 
 import React, { forwardRef, type HTMLAttributes } from "react";
@@ -27,18 +27,18 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 // -----------------------------------------------------------------------------
 
 const variantStyles: Record<BadgeVariant, string> = {
-  green: "bg-lr-green-50 text-lr-green-700 ring-lr-green-200",
+  green: "bg-brand-primary-50 text-brand-primary-700 ring-brand-primary-200",
   blue: "bg-info-light text-info-dark ring-blue-200",
-  gold: "bg-lr-gold-50 text-lr-gold-800 ring-lr-gold-200",
+  gold: "bg-brand-accent-50 text-brand-accent-800 ring-brand-accent-200",
   purple: "bg-purple-50 text-purple-700 ring-purple-200",
   red: "bg-error-light text-error-dark ring-red-200",
   gray: "bg-surface-100 text-surface-600 ring-surface-300",
 };
 
 const dotColors: Record<BadgeVariant, string> = {
-  green: "bg-lr-green-500",
+  green: "bg-brand-primary-500",
   blue: "bg-info",
-  gold: "bg-lr-gold-500",
+  gold: "bg-brand-accent-500",
   purple: "bg-purple-500",
   red: "bg-error",
   gray: "bg-surface-400",

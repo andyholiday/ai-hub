@@ -221,7 +221,7 @@ export default function LessonDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
       </div>
     );
   }
@@ -267,7 +267,7 @@ export default function LessonDetailPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
           <div className="animate-bounce rounded-2xl bg-white p-8 shadow-2xl">
             <div className="text-center">
-              <Star className="mx-auto h-12 w-12 text-lr-gold-500" />
+              <Star className="mx-auto h-12 w-12 text-brand-accent-500" />
               <p className="mt-3 text-3xl font-bold text-surface-900">
                 +{LESSON_XP} XP
               </p>
@@ -330,13 +330,13 @@ export default function LessonDetailPage() {
           // Quiz Content
           <div className="mt-4">
             {lesson.isCompleted ? (
-              <div className="rounded-lg bg-lr-green-50 p-6 text-center">
-                <CheckCircle2 className="mx-auto h-10 w-10 text-lr-green-500" />
-                <p className="mt-2 text-title-sm font-semibold text-lr-green-700">
+              <div className="rounded-lg bg-brand-primary-50 p-6 text-center">
+                <CheckCircle2 className="mx-auto h-10 w-10 text-brand-primary-500" />
+                <p className="mt-2 text-title-sm font-semibold text-brand-primary-700">
                   Quiz bereits bestanden!
                 </p>
                 {lesson.quizScore != null && (
-                  <p className="mt-1 text-body-sm text-lr-green-600">
+                  <p className="mt-1 text-body-sm text-brand-primary-600">
                     Dein Ergebnis: {lesson.quizScore}%
                   </p>
                 )}
@@ -354,7 +354,7 @@ export default function LessonDetailPage() {
           // Text / Video / Interactive Content
           <div className="mt-4">
             <div
-              className="prose prose-surface max-w-none prose-headings:font-heading prose-headings:text-surface-900 prose-p:text-surface-700 prose-strong:text-surface-900 prose-code:rounded prose-code:bg-surface-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-lr-green-700 prose-pre:rounded-lg prose-pre:bg-surface-900"
+              className="prose prose-surface max-w-none prose-headings:font-heading prose-headings:text-surface-900 prose-p:text-surface-700 prose-strong:text-surface-900 prose-code:rounded prose-code:bg-surface-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-brand-primary-700 prose-pre:rounded-lg prose-pre:bg-surface-900"
               dangerouslySetInnerHTML={{
                 __html: sanitizeHtml(renderMarkdown(lesson.content)),
               }}
@@ -372,10 +372,10 @@ export default function LessonDetailPage() {
 
       {/* Completion Message */}
       {completionMessage && (
-        <Card className="border-lr-green-200 bg-lr-green-50 p-4">
+        <Card className="border-brand-primary-200 bg-brand-primary-50 p-4">
           <div className="flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-lr-green-600" />
-            <p className="text-body-sm font-medium text-lr-green-700">
+            <CheckCircle2 className="h-5 w-5 text-brand-primary-600" />
+            <p className="text-body-sm font-medium text-brand-primary-700">
               {completionMessage}
             </p>
           </div>

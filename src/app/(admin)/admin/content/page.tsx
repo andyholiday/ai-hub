@@ -2,7 +2,7 @@
 
 export const metadata = {
   title: "Content-Verwaltung | Admin",
-  description: "Content-Verwaltung fuer die LR AI Hub Administration",
+  description: "Content-Verwaltung fuer die Administration",
 };
 
 export default function AdminContentPage() {

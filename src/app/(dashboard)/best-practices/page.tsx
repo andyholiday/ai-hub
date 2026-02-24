@@ -57,7 +57,7 @@ const demoBestPractices: BestPracticeCardData[] = [
     id: "2",
     title: "KI-Automatisierung im Kundenservice",
     excerpt:
-      "Wie LR den Kundenservice mit KI-gestuetzter Automatisierung revolutioniert. Lerne, wie Chatbots und automatische E-Mail-Klassifizierung die Antwortzeiten um 60% reduzieren und die Kundenzufriedenheit steigern.",
+      "Wie KI-gestuetzte Automatisierung den Kundenservice revolutioniert. Lerne, wie Chatbots und automatische E-Mail-Klassifizierung die Antwortzeiten um 60% reduzieren und die Kundenzufriedenheit steigern.",
     category: "automatisierung",
     author: {
       name: "Lisa Peters",
@@ -91,7 +91,7 @@ const demoBestPractices: BestPracticeCardData[] = [
   },
   {
     id: "4",
-    title: "Ethische Richtlinien fuer KI-Einsatz bei LR",
+    title: "Ethische Richtlinien fuer den KI-Einsatz im Unternehmen",
     excerpt:
       "Ein umfassender Leitfaden zu den ethischen Grundsaetzen beim Einsatz von KI in unserem Unternehmen. Von Datenschutz ueber Transparenz bis hin zu fairer Nutzung -- diese Best Practice definiert den Rahmen fuer verantwortungsvollen KI-Einsatz.",
     category: "ki-ethik",
@@ -111,7 +111,7 @@ const demoBestPractices: BestPracticeCardData[] = [
     id: "5",
     title: "Top 10 KI-Tools fuer Marketer 2026",
     excerpt:
-      "Die besten KI-Tools fuer das Marketing-Team: Von Text-Generierung ueber Bildbearbeitung bis zur Analyse. Jedes Tool wird mit konkreten Anwendungsfaellen bei LR vorgestellt und bewertet.",
+      "Die besten KI-Tools fuer das Marketing-Team: Von Text-Generierung ueber Bildbearbeitung bis zur Analyse. Jedes Tool wird mit konkreten Anwendungsfaellen vorgestellt und bewertet.",
     category: "ki-tools",
     author: {
       name: "Sarah Hoffmann",
@@ -129,7 +129,7 @@ const demoBestPractices: BestPracticeCardData[] = [
     id: "6",
     title: "Midjourney-Prompts fuer Produktbilder",
     excerpt:
-      "Erstelle professionelle Produktbilder mit Midjourney. Diese Best Practice enthaelt bewaehrte Prompt-Formeln, Stil-Referenzen und Nachbearbeitungstipps speziell fuer LR-Produkte im E-Commerce und Social Media.",
+      "Erstelle professionelle Produktbilder mit Midjourney. Diese Best Practice enthaelt bewaehrte Prompt-Formeln, Stil-Referenzen und Nachbearbeitungstipps fuer Produkte im E-Commerce und Social Media.",
     category: "ki-tools",
     author: {
       name: "Markus Koenig",
@@ -264,7 +264,7 @@ export default function BestPracticesPage() {
                     className={cn(
                       "flex w-full items-center px-4 py-2.5 text-body-sm transition-colors duration-150",
                       sortBy === option
-                        ? "bg-lr-green-50 font-semibold text-lr-green-700"
+                        ? "bg-brand-primary-50 font-semibold text-brand-primary-700"
                         : "text-surface-600 hover:bg-surface-50"
                     )}
                   >
@@ -281,7 +281,7 @@ export default function BestPracticesPage() {
       {/* Results Count */}
       {/* ------------------------------------------------------------------ */}
       <div className="mt-5 flex items-center gap-2">
-        <Sparkles className="h-4 w-4 text-lr-gold-500" />
+        <Sparkles className="h-4 w-4 text-brand-accent-500" />
         <span className="text-body-sm text-surface-500">
           {filteredPractices.length}{" "}
           {filteredPractices.length === 1 ? "Best Practice" : "Best Practices"}{" "}
@@ -300,8 +300,8 @@ export default function BestPracticesPage() {
         </div>
       ) : (
         <div className="mt-8 rounded-2xl border-2 border-dashed border-surface-200 bg-surface-50/50 p-12 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-lr-green-100 shadow-sm">
-            <Sparkles className="h-8 w-8 text-lr-green-600" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary-100 shadow-sm">
+            <Sparkles className="h-8 w-8 text-brand-primary-600" />
           </div>
           <h3 className="font-heading text-title-md font-semibold text-surface-900">
             {searchQuery || activeCategory !== "all"

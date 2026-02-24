@@ -46,7 +46,7 @@ interface ActivityFeedProps {
 const tagConfig: Record<FeedItemTag, { label: string; classes: string }> = {
   "best-practice": {
     label: "Best Practice",
-    classes: "bg-lr-green-50 text-lr-green-600",
+    classes: "bg-brand-primary-50 text-brand-primary-600",
   },
   achievement: {
     label: "Achievement",
@@ -75,7 +75,7 @@ const feedItems: FeedItem[] = [
     time: "Vor 25 Min",
     department: "Marketing",
     tag: "best-practice",
-    title: "ChatGPT-Prompts fuer Social Media Content bei LR",
+    title: "ChatGPT-Prompts fuer Social Media Content",
     excerpt:
       "Eine Sammlung von 15 getesteten Prompts fuer Social Media Posts. Inkl. Vorher/Nachher-Vergleiche und Zeitersparnis-Analyse.",
     actions: [
@@ -105,7 +105,7 @@ const feedItems: FeedItem[] = [
     id: "3",
     author: "Thomas Wagner",
     initials: "TW",
-    avatarColor: "bg-lr-gold-500",
+    avatarColor: "bg-brand-accent-500",
     time: "Vor 3 Std",
     department: "IT",
     tag: "diskussion",
@@ -153,7 +153,7 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
       {/* Section Title */}
       <h2 className="mb-4 flex items-center gap-2 font-display text-base font-semibold text-surface-900">
         <span
-          className="h-4 w-[3px] rounded-full bg-lr-green-500"
+          className="h-4 w-[3px] rounded-full bg-brand-primary-500"
           aria-hidden="true"
         />
         Aktivitaets-Feed
@@ -235,8 +235,8 @@ export function ActivityFeed({ className }: ActivityFeedProps) {
                     className={cn(
                       "inline-flex items-center gap-1.5 text-caption transition-colors duration-150",
                       action.isXp
-                        ? "ml-auto font-semibold text-lr-gold-500"
-                        : "text-surface-400 hover:text-lr-green-500"
+                        ? "ml-auto font-semibold text-brand-accent-500"
+                        : "text-surface-400 hover:text-brand-primary-500"
                     )}
                     type="button"
                   >

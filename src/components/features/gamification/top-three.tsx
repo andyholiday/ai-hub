@@ -79,13 +79,13 @@ const rankConfig: Record<
 > = {
   1: {
     containerClass: "order-2 z-10 -mt-4 sm:-mt-6",
-    ringClass: "ring-4 ring-lr-gold-400",
-    accentColor: "from-lr-gold-400 to-lr-gold-600",
-    bgGlow: "shadow-lr-gold",
+    ringClass: "ring-4 ring-brand-accent-400",
+    accentColor: "from-brand-accent-400 to-brand-accent-600",
+    bgGlow: "shadow-brand-accent",
     label: "1. Platz",
     badgeVariant: "gold",
     avatarSize: "h-20 w-20 sm:h-24 sm:w-24",
-    iconColor: "text-lr-gold-500",
+    iconColor: "text-brand-accent-500",
   },
   2: {
     containerClass: "order-1",

@@ -12,8 +12,8 @@ import { DashboardContent } from "@/components/features/dashboard";
 // -----------------------------------------------------------------------------
 
 export const metadata = {
-  title: "Dashboard | LR AI Hub",
-  description: "Deine persoenliche Uebersicht im LR AI Hub",
+  title: "Dashboard | AI Hub",
+  description: "Deine persoenliche Uebersicht im AI Hub",
 };
 
 // -----------------------------------------------------------------------------

@@ -77,7 +77,7 @@ function TimeBar({
               "h-full rounded-full transition-all duration-500",
               isUrgent
                 ? "bg-gradient-to-r from-error to-orange-400"
-                : "bg-gradient-to-r from-lr-green-400 to-lr-green-500"
+                : "bg-gradient-to-r from-brand-primary-400 to-brand-primary-500"
             )}
             style={{ width: `${percentage}%` }}
           />
@@ -185,7 +185,7 @@ export function ChallengeCard({
     >
       {/* Completed overlay checkmark */}
       {isCompleted && (
-        <div className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-lr-green-500">
+        <div className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary-500">
           <CheckIcon className="h-5 w-5 text-white" />
         </div>
       )}
@@ -198,7 +198,7 @@ export function ChallengeCard({
             "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
             isCompleted
               ? "bg-surface-200 text-surface-500"
-              : "bg-lr-green-50 text-lr-green-600",
+              : "bg-brand-primary-50 text-brand-primary-600",
             "[&>svg]:h-5 [&>svg]:w-5"
           )}
           aria-hidden="true"
@@ -263,7 +263,7 @@ export function ChallengeCard({
 
       {/* Completed result text */}
       {isCompleted && result && (
-        <p className="mt-3 text-body-sm font-medium text-lr-green-600">
+        <p className="mt-3 text-body-sm font-medium text-brand-primary-600">
           {result}
         </p>
       )}

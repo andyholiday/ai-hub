@@ -114,8 +114,8 @@ const categoryConfig: Record<
 > = {
   achievement: {
     label: "Erfolg",
-    colorClass: "text-lr-green-600",
-    bgClass: "bg-lr-green-50",
+    colorClass: "text-brand-primary-600",
+    bgClass: "bg-brand-primary-50",
   },
   skill: {
     label: "Skill",
@@ -129,8 +129,8 @@ const categoryConfig: Record<
   },
   special: {
     label: "Spezial",
-    colorClass: "text-lr-gold-700",
-    bgClass: "bg-lr-gold-50",
+    colorClass: "text-brand-accent-700",
+    bgClass: "bg-brand-accent-50",
   },
 };
 
@@ -272,7 +272,7 @@ export function BadgeGrid({ badges, className }: BadgeGridProps) {
             className={cn(
               "rounded-full px-3 py-1.5 text-caption font-medium transition-all duration-150",
               filter === cat.key
-                ? "bg-lr-green-500 text-white shadow-sm"
+                ? "bg-brand-primary-500 text-white shadow-sm"
                 : "bg-surface-100 text-surface-600 hover:bg-surface-200"
             )}
           >

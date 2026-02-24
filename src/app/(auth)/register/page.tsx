@@ -45,7 +45,7 @@ export default function RegisterPage() {
           Registrieren
         </h1>
         <p className="mt-2 text-sm text-surface-500">
-          Erstelle dein LR AI Hub Konto.
+          Erstelle dein AI Hub Konto.
         </p>
 
         {error && (
@@ -65,7 +65,7 @@ export default function RegisterPage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
+              className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
               placeholder="Dein vollstaendiger Name"
             />
           </div>
@@ -80,7 +80,7 @@ export default function RegisterPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
+              className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
               placeholder="deine@email.de"
             />
           </div>
@@ -96,7 +96,7 @@ export default function RegisterPage() {
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
+              className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
               placeholder="Mindestens 8 Zeichen"
             />
           </div>
@@ -104,7 +104,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-lr-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-lr-green-700 disabled:opacity-50"
+            className="w-full rounded-lg bg-brand-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-700 disabled:opacity-50"
           >
             {loading ? "Wird erstellt..." : "Konto erstellen"}
           </button>
@@ -112,7 +112,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-surface-500">
           Bereits ein Konto?{" "}
-          <Link href="/login" className="font-medium text-lr-green-600 hover:text-lr-green-700">
+          <Link href="/login" className="font-medium text-brand-primary-600 hover:text-brand-primary-700">
             Jetzt anmelden
           </Link>
         </p>

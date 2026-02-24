@@ -122,8 +122,8 @@ export function Quiz({
           {/* Result Icon */}
           <div className="mx-auto mb-4">
             {passed ? (
-              <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-lr-green-50">
-                <Trophy className="h-8 w-8 text-lr-green-600" />
+              <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary-50">
+                <Trophy className="h-8 w-8 text-brand-primary-600" />
               </div>
             ) : (
               <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
@@ -169,12 +169,12 @@ export function Quiz({
                   key={index}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 ${
                     answer?.isCorrect
-                      ? "bg-lr-green-50"
+                      ? "bg-brand-primary-50"
                       : "bg-red-50"
                   }`}
                 >
                   {answer?.isCorrect ? (
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-lr-green-500" />
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-brand-primary-500" />
                   ) : (
                     <XCircle className="h-4 w-4 shrink-0 text-red-500" />
                   )}
@@ -253,14 +253,14 @@ export function Quiz({
 
           if (hasAnswered) {
             if (isCorrectOption) {
-              optionStyle = "border-lr-green-300 bg-lr-green-50";
+              optionStyle = "border-brand-primary-300 bg-brand-primary-50";
             } else if (isSelected && !isCorrectOption) {
               optionStyle = "border-red-300 bg-red-50";
             } else {
               optionStyle = "border-surface-200 opacity-60";
             }
           } else if (isSelected) {
-            optionStyle = "border-lr-green-500 bg-lr-green-50";
+            optionStyle = "border-brand-primary-500 bg-brand-primary-50";
           }
 
           return (
@@ -274,7 +274,7 @@ export function Quiz({
               <span
                 className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-caption font-semibold ${
                   hasAnswered && isCorrectOption
-                    ? "bg-lr-green-500 text-white"
+                    ? "bg-brand-primary-500 text-white"
                     : hasAnswered && isSelected && !isCorrectOption
                       ? "bg-red-500 text-white"
                       : "bg-surface-200 text-surface-600"
@@ -288,7 +288,7 @@ export function Quiz({
 
               {/* Result Icon */}
               {hasAnswered && isCorrectOption && (
-                <CheckCircle2 className="ml-auto h-5 w-5 shrink-0 text-lr-green-500" />
+                <CheckCircle2 className="ml-auto h-5 w-5 shrink-0 text-brand-primary-500" />
               )}
               {hasAnswered && isSelected && !isCorrectOption && (
                 <XCircle className="ml-auto h-5 w-5 shrink-0 text-red-500" />

@@ -35,7 +35,7 @@ const PRESET_CARDS: {
     id: "lr",
     label: "LR Health & Beauty",
     logoText: "LR",
-    gradientClass: "bg-lr-gradient",
+    gradientClass: "bg-brand-gradient",
   },
 ];
 
@@ -107,7 +107,7 @@ export function AdminBrandingTab() {
       {/* ----------------------------------------------------------------- */}
       <div className="rounded-[14px] border border-surface-200 bg-white p-6 shadow-card">
         <div className="mb-4 flex items-center gap-2">
-          <div className="h-4 w-[3px] rounded-sm bg-lr-green-500" />
+          <div className="h-4 w-[3px] rounded-sm bg-brand-primary-500" />
           <Palette className="h-4 w-4 text-surface-500" />
           <h3 className="font-display text-base font-semibold text-surface-900">
             Branding-Preset
@@ -130,7 +130,7 @@ export function AdminBrandingTab() {
                 className={cn(
                   "relative flex items-center gap-4 rounded-xl border-2 p-4 text-left transition-all duration-150",
                   isActive
-                    ? "border-lr-green-500 bg-lr-green-50/50 shadow-sm"
+                    ? "border-brand-primary-500 bg-brand-primary-50/50 shadow-sm"
                     : "border-surface-200 bg-white hover:border-surface-300 hover:shadow-sm",
                 )}
               >
@@ -158,7 +158,7 @@ export function AdminBrandingTab() {
 
                 {/* Active indicator */}
                 {isActive && (
-                  <div className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-lr-green-500">
+                  <div className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary-500">
                     <Check className="h-3 w-3 text-white" strokeWidth={3} />
                   </div>
                 )}
@@ -173,7 +173,7 @@ export function AdminBrandingTab() {
       {/* ----------------------------------------------------------------- */}
       <div className="rounded-[14px] border border-surface-200 bg-white p-6 shadow-card">
         <div className="mb-4 flex items-center gap-2">
-          <div className="h-4 w-[3px] rounded-sm bg-lr-green-500" />
+          <div className="h-4 w-[3px] rounded-sm bg-brand-primary-500" />
           <h3 className="font-display text-base font-semibold text-surface-900">
             Benutzerdefinierte Einstellungen
           </h3>
@@ -189,7 +189,7 @@ export function AdminBrandingTab() {
               type="text"
               value={form.appName}
               onChange={(e) => handleFieldChange("appName", e.target.value)}
-              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
               placeholder="z.B. AI Hub"
             />
           </div>
@@ -205,7 +205,7 @@ export function AdminBrandingTab() {
               onChange={(e) =>
                 handleFieldChange("appSubtitle", e.target.value)
               }
-              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
               placeholder="z.B. Community Platform"
             />
           </div>
@@ -221,7 +221,7 @@ export function AdminBrandingTab() {
               onChange={(e) =>
                 handleFieldChange("companyName", e.target.value)
               }
-              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
               placeholder="z.B. AppManufaktor"
             />
           </div>
@@ -238,7 +238,7 @@ export function AdminBrandingTab() {
               onChange={(e) =>
                 handleFieldChange("logoText", e.target.value)
               }
-              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
               placeholder="z.B. AM (max. 3 Zeichen)"
             />
           </div>
@@ -254,7 +254,7 @@ export function AdminBrandingTab() {
               onChange={(e) =>
                 handleFieldChange("loginSubtext", e.target.value)
               }
-              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
               placeholder="Text auf der Login-Seite"
             />
           </div>
@@ -270,7 +270,7 @@ export function AdminBrandingTab() {
               onChange={(e) =>
                 handleFieldChange("description", e.target.value)
               }
-              className="w-full resize-none rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+              className="w-full resize-none rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
               placeholder="App-Beschreibung"
             />
           </div>
@@ -282,7 +282,7 @@ export function AdminBrandingTab() {
       {/* ----------------------------------------------------------------- */}
       <div className="rounded-[14px] border border-surface-200 bg-white p-6 shadow-card">
         <div className="mb-4 flex items-center gap-2">
-          <div className="h-4 w-[3px] rounded-sm bg-lr-green-500" />
+          <div className="h-4 w-[3px] rounded-sm bg-brand-primary-500" />
           <h3 className="font-display text-base font-semibold text-surface-900">
             Live-Preview (Sidebar-Logo)
           </h3>
@@ -325,8 +325,8 @@ export function AdminBrandingTab() {
           className={cn(
             "flex items-center gap-2 rounded-xl px-5 py-2.5 font-medium text-white transition-colors",
             saved
-              ? "bg-lr-green-500"
-              : "bg-lr-green-600 hover:bg-lr-green-700",
+              ? "bg-brand-primary-500"
+              : "bg-brand-primary-600 hover:bg-brand-primary-700",
           )}
         >
           {saved ? (

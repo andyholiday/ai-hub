@@ -82,7 +82,7 @@ export function TrendingTopics({
               hoverable
               className={cn(
                 "cursor-pointer p-4",
-                isSelected && "ring-2 ring-lr-green-500",
+                isSelected && "ring-2 ring-brand-primary-500",
               )}
               onClick={() => onItemClick(item)}
             >
@@ -119,7 +119,7 @@ export function TrendingTopics({
                     className={cn(
                       "h-full rounded-full transition-all duration-500",
                       item.ring === "adopt"
-                        ? "bg-lr-green-500"
+                        ? "bg-brand-primary-500"
                         : item.ring === "trial"
                           ? "bg-info"
                           : item.ring === "assess"

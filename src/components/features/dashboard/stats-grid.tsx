@@ -118,9 +118,9 @@ function buildStats(
       value: xpTotal.toLocaleString("de-DE"),
       change: `Level-Fortschritt aktiv`,
       changeDirection: "up" as const,
-      icon: <Zap className="h-5 w-5 text-lr-green-500" />,
-      iconBg: "bg-lr-green-50",
-      valueColor: "text-lr-green-500",
+      icon: <Zap className="h-5 w-5 text-brand-primary-500" />,
+      iconBg: "bg-brand-primary-50",
+      valueColor: "text-brand-primary-500",
     },
     {
       label: "Abgeschlossene Kurse",

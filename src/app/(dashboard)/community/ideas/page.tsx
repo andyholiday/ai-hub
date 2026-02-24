@@ -68,7 +68,7 @@ function CreateIdeaForm({
     <Card accent="gold">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Lightbulb className="h-5 w-5 text-lr-gold-500" />
+          <Lightbulb className="h-5 w-5 text-brand-accent-500" />
           <h2 className="font-heading text-title-sm font-semibold text-surface-900">
             Neue Idee einreichen
           </h2>
@@ -100,7 +100,7 @@ function CreateIdeaForm({
           </label>
           <textarea
             id="idea-content"
-            className="w-full rounded-[10px] border border-surface-300 bg-white px-3.5 py-2.5 text-body text-surface-900 placeholder:text-surface-400 focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
+            className="w-full rounded-[10px] border border-surface-300 bg-white px-3.5 py-2.5 text-body text-surface-900 placeholder:text-surface-400 focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
             rows={5}
             placeholder="Beschreibe deine Idee im Detail. Was ist das Problem? Welche Loesung schlaeaegst du vor?"
             value={content}
@@ -162,8 +162,8 @@ export default function IdeasPage() {
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lr-gold-50">
-            <Lightbulb className="h-6 w-6 text-lr-gold-600" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-accent-50">
+            <Lightbulb className="h-6 w-6 text-brand-accent-600" />
           </div>
           <div>
             <h1 className="font-display text-2xl font-bold text-surface-900">

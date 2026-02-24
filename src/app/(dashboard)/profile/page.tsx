@@ -281,7 +281,7 @@ export default function ProfilePage() {
       {/* Profile Header Card */}
       <Card className="!p-0 overflow-hidden">
         {/* Green gradient banner */}
-        <div className="h-28 bg-lr-gradient sm:h-36" />
+        <div className="h-28 bg-brand-gradient sm:h-36" />
 
         {/* Profile info */}
         <div className="relative px-5 pb-5 sm:px-6 sm:pb-6">

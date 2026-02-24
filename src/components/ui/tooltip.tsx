@@ -1,6 +1,6 @@
 // =============================================================================
 // Tooltip Component
-// LR AI Hub Design System
+// AI Hub Design System
 // Hover-triggered tooltip with glassmorphism pill shape
 // =============================================================================
 

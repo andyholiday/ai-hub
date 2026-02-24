@@ -92,7 +92,7 @@ export function MobileNav() {
                   "text-[10px] font-medium transition-colors duration-150",
                   "min-w-[56px]",
                   isActive
-                    ? "text-[#00A651]"
+                    ? "text-brand-primary-500"
                     : "text-surface-400 active:text-surface-600"
                 )}
                 aria-current={isActive ? "page" : undefined}
@@ -100,7 +100,7 @@ export function MobileNav() {
                 <Icon
                   className={cn(
                     "h-5 w-5 transition-colors duration-150",
-                    isActive ? "text-[#00A651]" : "text-surface-400"
+                    isActive ? "text-brand-primary-500" : "text-surface-400"
                   )}
                   strokeWidth={isActive ? 2.2 : 1.8}
                 />
@@ -108,7 +108,7 @@ export function MobileNav() {
 
                 {/* Active indicator dot */}
                 {isActive && (
-                  <span className="absolute -bottom-0.5 h-0.5 w-4 rounded-full bg-[#00A651]" />
+                  <span className="absolute -bottom-0.5 h-0.5 w-4 rounded-full bg-brand-primary-500" />
                 )}
               </Link>
             </li>

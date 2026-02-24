@@ -98,7 +98,7 @@ function getIconEmoji(iconName: string): string {
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; badge: "green" | "blue" | "gold" | "purple" }> = {
   learning: { bg: "bg-blue-50", text: "text-blue-600", badge: "blue" },
-  community: { bg: "bg-lr-green-50", text: "text-lr-green-600", badge: "green" },
+  community: { bg: "bg-brand-primary-50", text: "text-brand-primary-600", badge: "green" },
   engagement: { bg: "bg-orange-50", text: "text-amber-600", badge: "gold" },
   mastery: { bg: "bg-purple-50", text: "text-purple-600", badge: "purple" },
 };
@@ -127,7 +127,7 @@ function SummaryCards({ summary }: { summary: AchievementSummary }) {
         <div className="text-caption font-semibold uppercase tracking-wide text-surface-400">
           Freigeschaltet
         </div>
-        <div className="mt-1 font-display text-[24px] font-bold tabular-nums text-lr-green-500">
+        <div className="mt-1 font-display text-[24px] font-bold tabular-nums text-brand-primary-500">
           {summary.unlocked}
         </div>
       </div>
@@ -207,7 +207,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
               {achievement.title}
             </h4>
             {achievement.unlocked ? (
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-lr-green-500" />
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-brand-primary-500" />
             ) : (
               <Lock className="h-3.5 w-3.5 shrink-0 text-surface-300" />
             )}
@@ -438,7 +438,7 @@ export default function AchievementsPage() {
                 className={cn(
                   "rounded-lg px-3.5 py-1.5 text-caption font-semibold transition-all duration-150",
                   activeTab === tab.key
-                    ? "bg-lr-green-50 text-lr-green-600"
+                    ? "bg-brand-primary-50 text-brand-primary-600"
                     : "bg-surface-50 text-surface-500 hover:bg-surface-100 hover:text-surface-700",
                 )}
               >

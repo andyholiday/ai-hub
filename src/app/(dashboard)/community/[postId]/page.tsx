@@ -250,7 +250,7 @@ export default function CommunityPostPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
       </div>
     );
   }
@@ -304,7 +304,7 @@ export default function CommunityPostPage() {
               onClick={handleVote}
               disabled={isVoting}
               className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors ${post.hasUpvoted
-                  ? "bg-lr-green-50 text-lr-green-600"
+                  ? "bg-brand-primary-50 text-brand-primary-600"
                   : "bg-surface-100 text-surface-400 hover:bg-surface-200 hover:text-surface-600"
                 }`}
               aria-label="Upvote"
@@ -312,7 +312,7 @@ export default function CommunityPostPage() {
               <ThumbsUp className="h-5 w-5" />
             </button>
             <span
-              className={`text-body-sm font-bold ${post.hasUpvoted ? "text-lr-green-600" : "text-surface-500"
+              className={`text-body-sm font-bold ${post.hasUpvoted ? "text-brand-primary-600" : "text-surface-500"
                 }`}
             >
               {post.upvotes_count}
@@ -324,7 +324,7 @@ export default function CommunityPostPage() {
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap">
               {post.is_pinned && (
-                <Pin className="h-3.5 w-3.5 text-lr-gold-500" />
+                <Pin className="h-3.5 w-3.5 text-brand-accent-500" />
               )}
               <Badge variant={POST_TYPE_COLORS[post.type]} size="md">
                 {POST_TYPE_LABELS[post.type]}
@@ -407,7 +407,7 @@ export default function CommunityPostPage() {
           ) : (
             <Card className="text-center">
               <div className="space-y-3 py-4">
-                <Sparkles className="mx-auto h-10 w-10 text-lr-gold-500" />
+                <Sparkles className="mx-auto h-10 w-10 text-brand-accent-500" />
                 <div>
                   <h3 className="font-heading text-title-sm font-semibold text-surface-900">
                     KI-Bewertung
@@ -524,10 +524,10 @@ function CommentForm({
   };
 
   return (
-    <Card className={parentId ? "ml-6 border-l-2 border-lr-green-200" : ""}>
+    <Card className={parentId ? "ml-6 border-l-2 border-brand-primary-200" : ""}>
       <form onSubmit={handleSubmit} className="space-y-3">
         <textarea
-          className="w-full rounded-[10px] border border-surface-300 bg-white px-3.5 py-2.5 text-body text-surface-900 placeholder:text-surface-400 focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
+          className="w-full rounded-[10px] border border-surface-300 bg-white px-3.5 py-2.5 text-body text-surface-900 placeholder:text-surface-400 focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
           rows={parentId ? 2 : 3}
           placeholder={
             parentId ? "Antwort schreiben..." : "Schreibe einen Kommentar..."
@@ -611,7 +611,7 @@ function CommentThread({
           {depth < maxDepth && (
             <button
               onClick={() => setShowReplyForm(!showReplyForm)}
-              className="flex items-center gap-1 text-caption text-surface-400 hover:text-lr-green-600"
+              className="flex items-center gap-1 text-caption text-surface-400 hover:text-brand-primary-600"
             >
               <Reply className="h-3.5 w-3.5" />
               Antworten

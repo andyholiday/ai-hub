@@ -73,11 +73,11 @@ export function LearningPathStepper({
               {/* Status Icon */}
               <div className="relative z-10 shrink-0">
                 {course.isCompleted ? (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-lr-green-100">
-                    <CheckCircle2 className="h-6 w-6 text-lr-green-500" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary-100">
+                    <CheckCircle2 className="h-6 w-6 text-brand-primary-500" />
                   </div>
                 ) : isNext && isEnrolled ? (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-lr-green-500 shadow-lg shadow-lr-green-500/30">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary-500 shadow-lg shadow-brand-primary-500/30">
                     <PlayCircle className="h-6 w-6 text-white" />
                   </div>
                 ) : isLocked ? (
@@ -100,7 +100,7 @@ export function LearningPathStepper({
                 <div
                   className={`w-0.5 flex-1 ${
                     course.isCompleted
-                      ? "bg-lr-green-300"
+                      ? "bg-brand-primary-300"
                       : "bg-surface-200"
                   }`}
                 />
@@ -111,9 +111,9 @@ export function LearningPathStepper({
             <div
               className={`mb-6 min-w-0 flex-1 rounded-xl border p-4 transition-all ${
                 isNext && isEnrolled
-                  ? "border-lr-green-300 bg-lr-green-50/50 shadow-sm"
+                  ? "border-brand-primary-300 bg-brand-primary-50/50 shadow-sm"
                   : course.isCompleted
-                    ? "border-lr-green-200 bg-lr-green-50/30"
+                    ? "border-brand-primary-200 bg-brand-primary-50/30"
                     : "border-surface-200 bg-white"
               }`}
             >
@@ -205,7 +205,7 @@ export function LearningPathStepper({
                     href={`/learn-hub/${course.id}`}
                     className={`inline-flex items-center gap-1.5 text-body-sm font-medium transition-colors ${
                       isNext
-                        ? "text-lr-green-600 hover:text-lr-green-700"
+                        ? "text-brand-primary-600 hover:text-brand-primary-700"
                         : "text-surface-500 hover:text-surface-700"
                     }`}
                   >

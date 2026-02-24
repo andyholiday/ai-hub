@@ -54,9 +54,9 @@ const categories: CategoryDef[] = [
     id: "prompt-engineering",
     label: "Prompt Engineering",
     icon: <MessageSquareText className="h-4 w-4" />,
-    activeClasses: "bg-lr-green-500 text-white border-lr-green-500",
+    activeClasses: "bg-brand-primary-500 text-white border-brand-primary-500",
     inactiveClasses:
-      "bg-white text-surface-600 border-surface-300 hover:bg-lr-green-50 hover:border-lr-green-300 hover:text-lr-green-700",
+      "bg-white text-surface-600 border-surface-300 hover:bg-brand-primary-50 hover:border-brand-primary-300 hover:text-brand-primary-700",
   },
   {
     id: "ki-tools",
@@ -78,9 +78,9 @@ const categories: CategoryDef[] = [
     id: "datenanalyse",
     label: "Datenanalyse",
     icon: <BarChart3 className="h-4 w-4" />,
-    activeClasses: "bg-lr-gold-500 text-white border-lr-gold-500",
+    activeClasses: "bg-brand-accent-500 text-white border-brand-accent-500",
     inactiveClasses:
-      "bg-white text-surface-600 border-surface-300 hover:bg-lr-gold-50 hover:border-lr-gold-300 hover:text-lr-gold-800",
+      "bg-white text-surface-600 border-surface-300 hover:bg-brand-accent-50 hover:border-brand-accent-300 hover:text-brand-accent-800",
   },
   {
     id: "ki-ethik",
@@ -122,7 +122,7 @@ export function CategoryFilter({ value, onChange, className }: CategoryFilterPro
                 "inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2",
                 "text-body-sm font-medium",
                 "transition-all duration-200 ease-out",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-2",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2",
                 // Active/Inactive state
                 isActive ? cat.activeClasses : cat.inactiveClasses
               )}

@@ -2,7 +2,7 @@
 
 export const metadata = {
   title: "Benutzer-Verwaltung | Admin",
-  description: "Benutzer-Verwaltung fuer die LR AI Hub Administration",
+  description: "Benutzer-Verwaltung fuer die Administration",
 };
 
 export default function AdminUsersPage() {

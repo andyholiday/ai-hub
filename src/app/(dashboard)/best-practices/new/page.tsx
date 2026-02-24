@@ -92,19 +92,19 @@ function TagInput({
         className={cn(
           "flex flex-wrap items-center gap-2 rounded-[10px] border border-surface-300 bg-white px-3 py-2.5",
           "transition-all duration-200",
-          "focus-within:border-lr-green-500 focus-within:ring-2 focus-within:ring-lr-green-500/20"
+          "focus-within:border-brand-primary-500 focus-within:ring-2 focus-within:ring-brand-primary-500/20"
         )}
       >
         {tags.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 rounded-md bg-lr-green-50 px-2.5 py-1 text-body-sm font-medium text-lr-green-700"
+            className="inline-flex items-center gap-1 rounded-md bg-brand-primary-50 px-2.5 py-1 text-body-sm font-medium text-brand-primary-700"
           >
             {tag}
             <button
               type="button"
               onClick={() => removeTag(tag)}
-              className="ml-0.5 rounded-sm p-0.5 text-lr-green-500 transition-colors hover:bg-lr-green-100 hover:text-lr-green-700"
+              className="ml-0.5 rounded-sm p-0.5 text-brand-primary-500 transition-colors hover:bg-brand-primary-100 hover:text-brand-primary-700"
               aria-label={`Tag "${tag}" entfernen`}
             >
               <X className="h-3 w-3" />
@@ -157,7 +157,7 @@ export default function NewBestPracticePage() {
       <div className="mb-6">
         <Link
           href="/best-practices"
-          className="inline-flex items-center gap-1.5 text-body-sm text-surface-500 transition-colors hover:text-lr-green-600"
+          className="inline-flex items-center gap-1.5 text-body-sm text-surface-500 transition-colors hover:text-brand-primary-600"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Zurueck zu Best Practices
@@ -206,7 +206,7 @@ export default function NewBestPracticePage() {
                     "h-10 w-full rounded-[10px] border border-surface-300 bg-white px-3.5",
                     "text-body text-surface-900",
                     "transition-all duration-200 ease-out",
-                    "focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20",
+                    "focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20",
                     !formData.category && "text-surface-400"
                   )}
                 >
@@ -239,7 +239,7 @@ export default function NewBestPracticePage() {
                     "w-full resize-y rounded-[10px] border border-surface-300 bg-white px-3.5 py-3",
                     "font-mono text-body text-surface-900 placeholder:text-surface-400",
                     "transition-all duration-200 ease-out",
-                    "focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
+                    "focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
                   )}
                 />
                 <p className="text-caption text-surface-400">
@@ -254,9 +254,9 @@ export default function NewBestPracticePage() {
               />
 
               {/* XP Info */}
-              <div className="flex items-center gap-3 rounded-xl border border-lr-green-200 bg-lr-green-50 p-4">
-                <Sparkles className="h-5 w-5 shrink-0 text-lr-green-600" />
-                <p className="text-body-sm text-lr-green-700">
+              <div className="flex items-center gap-3 rounded-xl border border-brand-primary-200 bg-brand-primary-50 p-4">
+                <Sparkles className="h-5 w-5 shrink-0 text-brand-primary-600" />
+                <p className="text-body-sm text-brand-primary-700">
                   Du erhaeltst <strong>+50 XP</strong> fuer das Veroeffentlichen einer Best Practice.
                 </p>
               </div>
@@ -382,7 +382,7 @@ export default function NewBestPracticePage() {
               <div className="flex items-center gap-4 border-t border-surface-200 px-5 py-3 text-surface-400">
                 <span className="text-caption">0 Upvotes</span>
                 <span className="text-caption">0 Kommentare</span>
-                <span className="ml-auto text-caption font-semibold text-lr-green-600">
+                <span className="ml-auto text-caption font-semibold text-brand-primary-600">
                   +50 XP
                 </span>
               </div>
@@ -395,19 +395,19 @@ export default function NewBestPracticePage() {
               </h4>
               <ul className="space-y-1.5 text-caption text-surface-500">
                 <li className="flex items-start gap-2">
-                  <Plus className="mt-0.5 h-3 w-3 shrink-0 text-lr-green-500" />
+                  <Plus className="mt-0.5 h-3 w-3 shrink-0 text-brand-primary-500" />
                   Beschreibe den konkreten Anwendungsfall
                 </li>
                 <li className="flex items-start gap-2">
-                  <Plus className="mt-0.5 h-3 w-3 shrink-0 text-lr-green-500" />
+                  <Plus className="mt-0.5 h-3 w-3 shrink-0 text-brand-primary-500" />
                   Fuege Beispiel-Prompts oder Code-Snippets ein
                 </li>
                 <li className="flex items-start gap-2">
-                  <Plus className="mt-0.5 h-3 w-3 shrink-0 text-lr-green-500" />
+                  <Plus className="mt-0.5 h-3 w-3 shrink-0 text-brand-primary-500" />
                   Teile messbare Ergebnisse oder Erfahrungen
                 </li>
                 <li className="flex items-start gap-2">
-                  <Plus className="mt-0.5 h-3 w-3 shrink-0 text-lr-green-500" />
+                  <Plus className="mt-0.5 h-3 w-3 shrink-0 text-brand-primary-500" />
                   Verwende aussagekraeftige Tags fuer die Auffindbarkeit
                 </li>
               </ul>

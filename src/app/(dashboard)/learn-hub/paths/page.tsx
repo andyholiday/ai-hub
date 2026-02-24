@@ -95,8 +95,8 @@ export default function LearningPathsPage() {
       {/* Stats Bar */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-lr-green-50">
-            <Route className="h-5 w-5 text-lr-green-600" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-primary-50">
+            <Route className="h-5 w-5 text-brand-primary-600" />
           </div>
           <div>
             <p className="text-caption text-surface-500">
@@ -121,8 +121,8 @@ export default function LearningPathsPage() {
         </Card>
 
         <Card className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-lr-gold-50">
-            <CheckCircle2 className="h-5 w-5 text-lr-gold-600" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-accent-50">
+            <CheckCircle2 className="h-5 w-5 text-brand-accent-600" />
           </div>
           <div>
             <p className="text-caption text-surface-500">Abgeschlossen</p>
@@ -148,7 +148,7 @@ export default function LearningPathsPage() {
               }
               className={`rounded-full px-3 py-1 text-caption font-medium transition-colors ${
                 activeDifficulty === level
-                  ? "bg-lr-green-500 text-white"
+                  ? "bg-brand-primary-500 text-white"
                   : "bg-surface-100 text-surface-600 hover:bg-surface-200"
               }`}
             >
@@ -168,7 +168,7 @@ export default function LearningPathsPage() {
       {/* Loading */}
       {isLoading && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
         </div>
       )}
 

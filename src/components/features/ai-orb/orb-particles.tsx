@@ -17,11 +17,11 @@ import { useMemo } from "react";
 /** Number of particles to render */
 const PARTICLE_COUNT = 8;
 
-/** Colors for the celebration particles (LR Gold + Green palette) */
+/** Colors for the celebration particles (Gold + Green palette) */
 const PARTICLE_COLORS = [
-  "rgba(199, 168, 78, 0.9)", // LR Gold
+  "rgba(199, 168, 78, 0.9)", // Gold
   "rgba(199, 168, 78, 0.7)",
-  "rgba(0, 166, 81, 0.8)", // LR Green
+  "rgba(0, 166, 81, 0.8)", // Green
   "rgba(0, 166, 81, 0.6)",
   "rgba(239, 219, 158, 0.9)", // Light Gold
   "rgba(150, 222, 184, 0.8)", // Light Green

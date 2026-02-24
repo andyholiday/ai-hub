@@ -1,6 +1,6 @@
 // =============================================================================
 // Avatar Component
-// LR AI Hub Design System
+// AI Hub Design System
 // =============================================================================
 
 "use client";
@@ -43,8 +43,8 @@ function getInitials(name: string): string {
 
 /** Deterministic color based on name string */
 const avatarBackgrounds = [
-  "bg-lr-green-100 text-lr-green-700",
-  "bg-lr-gold-100 text-lr-gold-800",
+  "bg-brand-primary-100 text-brand-primary-700",
+  "bg-brand-accent-100 text-brand-accent-800",
   "bg-blue-100 text-blue-700",
   "bg-purple-100 text-purple-700",
   "bg-orange-100 text-orange-700",
@@ -89,7 +89,7 @@ const sizeStyles: Record<AvatarSize, { container: string; text: string; status: 
 };
 
 const statusColors: Record<NonNullable<AvatarStatus>, string> = {
-  online: "bg-lr-green-500",
+  online: "bg-brand-primary-500",
   offline: "bg-surface-400",
   busy: "bg-error",
   away: "bg-warning",

@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="https://lrworld.com/img/company-logo/default/black.svg" alt="LR Logo" width="120" />
+  <img src="public/logo.svg" alt="AI Hub Logo" width="80" />
 </p>
 
-<h1 align="center">LR AI Hub</h1>
+<h1 align="center">AI Hub</h1>
 
 <p align="center">
-  <strong>Die KI-Community-Plattform fuer LR Health & Beauty Systems</strong>
+  <strong>KI-Community-Plattform fuer Teams und Unternehmen</strong>
 </p>
 
 <p align="center">
@@ -21,8 +21,8 @@
 
 <p align="center">
   Lernen, teilen und wachsen mit kuenstlicher Intelligenz.<br/>
-  Der LR AI Hub vereint Wissensaustausch, Schulungen, KI-Werkzeuge und Gamification<br/>
-  zu einer lebendigen Community-Plattform, die die KI-Kompetenz im gesamten Unternehmen foerdert.
+  Der AI Hub vereint Wissensaustausch, Schulungen, KI-Werkzeuge und Gamification<br/>
+  zu einer lebendigen Community-Plattform, die die KI-Kompetenz im gesamten Team foerdert.
 </p>
 
 ---
@@ -52,7 +52,7 @@ Die **Living Cloud** ist weit mehr als ein Chat-Button -- sie ist ein **lebendig
 
 **Was sie besonders macht:**
 
-- **64px Cosmos Orb** mit dynamischen Gradient-Farben (LR-Gruen/Gold)
+- **64px Cosmos Orb** mit dynamischen Gradient-Farben (Gruen/Gold)
 - **Breathing-Animation** mit organischem Pulsieren (3s-Zyklen)
 - **Rotierender Ring** mit Gold-Partikel (8s-Zyklen)
 - **Feier-Partikel** -- orbiting Glowing Dots bei Achievements
@@ -103,7 +103,7 @@ Eine interaktive Radar-Darstellung, die auf einen Blick zeigt, welche KI-Themen 
 
 > **Multi-Provider KI-Chat mit Use-Case-Bewertung**
 
-Der AI Mentor ist das intelligente Herzueck der Plattform:
+Der AI Mentor ist das intelligente Herzstueck der Plattform:
 
 - **Multi-Provider Chat** mit Streaming-Responses (Gemini, Claude, OpenAI, Copilot)
 - **Automatische Fallback-Chain** bei Provider-Ausfaellen
@@ -306,7 +306,7 @@ Die Komponenten sind nach Features organisiert, nicht nach technischer Schicht:
 
 ```bash
 git clone <repository-url>
-cd lr-ai-hub
+cd ai-hub
 ```
 
 ### 2. Abhaengigkeiten installieren
@@ -385,7 +385,7 @@ npm run test:coverage
 ## &#128193; Projektstruktur
 
 ```
-lr-ai-hub/
+ai-hub/
 ├── .env.example                    # Umgebungsvariablen-Vorlage
 ├── .github/
 │   └── workflows/ci.yml           # GitHub Actions CI Pipeline
@@ -628,10 +628,10 @@ _KI-Konfiguration mit Provider-Management und Fallback-Chain_
 
 **Proprietary / Internal Use Only**
 
-Dieses Projekt ist ausschliesslich fuer den internen Gebrauch bei LR Health & Beauty Systems bestimmt.
-Jegliche Vervielfaeltigung, Weitergabe oder Nutzung ausserhalb des Unternehmens ist ohne ausdrueckliche Genehmigung untersagt.
+Dieses Projekt ist fuer den internen Gebrauch bestimmt.
+Jegliche Vervielfaeltigung, Weitergabe oder Nutzung ist ohne ausdrueckliche Genehmigung untersagt.
 
-(c) 2025-2026 LR Health & Beauty Systems. Alle Rechte vorbehalten.
+(c) 2025-2026 AI Hub. Alle Rechte vorbehalten.
 
 ---
 

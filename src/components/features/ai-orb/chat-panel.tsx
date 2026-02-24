@@ -189,14 +189,14 @@ export function ChatPanel() {
       {/* ------------------------------------------------------------------- */}
       <div className="relative shrink-0">
         {/* Gradient accent bar at the very top */}
-        <div className="h-1 w-full bg-gradient-to-r from-lr-green-500 via-lr-green-400 to-lr-gold-500" />
+        <div className="h-1 w-full bg-gradient-to-r from-brand-primary-500 via-brand-primary-400 to-brand-accent-500" />
 
         <div className="flex items-center gap-3 bg-white/80 px-4 py-3 backdrop-blur-xl">
           {/* Mini-Orb (continues breathing animation) */}
           <div
             className={cn(
               "ai-orb-core ai-orb-core--mini flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-              "bg-gradient-to-br from-lr-green-500 to-lr-gold-500"
+              "bg-gradient-to-br from-brand-primary-500 to-brand-accent-500"
             )}
           >
             <Sparkles className="h-4 w-4 text-white" />
@@ -220,7 +220,7 @@ export function ChatPanel() {
               "ml-auto flex h-8 w-8 items-center justify-center rounded-lg",
               "text-surface-400 transition-colors duration-150",
               "hover:bg-surface-100 hover:text-surface-600",
-              "focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-1"
+              "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-1"
             )}
             aria-label="Chat minimieren"
           >
@@ -234,7 +234,7 @@ export function ChatPanel() {
       {/* ------------------------------------------------------------------- */}
       <div className="shrink-0 border-b border-surface-100 bg-surface-50 px-4 py-2">
         <div className="flex items-center gap-1.5 text-[11px] text-surface-500">
-          <FileText className="h-3 w-3 shrink-0 text-lr-green-500" />
+          <FileText className="h-3 w-3 shrink-0 text-brand-primary-500" />
           <span className="truncate">
             Kontext: {pageContext}
           </span>
@@ -270,8 +270,8 @@ export function ChatPanel() {
               "border border-surface-200 bg-white px-3 py-1.5",
               "text-xs font-medium text-surface-600",
               "transition-all duration-150",
-              "hover:border-lr-green-300 hover:bg-lr-green-50 hover:text-lr-green-700",
-              "focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-1"
+              "hover:border-brand-primary-300 hover:bg-brand-primary-50 hover:text-brand-primary-700",
+              "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-1"
             )}
           >
             <Icon className="h-3 w-3" />
@@ -296,7 +296,7 @@ export function ChatPanel() {
               "flex-1 rounded-xl border border-surface-200 bg-surface-50 px-3.5 py-2.5",
               "text-sm text-surface-800 placeholder:text-surface-400",
               "transition-colors duration-150",
-              "focus:border-lr-green-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-lr-green-400"
+              "focus:border-brand-primary-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-primary-400"
             )}
             aria-label="Chat-Nachricht eingeben"
           />
@@ -308,11 +308,11 @@ export function ChatPanel() {
             disabled={!inputValue.trim()}
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-              "bg-lr-green-500 text-white",
+              "bg-brand-primary-500 text-white",
               "transition-all duration-150",
-              "hover:bg-lr-green-600 hover:shadow-lr-green",
-              "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-lr-green-500 disabled:hover:shadow-none",
-              "focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-1"
+              "hover:bg-brand-primary-600 hover:shadow-brand-primary",
+              "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand-primary-500 disabled:hover:shadow-none",
+              "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-1"
             )}
             aria-label="Nachricht senden"
           >

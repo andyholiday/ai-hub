@@ -1,5 +1,5 @@
 // =============================================================================
-// LR AI Hub - Central Type Exports
+// AI Hub - Central Type Exports
 // =============================================================================
 
 export type { Database, Tables, TablesInsert as InsertTables, TablesUpdate as UpdateTables, Enums } from "@/lib/supabase/types";

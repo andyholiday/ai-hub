@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
         </p>
 
         {submitted ? (
-          <div className="mt-6 rounded-lg bg-lr-green-50 p-4 text-sm text-lr-green-700">
+          <div className="mt-6 rounded-lg bg-brand-primary-50 p-4 text-sm text-brand-primary-700">
             Falls ein Konto mit dieser E-Mail existiert, haben wir dir einen Link zum
             Zuruecksetzen gesendet. Pruefe dein Postfach.
           </div>
@@ -39,14 +39,14 @@ export default function ForgotPasswordPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
+                className="mt-1 w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
                 placeholder="deine@email.de"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-lr-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-lr-green-700"
+              className="w-full rounded-lg bg-brand-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-700"
             >
               Link senden
             </button>
@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
         )}
 
         <p className="mt-6 text-center text-sm text-surface-500">
-          <Link href="/login" className="font-medium text-lr-green-600 hover:text-lr-green-700">
+          <Link href="/login" className="font-medium text-brand-primary-600 hover:text-brand-primary-700">
             Zurueck zur Anmeldung
           </Link>
         </p>

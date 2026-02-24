@@ -56,7 +56,7 @@ const DEFAULT_COSTS: CostItem[] = [
     label: "Gemini (Primaer)",
     amount: "\u20AC 124,50",
     subInfo: "1.2M Tokens verbraucht",
-    color: "text-lr-green-500",
+    color: "text-brand-primary-500",
   },
   {
     id: "claude",
@@ -107,7 +107,7 @@ export function CostDashboard({
       {/* Section Title + Period Filter */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-[3px] rounded-sm bg-lr-green-500" />
+          <div className="h-4 w-[3px] rounded-sm bg-brand-primary-500" />
           <Wallet className="h-4 w-4 text-surface-500" />
           <h3 className="font-display text-base font-semibold text-surface-900">
             Kosten-Dashboard ({period})
@@ -124,7 +124,7 @@ export function CostDashboard({
                 className={cn(
                   "rounded-md px-3 py-1 text-[11px] font-semibold transition-all duration-150",
                   activePeriod === opt.value
-                    ? "bg-lr-green-500 text-white shadow-sm"
+                    ? "bg-brand-primary-500 text-white shadow-sm"
                     : "text-surface-500 hover:text-surface-800"
                 )}
               >

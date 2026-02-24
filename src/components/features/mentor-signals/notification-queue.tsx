@@ -22,8 +22,8 @@ const SIGNAL_TYPE_CONFIG: Record<
 > = {
     page_entry_briefing: {
         emoji: "👋",
-        color: "text-lr-green-600",
-        bgColor: "bg-lr-green-50",
+        color: "text-brand-primary-600",
+        bgColor: "bg-brand-primary-50",
     },
     inline_suggestion: {
         emoji: "💡",
@@ -42,8 +42,8 @@ const SIGNAL_TYPE_CONFIG: Record<
     },
     achievement_congrats: {
         emoji: "🎉",
-        color: "text-lr-gold-600",
-        bgColor: "bg-lr-gold-50",
+        color: "text-brand-accent-600",
+        bgColor: "bg-brand-accent-50",
     },
     streak_motivation: {
         emoji: "🔥",
@@ -57,8 +57,8 @@ const SIGNAL_TYPE_CONFIG: Record<
     },
     smart_notification: {
         emoji: "🤖",
-        color: "text-lr-green-600",
-        bgColor: "bg-lr-green-50",
+        color: "text-brand-primary-600",
+        bgColor: "bg-brand-primary-50",
     },
 };
 
@@ -94,11 +94,11 @@ export function NotificationQueue({ pageContext, onDismiss }: NotificationQueueP
         <div className="px-4 py-3">
             {/* Header */}
             <div className="mb-3 flex items-center gap-2">
-                <Bell className="h-4 w-4 text-lr-green-500" />
+                <Bell className="h-4 w-4 text-brand-primary-500" />
                 <span className="text-xs font-bold text-surface-700">
                     Smarte Empfehlungen
                 </span>
-                <span className="ml-auto rounded-full bg-lr-green-100 px-2 py-0.5 text-[10px] font-bold text-lr-green-700">
+                <span className="ml-auto rounded-full bg-brand-primary-100 px-2 py-0.5 text-[10px] font-bold text-brand-primary-700">
                     {signals.length} neu
                 </span>
             </div>
@@ -196,7 +196,7 @@ export function NotificationBadge({ count }: NotificationBadgeProps) {
             exit={{ scale: 0 }}
             className={cn(
                 "absolute -right-1 -top-1 z-30 flex h-5 min-w-5 items-center justify-center",
-                "rounded-full bg-lr-gold-500 px-1",
+                "rounded-full bg-brand-accent-500 px-1",
                 "text-[10px] font-bold text-white",
                 "shadow-md",
                 "cosmos-notification-dot",

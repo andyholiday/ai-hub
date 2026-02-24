@@ -47,26 +47,26 @@ const DOCK_CLASSES: Record<DockPosition, string> = {
 // Gradient map per state
 // ---------------------------------------------------------------------------
 const STATE_GRADIENT: Record<OrbState, string> = {
-    idle: "from-lr-green-500/40 to-lr-gold-500/30",
-    thinking: "from-lr-gold-400/50 to-lr-gold-600/40",
-    notification: "from-lr-green-500/45 to-lr-gold-500/35",
-    celebration: "from-lr-gold-400/50 to-lr-gold-500/40",
-    greeting: "from-lr-gold-400/45 to-lr-gold-500/35",
-    listening: "from-lr-green-400/40 to-lr-green-600/30",
-    energized: "from-lr-green-400/45 to-lr-gold-400/35",
+    idle: "from-brand-primary-500/40 to-brand-accent-500/30",
+    thinking: "from-brand-accent-400/50 to-brand-accent-600/40",
+    notification: "from-brand-primary-500/45 to-brand-accent-500/35",
+    celebration: "from-brand-accent-400/50 to-brand-accent-500/40",
+    greeting: "from-brand-accent-400/45 to-brand-accent-500/35",
+    listening: "from-brand-primary-400/40 to-brand-primary-600/30",
+    energized: "from-brand-primary-400/45 to-brand-accent-400/35",
 };
 
 // ---------------------------------------------------------------------------
 // Core gradient for center icon
 // ---------------------------------------------------------------------------
 const STATE_CORE_GRADIENT: Record<OrbState, string> = {
-    idle: "from-lr-green-500 to-lr-gold-500",
-    thinking: "from-lr-gold-400 to-lr-gold-600",
-    notification: "from-lr-green-500 to-lr-gold-500",
-    celebration: "from-lr-gold-400 to-lr-gold-500",
-    greeting: "from-lr-gold-400 to-lr-gold-500",
-    listening: "from-lr-green-400 to-lr-green-600",
-    energized: "from-lr-green-400 to-lr-gold-400",
+    idle: "from-brand-primary-500 to-brand-accent-500",
+    thinking: "from-brand-accent-400 to-brand-accent-600",
+    notification: "from-brand-primary-500 to-brand-accent-500",
+    celebration: "from-brand-accent-400 to-brand-accent-500",
+    greeting: "from-brand-accent-400 to-brand-accent-500",
+    listening: "from-brand-primary-400 to-brand-primary-600",
+    energized: "from-brand-primary-400 to-brand-accent-400",
 };
 
 // ---------------------------------------------------------------------------
@@ -215,16 +215,16 @@ export function CosmosCompanion() {
                             className={cn(
                                 "cosmos-ring pointer-events-none absolute inset-1/2",
                                 "h-[140px] w-[140px] -translate-x-1/2 -translate-y-1/2 rounded-full",
-                                "border border-lr-green-500/10",
+                                "border border-brand-primary-500/10",
                                 orbState === "energized" && "cosmos-ring--fast",
                                 orbState === "listening" && "cosmos-ring--slow",
                             )}
                             aria-hidden="true"
                         >
                             {/* Gold particle on ring */}
-                            <span className="absolute -top-[3px] left-1/2 h-[6px] w-[6px] -translate-x-1/2 rounded-full bg-lr-gold-500 shadow-lr-gold" />
+                            <span className="absolute -top-[3px] left-1/2 h-[6px] w-[6px] -translate-x-1/2 rounded-full bg-brand-accent-500 shadow-brand-accent" />
                             {/* Green particle 120° offset */}
-                            <span className="absolute -bottom-[3px] left-[20%] h-[5px] w-[5px] rounded-full bg-lr-green-500/60" />
+                            <span className="absolute -bottom-[3px] left-[20%] h-[5px] w-[5px] rounded-full bg-brand-primary-500/60" />
                         </div>
 
                         {/* Second Ring (counter-rotating, dashed) */}
@@ -232,11 +232,11 @@ export function CosmosCompanion() {
                             className={cn(
                                 "cosmos-ring-reverse pointer-events-none absolute inset-1/2",
                                 "h-[160px] w-[160px] -translate-x-1/2 -translate-y-1/2 rounded-full",
-                                "border border-dashed border-lr-gold-500/8",
+                                "border border-dashed border-brand-accent-500/8",
                             )}
                             aria-hidden="true"
                         >
-                            <span className="absolute -right-[2px] top-1/2 h-[4px] w-[4px] -translate-y-1/2 rounded-full bg-lr-gold-500/50" />
+                            <span className="absolute -right-[2px] top-1/2 h-[4px] w-[4px] -translate-y-1/2 rounded-full bg-brand-accent-500/50" />
                         </div>
 
                         {/* Multi-Layer Fluid Blob Container */}
@@ -250,7 +250,7 @@ export function CosmosCompanion() {
                                 "cursor-pointer outline-none",
                                 "transition-transform duration-500 ease-out",
                                 "hover:scale-105",
-                                "focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-2",
+                                "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2",
                             )}
                             style={{ borderRadius: "50%" }}
                             aria-label="AI Mentor öffnen"
@@ -259,7 +259,7 @@ export function CosmosCompanion() {
                             <div
                                 className={cn(
                                     "cosmos-blob cosmos-blob--1 absolute inset-0 rounded-[50%]",
-                                    "bg-gradient-to-br from-lr-green-500/25 to-lr-green-600/15",
+                                    "bg-gradient-to-br from-brand-primary-500/25 to-brand-primary-600/15",
                                     "mix-blend-screen",
                                 )}
                                 aria-hidden="true"
@@ -269,7 +269,7 @@ export function CosmosCompanion() {
                             <div
                                 className={cn(
                                     "cosmos-blob cosmos-blob--2 absolute inset-[8px] rounded-[50%]",
-                                    "bg-gradient-to-tr from-lr-green-400/20 to-lr-gold-500/15",
+                                    "bg-gradient-to-tr from-brand-primary-400/20 to-brand-accent-500/15",
                                     "mix-blend-screen",
                                 )}
                                 aria-hidden="true"
@@ -279,7 +279,7 @@ export function CosmosCompanion() {
                             <div
                                 className={cn(
                                     "cosmos-blob cosmos-blob--3 absolute inset-[18px] rounded-[50%]",
-                                    "bg-gradient-to-bl from-lr-gold-500/20 to-lr-green-500/25",
+                                    "bg-gradient-to-bl from-brand-accent-500/20 to-brand-primary-500/25",
                                     "mix-blend-screen",
                                 )}
                                 aria-hidden="true"
@@ -302,8 +302,8 @@ export function CosmosCompanion() {
                                 className={cn(
                                     "absolute right-[16px] top-[12px] z-20 h-3.5 w-3.5 rounded-full border-2 border-white",
                                     {
-                                        "bg-lr-green-400": !hasNotification,
-                                        "bg-lr-gold-500 cosmos-notification-dot": hasNotification,
+                                        "bg-brand-primary-400": !hasNotification,
+                                        "bg-brand-accent-500 cosmos-notification-dot": hasNotification,
                                     },
                                 )}
                                 aria-hidden="true"

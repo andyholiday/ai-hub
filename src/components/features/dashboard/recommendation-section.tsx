@@ -49,10 +49,10 @@ function getTypeConfig(type: RecommendationType): TypeConfig {
       };
     case "new_course":
       return {
-        icon: <GraduationCap className="h-4.5 w-4.5 text-lr-green-600" />,
-        iconBg: "bg-lr-green-50",
+        icon: <GraduationCap className="h-4.5 w-4.5 text-brand-primary-600" />,
+        iconBg: "bg-brand-primary-50",
         label: "Neuer Kurs",
-        labelClasses: "bg-lr-green-50 text-lr-green-600",
+        labelClasses: "bg-brand-primary-50 text-brand-primary-600",
       };
     case "best_practice":
       return {
@@ -70,7 +70,7 @@ function getTypeConfig(type: RecommendationType): TypeConfig {
       };
     case "challenge":
       return {
-        icon: <Trophy className="h-4.5 w-4.5 text-lr-gold-500" />,
+        icon: <Trophy className="h-4.5 w-4.5 text-brand-accent-500" />,
         iconBg: "bg-orange-50",
         label: "Challenge",
         labelClasses: "bg-orange-50 text-amber-500",
@@ -185,7 +185,7 @@ function RecommendationCard({
       </div>
 
       {/* Title */}
-      <h4 className="line-clamp-2 text-body font-semibold leading-snug text-surface-900 group-hover:text-lr-green-600">
+      <h4 className="line-clamp-2 text-body font-semibold leading-snug text-surface-900 group-hover:text-brand-primary-600">
         {recommendation.title}
       </h4>
 
@@ -199,7 +199,7 @@ function RecommendationCard({
         <div className="mt-3">
           <div className="mb-1 flex items-center justify-between text-[10px] font-medium text-surface-400">
             <span>Fortschritt</span>
-            <span className="text-lr-green-500">
+            <span className="text-brand-primary-500">
               {recommendation.metadata?.progress}%
             </span>
           </div>
@@ -212,7 +212,7 @@ function RecommendationCard({
             aria-label={`Kursfortschritt: ${recommendation.metadata?.progress}%`}
           >
             <div
-              className="h-full rounded-full bg-gradient-to-r from-lr-green-500 to-lr-gold-500 transition-all duration-700"
+              className="h-full rounded-full bg-gradient-to-r from-brand-primary-500 to-brand-accent-500 transition-all duration-700"
               style={{ width: `${recommendation.metadata?.progress}%` }}
             />
           </div>
@@ -222,7 +222,7 @@ function RecommendationCard({
       {/* Reason */}
       <div className="mt-3 flex items-center gap-1.5 border-t border-surface-100 pt-3">
         <Sparkles
-          className="h-3 w-3 shrink-0 text-lr-gold-500"
+          className="h-3 w-3 shrink-0 text-brand-accent-500"
           aria-hidden="true"
         />
         <span className="line-clamp-1 text-[11px] font-medium text-surface-400">
@@ -235,7 +235,7 @@ function RecommendationCard({
         className={cn(
           "absolute bottom-5 right-5 h-4 w-4 text-surface-300",
           "transition-all duration-200",
-          "opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:text-lr-green-500",
+          "opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:text-brand-primary-500",
         )}
         aria-hidden="true"
       />
@@ -287,7 +287,7 @@ export function RecommendationSection({ className }: RecommendationSectionProps)
       {/* Section Title */}
       <h2 className="mb-4 flex items-center gap-2 font-display text-base font-semibold text-surface-900">
         <span
-          className="h-4 w-[3px] rounded-full bg-lr-green-500"
+          className="h-4 w-[3px] rounded-full bg-brand-primary-500"
           aria-hidden="true"
         />
         Fuer dich empfohlen

@@ -2,7 +2,7 @@
 
 // =============================================================================
 // Sidebar Component
-// Main navigation sidebar for the LR AI Hub dashboard
+// Main navigation sidebar for the AI Hub dashboard
 // =============================================================================
 
 import { useEffect } from "react";
@@ -110,11 +110,11 @@ function SidebarLogo() {
       <div
         className={cn(
           "flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]",
-          isHydrated ? branding.logoGradient : "bg-lr-gradient",
+          isHydrated ? branding.logoGradient : "bg-brand-gradient",
         )}
       >
         <span className="font-display text-[15px] font-bold leading-none text-white">
-          {isHydrated ? branding.logoText : "LR"}
+          {isHydrated ? branding.logoText : "AM"}
         </span>
       </div>
 
@@ -150,7 +150,7 @@ function SidebarNavItem({
       className={cn(
         "group flex items-center gap-3 rounded-[10px] px-3.5 py-2.5 text-[13.5px] font-medium transition-all duration-150",
         isActive
-          ? "bg-[#F0FDF4] font-semibold text-[#00A651]"
+          ? "bg-brand-primary-50 font-semibold text-brand-primary-500"
           : "text-surface-600 hover:bg-[#F7F8FA] hover:text-surface-900"
       )}
     >
@@ -160,7 +160,7 @@ function SidebarNavItem({
           className={cn(
             "h-[18px] w-[18px] shrink-0 transition-colors duration-150",
             isActive
-              ? "text-[#00A651]"
+              ? "text-brand-primary-500"
               : "text-surface-400 group-hover:text-surface-600"
           )}
           strokeWidth={isActive ? 2.2 : 1.8}
@@ -172,14 +172,14 @@ function SidebarNavItem({
 
       {/* Badge */}
       {badgeCount && (
-        <span className="inline-flex items-center justify-center rounded-lg bg-[#00A651] px-[7px] py-[2px] text-[10px] font-semibold leading-tight text-white">
+        <span className="inline-flex items-center justify-center rounded-lg bg-brand-primary-500 px-[7px] py-[2px] text-[10px] font-semibold leading-tight text-white">
           {badgeCount}
         </span>
       )}
 
       {/* AI Badge */}
       {item.badge === "KI" && !badgeCount && (
-        <span className="inline-flex items-center justify-center rounded-md bg-lr-green-50 px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-wide text-lr-green-600">
+        <span className="inline-flex items-center justify-center rounded-md bg-brand-primary-50 px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-wide text-brand-primary-600">
           KI
         </span>
       )}
@@ -217,7 +217,7 @@ function SidebarUserCard() {
         className="flex items-center gap-3 rounded-[10px] bg-[#F7F8FA] px-3 py-2.5 transition-colors duration-150 hover:bg-surface-200"
       >
         {/* Avatar */}
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-lr-gradient">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-brand-gradient">
           <span className="text-[12px] font-bold leading-none text-white">
             {isLoaded ? initials : "..."}
           </span>

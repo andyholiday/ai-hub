@@ -54,7 +54,7 @@ export function AdminContentTab() {
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center gap-3 py-20 animate-fade-in">
-                <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
                 <p className="text-sm text-surface-500">Content wird geladen...</p>
             </div>
         );
@@ -99,7 +99,7 @@ export function AdminContentTab() {
                             {data.bestPractices.map((bp) => (
                                 <tr key={bp.id} className="group hover:bg-surface-50 transition-colors">
                                     <td className="px-6 py-4">
-                                        <Link href={`/best-practices/${bp.id}`} className="font-semibold text-surface-900 hover:text-lr-green-600 flex items-center gap-1.5">
+                                        <Link href={`/best-practices/${bp.id}`} className="font-semibold text-surface-900 hover:text-brand-primary-600 flex items-center gap-1.5">
                                             {bp.title} <ExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                                         </Link>
                                         <div className="mt-1 text-xs text-surface-400">{bp.profiles?.full_name || 'Unbekannt'}</div>
@@ -110,7 +110,7 @@ export function AdminContentTab() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${bp.status === 'published' ? "bg-lr-green-100 text-lr-green-700" : "bg-surface-200 text-surface-600"
+                                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${bp.status === 'published' ? "bg-brand-primary-100 text-brand-primary-700" : "bg-surface-200 text-surface-600"
                                             }`}>
                                             {bp.status === 'published' && <CheckCircle className="h-3 w-3" />}
                                             {bp.status}

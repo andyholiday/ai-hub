@@ -51,8 +51,8 @@ const eventConfig: Record<
         <path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clipRule="evenodd" />
       </svg>
     ),
-    colorClass: "text-lr-gold-600",
-    bgClass: "bg-lr-gold-50",
+    colorClass: "text-brand-accent-600",
+    bgClass: "bg-brand-accent-50",
   },
   badge_earned: {
     icon: (
@@ -69,8 +69,8 @@ const eventConfig: Record<
         <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
       </svg>
     ),
-    colorClass: "text-lr-green-600",
-    bgClass: "bg-lr-green-50",
+    colorClass: "text-brand-primary-600",
+    bgClass: "bg-brand-primary-50",
   },
   course_completed: {
     icon: (
@@ -88,8 +88,8 @@ const eventConfig: Record<
         <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
       </svg>
     ),
-    colorClass: "text-lr-green-600",
-    bgClass: "bg-lr-green-50",
+    colorClass: "text-brand-primary-600",
+    bgClass: "bg-brand-primary-50",
   },
   challenge_completed: {
     icon: (
@@ -97,8 +97,8 @@ const eventConfig: Record<
         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
       </svg>
     ),
-    colorClass: "text-lr-gold-600",
-    bgClass: "bg-lr-gold-50",
+    colorClass: "text-brand-accent-600",
+    bgClass: "bg-brand-accent-50",
   },
   comment: {
     icon: (
@@ -200,7 +200,7 @@ export function ActivityTimeline({
                       {event.title}
                     </p>
                     {event.xp && (
-                      <span className="shrink-0 text-caption font-semibold tabular-nums text-lr-green-600">
+                      <span className="shrink-0 text-caption font-semibold tabular-nums text-brand-primary-600">
                         +{event.xp} XP
                       </span>
                     )}

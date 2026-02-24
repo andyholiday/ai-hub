@@ -81,7 +81,7 @@ export function Header({
             "relative flex h-10 w-10 items-center justify-center rounded-xl",
             "text-surface-500 transition-colors duration-150",
             "hover:bg-surface-100 hover:text-surface-700",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-2"
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2"
           )}
           aria-label={`Benachrichtigungen${notificationCount > 0 ? ` (${notificationCount} ungelesen)` : ""}`}
         >
@@ -100,11 +100,11 @@ export function Header({
           href="/best-practices/new"
           className={cn(
             "inline-flex items-center gap-2 rounded-xl px-4 py-2.5",
-            "bg-[#00A651] text-[13.5px] font-semibold text-white",
-            "shadow-lr-green transition-all duration-150",
-            "hover:bg-lr-green-600 hover:shadow-lg",
+            "bg-brand-primary-500 text-[13.5px] font-semibold text-white",
+            "shadow-brand-primary transition-all duration-150",
+            "hover:bg-brand-primary-600 hover:shadow-lg",
             "active:scale-[0.98]",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-2"
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2"
           )}
         >
           <Plus className="h-4 w-4" strokeWidth={2.5} />

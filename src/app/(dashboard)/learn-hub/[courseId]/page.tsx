@@ -174,7 +174,7 @@ export default function CourseDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
       </div>
     );
   }
@@ -336,12 +336,12 @@ export default function CourseDetailPage() {
 
               {/* Completed State */}
               {course.isCompleted && (
-                <div className="rounded-lg bg-lr-green-50 p-4 text-center">
-                  <Award className="mx-auto h-8 w-8 text-lr-green-600" />
-                  <p className="mt-2 text-body-sm font-semibold text-lr-green-700">
+                <div className="rounded-lg bg-brand-primary-50 p-4 text-center">
+                  <Award className="mx-auto h-8 w-8 text-brand-primary-600" />
+                  <p className="mt-2 text-body-sm font-semibold text-brand-primary-700">
                     Kurs abgeschlossen!
                   </p>
-                  <p className="mt-0.5 text-caption text-lr-green-600">
+                  <p className="mt-0.5 text-caption text-brand-primary-600">
                     Du hast {course.xp_reward} XP erhalten
                   </p>
                   {course.certificateId && (
@@ -357,8 +357,8 @@ export default function CourseDetailPage() {
           {/* XP Card */}
           <Card>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-lr-gold-50">
-                <Star className="h-5 w-5 text-lr-gold-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-accent-50">
+                <Star className="h-5 w-5 text-brand-accent-600" />
               </div>
               <div>
                 <p className="text-caption text-surface-500">XP-Belohnung</p>
@@ -397,14 +397,14 @@ export default function CourseDetailPage() {
                 <div
                   className={`flex items-center gap-4 rounded-lg border p-4 transition-colors ${
                     lesson.isCompleted
-                      ? "border-lr-green-200 bg-lr-green-50/50"
+                      ? "border-brand-primary-200 bg-brand-primary-50/50"
                       : "border-surface-200 hover:border-surface-300 hover:bg-surface-50"
                   }`}
                 >
                   {/* Completion Status */}
                   <div className="shrink-0">
                     {lesson.isCompleted ? (
-                      <CheckCircle2 className="h-6 w-6 text-lr-green-500" />
+                      <CheckCircle2 className="h-6 w-6 text-brand-primary-500" />
                     ) : (
                       <Circle className="h-6 w-6 text-surface-300" />
                     )}
@@ -419,7 +419,7 @@ export default function CourseDetailPage() {
                       <h4
                         className={`font-heading text-body font-medium ${
                           lesson.isCompleted
-                            ? "text-lr-green-700"
+                            ? "text-brand-primary-700"
                             : "text-surface-900"
                         }`}
                       >

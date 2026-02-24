@@ -78,9 +78,9 @@ export function AdminTabs({ activeTab, onTabChange, className }: AdminTabsProps)
             className={cn(
               "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2",
               "text-[13px] font-medium transition-all duration-150",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-1",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-1",
               isActive
-                ? "bg-lr-green-500 font-semibold text-white shadow-sm"
+                ? "bg-brand-primary-500 font-semibold text-white shadow-sm"
                 : "text-surface-500 hover:text-surface-800"
             )}
           >

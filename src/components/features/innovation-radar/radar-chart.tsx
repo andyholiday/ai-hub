@@ -43,17 +43,19 @@ interface RadarChartProps {
 
 const RING_ORDER: RadarRing[] = ["adopt", "trial", "assess", "hold"];
 
+// SVG requires raw hex values; these correspond to the brand-primary Tailwind tokens
 const RING_COLORS: Record<RadarRing, { fill: string; stroke: string; label: string }> = {
-  adopt: { fill: "#E6F7ED", stroke: "#00A651", label: "#006837" },
+  adopt: { fill: "#EFF6FF", stroke: "#3B82F6", label: "#1E3A8A" },  // brand-primary-50 / 500 / 800
   trial: { fill: "#E3F2FD", stroke: "#42A5F5", label: "#1565C0" },
   assess: { fill: "#FFF8E1", stroke: "#FFA726", label: "#E65100" },
   hold: { fill: "#FFEBEE", stroke: "#EF5350", label: "#C62828" },
 };
 
+// SVG requires raw hex values; mapped to Tailwind tokens where applicable
 const CATEGORY_COLORS: Record<RadarCategory, string> = {
-  techniques: "#00A651",
+  techniques: "#3B82F6",  // brand-primary-500
   tools: "#42A5F5",
-  platforms: "#C7A84E",
+  platforms: "#8B5CF6",   // brand-accent-500
   frameworks: "#7C3AED",
 };
 

@@ -213,11 +213,11 @@ export function ChatSplitView() {
                 {/* ----------------------------------------------------------------- */}
                 <div className="relative shrink-0">
                     {/* Gradient accent bar */}
-                    <div className="h-1.5 w-full bg-gradient-to-r from-lr-green-500 via-lr-green-400 to-lr-gold-500" />
+                    <div className="h-1.5 w-full bg-gradient-to-r from-brand-primary-500 via-brand-primary-400 to-brand-accent-500" />
 
                     <div className="flex items-center gap-3 bg-white/90 px-5 py-4 backdrop-blur-xl">
                         {/* Mini Cosmos Orb */}
-                        <div className="cosmos-core-mini relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lr-green-500 to-lr-gold-500 shadow-md">
+                        <div className="cosmos-core-mini relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary-500 to-brand-accent-500 shadow-md">
                             <Sparkles className="h-5 w-5 text-white" />
                         </div>
 
@@ -242,7 +242,7 @@ export function ChatSplitView() {
                                 "flex h-8 w-8 items-center justify-center rounded-lg",
                                 "text-surface-400 transition-colors duration-150",
                                 "hover:bg-surface-100 hover:text-surface-600",
-                                "focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-1",
+                                "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-1",
                                 "max-sm:hidden",
                             )}
                             aria-label={isFullscreen ? "Normalgröße" : "Vollbild"}
@@ -262,7 +262,7 @@ export function ChatSplitView() {
                                 "flex h-8 w-8 items-center justify-center rounded-lg",
                                 "text-surface-400 transition-colors duration-150",
                                 "hover:bg-red-50 hover:text-red-500",
-                                "focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-1",
+                                "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-1",
                             )}
                             aria-label="Chat schließen"
                         >
@@ -276,7 +276,7 @@ export function ChatSplitView() {
                 {/* ----------------------------------------------------------------- */}
                 <div className="shrink-0 border-b border-surface-100 bg-gradient-to-r from-surface-50 to-white px-5 py-2.5">
                     <div className="flex items-center gap-2 text-[11px] text-surface-500">
-                        <FileText className="h-3.5 w-3.5 shrink-0 text-lr-green-500" />
+                        <FileText className="h-3.5 w-3.5 shrink-0 text-brand-primary-500" />
                         <span className="truncate font-medium">
                             Kontext: {pageContext}
                         </span>
@@ -289,8 +289,8 @@ export function ChatSplitView() {
                 <div className="flex-1 overflow-y-auto py-4 no-scrollbar">
                     {messages.length === 0 && (
                         <div className="flex flex-col items-center justify-center gap-3 px-8 py-12 text-center">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-lr-green-500/10 to-lr-gold-500/10">
-                                <Sparkles className="h-8 w-8 text-lr-green-500" />
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary-500/10 to-brand-accent-500/10">
+                                <Sparkles className="h-8 w-8 text-brand-primary-500" />
                             </div>
                             <p className="text-sm font-semibold text-surface-700">
                                 Wie kann ich dir helfen?
@@ -324,8 +324,8 @@ export function ChatSplitView() {
                                 "border border-surface-200 bg-white px-3.5 py-2",
                                 "text-xs font-medium text-surface-600",
                                 "transition-all duration-200",
-                                "hover:border-lr-green-300 hover:bg-lr-green-50 hover:text-lr-green-700 hover:shadow-sm",
-                                "focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-1",
+                                "hover:border-brand-primary-300 hover:bg-brand-primary-50 hover:text-brand-primary-700 hover:shadow-sm",
+                                "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-1",
                             )}
                         >
                             <Icon className="h-3.5 w-3.5" />
@@ -350,7 +350,7 @@ export function ChatSplitView() {
                                 "flex-1 rounded-xl border border-surface-200 bg-surface-50 px-4 py-3",
                                 "text-sm text-surface-800 placeholder:text-surface-400",
                                 "transition-all duration-200",
-                                "focus:border-lr-green-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-lr-green-400/30",
+                                "focus:border-brand-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary-400/30",
                             )}
                             aria-label="Nachricht eingeben"
                         />
@@ -361,11 +361,11 @@ export function ChatSplitView() {
                             disabled={!inputValue.trim()}
                             className={cn(
                                 "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
-                                "bg-gradient-to-r from-lr-green-500 to-lr-green-600 text-white",
+                                "bg-gradient-to-r from-brand-primary-500 to-brand-primary-600 text-white",
                                 "transition-all duration-200",
-                                "hover:shadow-lg hover:shadow-lr-green-500/25",
+                                "hover:shadow-lg hover:shadow-brand-primary-500/25",
                                 "disabled:cursor-not-allowed disabled:opacity-40",
-                                "focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-1",
+                                "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-1",
                             )}
                             aria-label="Nachricht senden"
                         >

@@ -84,14 +84,14 @@ export function BestPracticeCard({ data, className }: BestPracticeCardProps) {
         "transition-all duration-300 ease-out",
         // Hover effect
         "hover:-translate-y-0.5 hover:shadow-card-hover",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-2",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2",
         className
       )}
     >
       {/* Featured Star Badge */}
       {data.isFeatured && (
         <div
-          className="absolute -top-2 -right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-lr-gold-500 shadow-lr-gold"
+          className="absolute -top-2 -right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-brand-accent-500 shadow-brand-accent"
           aria-label="Hervorgehobene Best Practice"
         >
           <Star className="h-4 w-4 fill-white text-white" />
@@ -108,7 +108,7 @@ export function BestPracticeCard({ data, className }: BestPracticeCardProps) {
         </div>
 
         {/* Title */}
-        <h3 className="font-heading text-[16px] font-semibold leading-snug text-surface-900 group-hover:text-lr-green-600 transition-colors duration-200">
+        <h3 className="font-heading text-[16px] font-semibold leading-snug text-surface-900 group-hover:text-brand-primary-600 transition-colors duration-200">
           {data.title}
         </h3>
 
@@ -175,7 +175,7 @@ export function BestPracticeCard({ data, className }: BestPracticeCardProps) {
         </div>
 
         {/* XP Reward (right-aligned) */}
-        <div className="ml-auto flex items-center gap-1 text-lr-green-600">
+        <div className="ml-auto flex items-center gap-1 text-brand-primary-600">
           <Sparkles className="h-3.5 w-3.5" />
           <span className="text-caption font-semibold">+{data.xpReward} XP</span>
         </div>

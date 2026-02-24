@@ -1,5 +1,5 @@
 // =============================================================================
-// LR AI Hub - UI Component Library
+// AI Hub - UI Component Library
 // Re-exports all design system primitives
 // =============================================================================
 

@@ -213,7 +213,7 @@ export default function CommunityPage() {
                   setActiveType(activeType === type ? null : type)
                 }
                 className={`rounded-full px-3 py-1 text-caption font-medium transition-colors ${activeType === type
-                    ? "bg-lr-green-500 text-white"
+                    ? "bg-brand-primary-500 text-white"
                     : "bg-surface-100 text-surface-600 hover:bg-surface-200"
                   }`}
               >
@@ -232,7 +232,7 @@ export default function CommunityPage() {
             key={option}
             onClick={() => setSort(option)}
             className={`rounded-lg px-3 py-1 text-caption font-medium transition-colors ${sort === option
-                ? "bg-lr-green-50 text-lr-green-700"
+                ? "bg-brand-primary-50 text-brand-primary-700"
                 : "text-surface-500 hover:text-surface-700"
               }`}
           >
@@ -251,7 +251,7 @@ export default function CommunityPage() {
       {/* Loading */}
       {isLoading && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
         </div>
       )}
 
@@ -314,7 +314,7 @@ function PostCard({
               }}
               disabled={isVoting}
               className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${post.hasUpvoted
-                  ? "bg-lr-green-50 text-lr-green-600"
+                  ? "bg-brand-primary-50 text-brand-primary-600"
                   : "bg-surface-100 text-surface-400 hover:bg-surface-200 hover:text-surface-600"
                 }`}
               aria-label="Upvote"
@@ -322,7 +322,7 @@ function PostCard({
               <ThumbsUp className="h-4 w-4" />
             </button>
             <span
-              className={`text-caption font-semibold ${post.hasUpvoted ? "text-lr-green-600" : "text-surface-500"
+              className={`text-caption font-semibold ${post.hasUpvoted ? "text-brand-primary-600" : "text-surface-500"
                 }`}
             >
               {post.upvotes_count}
@@ -333,7 +333,7 @@ function PostCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               {post.is_pinned && (
-                <Pin className="h-3.5 w-3.5 text-lr-gold-500" />
+                <Pin className="h-3.5 w-3.5 text-brand-accent-500" />
               )}
               <Badge variant={POST_TYPE_COLORS[post.type]} size="sm">
                 {POST_TYPE_LABELS[post.type]}
@@ -462,7 +462,7 @@ function CreatePostForm({
                   type="button"
                   onClick={() => setType(t)}
                   className={`rounded-full px-3 py-1.5 text-caption font-medium transition-colors ${type === t
-                      ? "bg-lr-green-500 text-white"
+                      ? "bg-brand-primary-500 text-white"
                       : "bg-surface-100 text-surface-600 hover:bg-surface-200"
                     }`}
                 >
@@ -490,7 +490,7 @@ function CreatePostForm({
           </label>
           <textarea
             id="post-content"
-            className="w-full rounded-[10px] border border-surface-300 bg-white px-3.5 py-2.5 text-body text-surface-900 placeholder:text-surface-400 focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20"
+            className="w-full rounded-[10px] border border-surface-300 bg-white px-3.5 py-2.5 text-body text-surface-900 placeholder:text-surface-400 focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
             rows={5}
             placeholder="Beschreibe deinen Beitrag..."
             value={content}

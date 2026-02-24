@@ -1,6 +1,6 @@
 // =============================================================================
 // Button Component
-// LR AI Hub Design System
+// AI Hub Design System
 // =============================================================================
 
 import React, { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
@@ -36,30 +36,30 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary: [
-    "bg-lr-green-500 text-white",
-    "hover:bg-lr-green-600 active:bg-lr-green-700",
-    "shadow-sm hover:shadow-lr-green",
-    "focus-visible:ring-lr-green-500",
+    "bg-brand-primary-500 text-white",
+    "hover:bg-brand-primary-600 active:bg-brand-primary-700",
+    "shadow-sm hover:shadow-brand-primary",
+    "focus-visible:ring-brand-primary-500",
   ].join(" "),
 
   secondary: [
-    "bg-lr-green-50 text-lr-green-700",
-    "hover:bg-lr-green-100 active:bg-lr-green-200",
-    "focus-visible:ring-lr-green-500",
+    "bg-brand-primary-50 text-brand-primary-700",
+    "hover:bg-brand-primary-100 active:bg-brand-primary-200",
+    "focus-visible:ring-brand-primary-500",
   ].join(" "),
 
   ghost: [
     "bg-transparent text-surface-700",
     "border border-surface-300",
     "hover:bg-surface-100 active:bg-surface-200",
-    "focus-visible:ring-lr-green-500",
+    "focus-visible:ring-brand-primary-500",
   ].join(" "),
 
   outline: [
-    "bg-transparent text-lr-green-600",
-    "border border-lr-green-500",
-    "hover:bg-lr-green-50 active:bg-lr-green-100",
-    "focus-visible:ring-lr-green-500",
+    "bg-transparent text-brand-primary-600",
+    "border border-brand-primary-500",
+    "hover:bg-brand-primary-50 active:bg-brand-primary-100",
+    "focus-visible:ring-brand-primary-500",
   ].join(" "),
 
   danger: [

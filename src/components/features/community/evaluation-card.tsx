@@ -84,30 +84,30 @@ const SCORE_DIMENSIONS: ScoreDimension[] = [
 // ---------------------------------------------------------------------------
 
 function getScoreColor(score: number): string {
-  if (score >= 75) return "bg-lr-green-500";
+  if (score >= 75) return "bg-brand-primary-500";
   if (score >= 55) return "bg-info";
-  if (score >= 35) return "bg-lr-gold-500";
+  if (score >= 35) return "bg-brand-accent-500";
   return "bg-error";
 }
 
 function getScoreTextColor(score: number): string {
-  if (score >= 75) return "text-lr-green-700";
+  if (score >= 75) return "text-brand-primary-700";
   if (score >= 55) return "text-info-dark";
-  if (score >= 35) return "text-lr-gold-800";
+  if (score >= 35) return "text-brand-accent-800";
   return "text-error-dark";
 }
 
 function getOverallScoreRingColor(score: number): string {
-  if (score >= 75) return "ring-lr-green-500";
+  if (score >= 75) return "ring-brand-primary-500";
   if (score >= 55) return "ring-info";
-  if (score >= 35) return "ring-lr-gold-500";
+  if (score >= 35) return "ring-brand-accent-500";
   return "ring-error";
 }
 
 function getOverallScoreBgColor(score: number): string {
-  if (score >= 75) return "bg-lr-green-50";
+  if (score >= 75) return "bg-brand-primary-50";
   if (score >= 55) return "bg-info-light";
-  if (score >= 35) return "bg-lr-gold-50";
+  if (score >= 35) return "bg-brand-accent-50";
   return "bg-error-light";
 }
 
@@ -252,13 +252,13 @@ export function EvaluationCard({ evaluation, className }: EvaluationCardProps) {
           title="Staerken"
           items={strengths}
           icon={<CheckCircle className="h-4 w-4" />}
-          iconClassName="text-lr-green-500"
+          iconClassName="text-brand-primary-500"
         />
         <ListSection
           title="Risiken"
           items={risks}
           icon={<AlertTriangle className="h-4 w-4" />}
-          iconClassName="text-lr-gold-500"
+          iconClassName="text-brand-accent-500"
         />
         <ListSection
           title="Naechste Schritte"

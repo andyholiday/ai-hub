@@ -60,8 +60,8 @@ const MENTOR_STATS = [
     icon: MessageSquare,
     label: "Gespraeche",
     value: "12",
-    color: "text-lr-green-600",
-    bg: "bg-lr-green-50",
+    color: "text-brand-primary-600",
+    bg: "bg-brand-primary-50",
   },
   {
     icon: Flame,
@@ -74,7 +74,7 @@ const MENTOR_STATS = [
     icon: Trophy,
     label: "XP verdient",
     value: "240",
-    color: "text-lr-gold-600",
+    color: "text-brand-accent-600",
     bg: "bg-amber-50",
   },
 ] as const;
@@ -132,7 +132,7 @@ export default function AIMentorPage() {
           {
             role: "system",
             content:
-              "Du bist der KI-Mentor der LR AI Hub Community. Du hilfst Mitarbeitern von LR Health & Beauty Systems, KI im Arbeitsalltag einzusetzen. Antworte auf Deutsch, freundlich und praxisnah. Halte deine Antworten kompakt aber hilfreich.",
+              "Du bist der KI-Mentor der AI Hub Community. Du hilfst Community-Mitgliedern, KI im Arbeitsalltag einzusetzen. Antworte auf Deutsch, freundlich und praxisnah. Halte deine Antworten kompakt aber hilfreich.",
           },
           ...messages.map((m) => ({
             role: m.role === "ai" ? "assistant" : "user",
@@ -213,7 +213,7 @@ export default function AIMentorPage() {
             {
               role: "system",
               content:
-                "Du bist der KI-Mentor der LR AI Hub Community. Du hilfst Mitarbeitern von LR Health & Beauty Systems, KI im Arbeitsalltag einzusetzen. Antworte auf Deutsch, freundlich und praxisnah.",
+                "Du bist der KI-Mentor der AI Hub Community. Du hilfst Community-Mitgliedern, KI im Arbeitsalltag einzusetzen. Antworte auf Deutsch, freundlich und praxisnah.",
             },
             { role: "user", content: prompt },
           ],
@@ -325,9 +325,9 @@ export default function AIMentorPage() {
       <Card className="flex flex-col overflow-hidden shadow-xl shadow-surface-200/40 border-surface-200/60 transition-all duration-300 hover:shadow-2xl hover:shadow-surface-200/50" noPadding>
         {/* Chat Header */}
         <div className="relative shrink-0">
-          <div className="h-1 w-full bg-gradient-to-r from-lr-green-500 via-lr-green-400 to-lr-gold-500" />
+          <div className="h-1 w-full bg-gradient-to-r from-brand-primary-500 via-brand-primary-400 to-brand-accent-500" />
           <div className="flex items-center gap-3 border-b border-surface-100 bg-white/80 px-5 py-3.5 backdrop-blur-xl">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lr-green-500 to-lr-gold-500 shadow-sm">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary-500 to-brand-accent-500 shadow-sm">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div className="flex flex-col">
@@ -341,7 +341,7 @@ export default function AIMentorPage() {
               </span>
             </div>
             <div className="ml-auto flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-lr-green-500" />
+              <span className="h-2 w-2 rounded-full bg-brand-primary-500" />
               <span className="text-[11px] text-surface-400">Online</span>
             </div>
           </div>
@@ -353,10 +353,10 @@ export default function AIMentorPage() {
           {!hasMessages && (
             <div className="relative flex flex-col items-center justify-center px-6 py-20 min-h-full overflow-hidden">
               {/* Decorative Ambient Glows */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-lr-green-400/10 blur-[100px] rounded-full pointer-events-none" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-[20%] -translate-y-1/2 w-[400px] h-[400px] bg-lr-gold-400/10 blur-[80px] rounded-full pointer-events-none" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-primary-400/10 blur-[100px] rounded-full pointer-events-none" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-[20%] -translate-y-1/2 w-[400px] h-[400px] bg-brand-accent-400/10 blur-[80px] rounded-full pointer-events-none" />
 
-              <div className="relative mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-lr-green-500 to-lr-gold-500 shadow-xl shadow-lr-green-500/25 ring-4 ring-white/50 backdrop-blur-sm transition-transform duration-500 hover:scale-110 hover:rotate-3">
+              <div className="relative mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-primary-500 to-brand-accent-500 shadow-xl shadow-brand-primary-500/25 ring-4 ring-white/50 backdrop-blur-sm transition-transform duration-500 hover:scale-110 hover:rotate-3">
                 <Sparkles className="h-10 w-10 text-white" />
               </div>
               <h2 className="relative font-display text-3xl font-bold text-surface-900 tracking-tight text-center">
@@ -377,12 +377,12 @@ export default function AIMentorPage() {
                       "flex items-center gap-3 rounded-xl border border-surface-200 bg-white p-4",
                       "text-left text-body-sm font-medium text-surface-700",
                       "transition-all duration-200",
-                      "hover:border-lr-green-300 hover:bg-lr-green-50 hover:text-lr-green-700 hover:shadow-sm",
-                      "focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-1"
+                      "hover:border-brand-primary-300 hover:bg-brand-primary-50 hover:text-brand-primary-700 hover:shadow-sm",
+                      "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-1"
                     )}
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-lr-green-50">
-                      <Icon className="h-4.5 w-4.5 text-lr-green-600" />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-primary-50">
+                      <Icon className="h-4.5 w-4.5 text-brand-primary-600" />
                     </div>
                     <span>{label}</span>
                   </button>
@@ -421,9 +421,9 @@ export default function AIMentorPage() {
                   "border border-surface-200 bg-white px-3 py-1.5",
                   "text-xs font-medium text-surface-600",
                   "transition-all duration-150",
-                  "hover:border-lr-green-300 hover:bg-lr-green-50 hover:text-lr-green-700",
+                  "hover:border-brand-primary-300 hover:bg-brand-primary-50 hover:text-brand-primary-700",
                   "disabled:cursor-not-allowed disabled:opacity-50",
-                  "focus-visible:ring-2 focus-visible:ring-lr-green-500 focus-visible:ring-offset-1"
+                  "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-1"
                 )}
               >
                 <Icon className="h-3 w-3" />
@@ -447,7 +447,7 @@ export default function AIMentorPage() {
                 "flex-1 resize-none rounded-2xl border border-surface-200 bg-surface-50/50 px-5 py-3.5",
                 "text-body text-surface-800 placeholder:text-surface-400",
                 "transition-all duration-200 shadow-inner shadow-surface-100/50",
-                "focus:border-lr-green-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-lr-green-500/10"
+                "focus:border-brand-primary-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-primary-500/10"
               )}
               aria-label="Chat-Nachricht eingeben"
               style={{ maxHeight: "120px" }}
@@ -465,11 +465,11 @@ export default function AIMentorPage() {
               disabled={!inputValue.trim() || isTyping}
               className={cn(
                 "flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl",
-                "bg-gradient-to-br from-lr-green-500 to-lr-green-600 text-white shadow-lg shadow-lr-green-500/30",
+                "bg-gradient-to-br from-brand-primary-500 to-brand-primary-600 text-white shadow-lg shadow-brand-primary-500/30",
                 "transition-all duration-200",
-                "hover:scale-105 hover:shadow-xl hover:shadow-lr-green-500/40",
+                "hover:scale-105 hover:shadow-xl hover:shadow-brand-primary-500/40",
                 "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 disabled:hover:shadow-lg",
-                "focus-visible:ring-4 focus-visible:ring-lr-green-500/30 focus-visible:ring-offset-1 focus:outline-none"
+                "focus-visible:ring-4 focus-visible:ring-brand-primary-500/30 focus-visible:ring-offset-1 focus:outline-none"
               )}
               aria-label="Nachricht senden"
             >

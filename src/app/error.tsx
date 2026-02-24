@@ -38,7 +38,7 @@ export default function Error({
       </p>
       <button
         onClick={reset}
-        className="rounded-[10px] bg-lr-green-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lr-green transition-all hover:bg-lr-green-600 hover:-translate-y-0.5"
+        className="rounded-[10px] bg-brand-primary-500 px-6 py-2.5 text-sm font-semibold text-white shadow-brand-primary transition-all hover:bg-brand-primary-600 hover:-translate-y-0.5"
       >
         Erneut versuchen
       </button>

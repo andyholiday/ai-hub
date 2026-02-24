@@ -17,32 +17,32 @@ const config: Config = {
   theme: {
     extend: {
       // -----------------------------------------------------------------------
-      // LR Corporate Colors
+      // Brand Colors
       // -----------------------------------------------------------------------
       colors: {
-        // Primary - LR Green
-        lr: {
-          green: {
+        // Primary - Brand Green
+        brand: {
+          primary: {
             50: "#E6F7ED",
             100: "#C0EBD4",
             200: "#96DEB8",
             300: "#6BD19C",
             400: "#4BC887",
-            500: "#00A651", // Primary LR Green
+            500: "#00A651", // Primary Brand Green
             600: "#009548",
             700: "#00823E",
             800: "#006837", // Dark Green
             900: "#004D29",
             950: "#003A1F",
           },
-          // Secondary - LR Gold
-          gold: {
+          // Secondary - Brand Gold
+          accent: {
             50: "#FBF6E8",
             100: "#F5E9C5",
             200: "#EFDB9E",
             300: "#E8CD77",
             400: "#D4B85E",
-            500: "#C7A84E", // Primary LR Gold
+            500: "#C7A84E", // Primary Brand Gold
             600: "#B59540",
             700: "#9E8035",
             800: "#876B2B",
@@ -172,15 +172,15 @@ const config: Config = {
       },
 
       // -----------------------------------------------------------------------
-      // Shadows (LR style - subtle, layered)
+      // Shadows (Brand style - subtle, layered)
       // -----------------------------------------------------------------------
       boxShadow: {
         "card": "0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)",
         "card-hover": "0 10px 30px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04)",
         "elevated": "0 20px 60px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.06)",
         "inner-glow": "inset 0 1px 4px rgba(0, 166, 81, 0.1)",
-        "lr-green": "0 4px 14px rgba(0, 166, 81, 0.25)",
-        "lr-gold": "0 4px 14px rgba(199, 168, 78, 0.25)",
+        "brand-primary": "0 4px 14px rgba(0, 166, 81, 0.25)",
+        "brand-accent": "0 4px 14px rgba(199, 168, 78, 0.25)",
       },
 
       // -----------------------------------------------------------------------
@@ -241,10 +241,10 @@ const config: Config = {
       // Background images & gradients
       // -----------------------------------------------------------------------
       backgroundImage: {
-        "lr-gradient": "linear-gradient(135deg, #00A651 0%, #006837 100%)",
-        "lr-gradient-gold": "linear-gradient(135deg, #C7A84E 0%, #9E8035 100%)",
-        "lr-gradient-subtle": "linear-gradient(135deg, #E6F7ED 0%, #C0EBD4 100%)",
-        "lr-mesh": "radial-gradient(at 40% 20%, #E6F7ED 0px, transparent 50%), radial-gradient(at 80% 0%, #FBF6E8 0px, transparent 50%), radial-gradient(at 0% 50%, #E3F2FD 0px, transparent 50%)",
+        "brand-gradient": "linear-gradient(135deg, #00A651 0%, #006837 100%)",
+        "brand-gradient-gold": "linear-gradient(135deg, #C7A84E 0%, #9E8035 100%)",
+        "brand-gradient-subtle": "linear-gradient(135deg, #E6F7ED 0%, #C0EBD4 100%)",
+        "brand-mesh": "radial-gradient(at 40% 20%, #E6F7ED 0px, transparent 50%), radial-gradient(at 80% 0%, #FBF6E8 0px, transparent 50%), radial-gradient(at 0% 50%, #E3F2FD 0px, transparent 50%)",
       },
 
       // -----------------------------------------------------------------------

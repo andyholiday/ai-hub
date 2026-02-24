@@ -137,15 +137,15 @@ export function IdeaBoard({ onRequestCreate }: IdeaBoardProps = {}) {
       {/* Loading */}
       {isLoading && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-lr-gold-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-brand-accent-500" />
         </div>
       )}
 
       {/* Empty State */}
       {!isLoading && !error && ideas.length === 0 && (
         <Card className="py-16 text-center border-dashed border-2 bg-surface-50/50">
-          <div className="mx-auto bg-lr-gold-100 flex items-center justify-center h-16 w-16 rounded-full mb-4 shadow-sm">
-            <Lightbulb className="h-8 w-8 text-lr-gold-600" />
+          <div className="mx-auto bg-brand-accent-100 flex items-center justify-center h-16 w-16 rounded-full mb-4 shadow-sm">
+            <Lightbulb className="h-8 w-8 text-brand-accent-600" />
           </div>
           <p className="text-title-md font-semibold text-surface-900">
             Noch keine Ideen vorhanden
@@ -156,7 +156,7 @@ export function IdeaBoard({ onRequestCreate }: IdeaBoardProps = {}) {
           {onRequestCreate && (
             <button
               onClick={onRequestCreate}
-              className="inline-flex items-center justify-center rounded-xl bg-lr-green-500 px-6 py-2.5 text-body-sm font-medium text-white shadow-soft transition-all hover:bg-lr-green-600 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20 active:scale-95"
+              className="inline-flex items-center justify-center rounded-xl bg-brand-primary-500 px-6 py-2.5 text-body-sm font-medium text-white shadow-soft transition-all hover:bg-brand-primary-600 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20 active:scale-95"
             >
               Erste Idee einreichen
             </button>

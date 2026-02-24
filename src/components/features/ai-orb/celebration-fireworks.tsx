@@ -22,9 +22,9 @@ import { useMemo } from "react";
 const PARTICLE_COUNT = 12;
 
 const PARTICLE_COLORS = [
-    "rgba(199, 168, 78, 1)",    // LR Gold
+    "rgba(199, 168, 78, 1)",    // Gold
     "rgba(199, 168, 78, 0.8)",
-    "rgba(0, 166, 81, 0.9)",    // LR Green
+    "rgba(0, 166, 81, 0.9)",    // Green
     "rgba(0, 166, 81, 0.7)",
     "rgba(239, 219, 158, 1)",   // Light Gold
     "rgba(150, 222, 184, 0.9)", // Light Green

@@ -35,13 +35,13 @@ export const BRANDING_APPMANUFAKTOR: BrandingConfig = {
   loginSubtext: "Melde dich bei deinem AI Hub Konto an.",
 };
 
-/** Preset: LR Health & Beauty */
+/** Custom preset: LR Health & Beauty (white-label example) */
 export const BRANDING_LR: BrandingConfig = {
   appName: "AI Hub",
   appSubtitle: "Community Platform",
   companyName: "LR Health & Beauty Systems",
   logoText: "LR",
-  logoGradient: "bg-lr-gradient",
+  logoGradient: "bg-brand-gradient",
   primaryColor: "green",
   description:
     "Die KI-Community-Plattform fuer LR Health & Beauty Systems Partner",

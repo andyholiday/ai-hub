@@ -1,8 +1,8 @@
 {
-  "name": "lr-ai-hub",
+  "name": "ai-hub",
   "version": "0.1.0",
   "private": true,
-  "description": "LR AI Hub - KI-Community-Plattform fuer LR Health & Beauty Systems",
+  "description": "AI Hub - KI-Community-Plattform",
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",

@@ -77,16 +77,16 @@ function getNextLevel(currentLevel: LevelDefinition): LevelDefinition | null {
 }
 
 function getLevelIconColor(level: number): string {
-  if (level >= 8) return "text-lr-gold-500";
+  if (level >= 8) return "text-brand-accent-500";
   if (level >= 6) return "text-purple-500";
-  if (level >= 4) return "text-lr-green-500";
+  if (level >= 4) return "text-brand-primary-500";
   return "text-info";
 }
 
 function getLevelBgColor(level: number): string {
-  if (level >= 8) return "bg-lr-gold-50 ring-lr-gold-200";
+  if (level >= 8) return "bg-brand-accent-50 ring-brand-accent-200";
   if (level >= 6) return "bg-purple-50 ring-purple-200";
-  if (level >= 4) return "bg-lr-green-50 ring-lr-green-200";
+  if (level >= 4) return "bg-brand-primary-50 ring-brand-primary-200";
   return "bg-info-light ring-blue-200";
 }
 

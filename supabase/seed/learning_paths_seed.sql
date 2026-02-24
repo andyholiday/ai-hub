@@ -1,5 +1,5 @@
 -- =============================================================================
--- LR AI Hub - Learning Paths Seed Data
+-- AI Hub - Learning Paths Seed Data
 -- Date: 2026-02-21
 -- Description: Seed data for learning paths with references to existing courses.
 --   Creates 3 curated learning paths using the courses from the main seed file.
@@ -13,9 +13,9 @@ INSERT INTO learning_paths (id, title, description, slug, difficulty, estimated_
 VALUES
     (
         'a0000000-0000-0000-0000-a00000000001',
-        'KI-Grundlagen fuer LR Partner',
-        'Dein Einstieg in die Welt der Kuenstlichen Intelligenz -- speziell fuer LR Partner. Dieser Lernpfad fuehrt dich Schritt fuer Schritt von den Basics ueber Prompt Engineering bis hin zu ethischen Grundlagen. Nach Abschluss bist du bestens geruestet, KI verantwortungsvoll und effektiv im Alltag einzusetzen.',
-        'ki-grundlagen-lr-partner',
+        'KI-Grundlagen fuer Einsteiger',
+        'Dein Einstieg in die Welt der Kuenstlichen Intelligenz. Dieser Lernpfad fuehrt dich Schritt fuer Schritt von den Basics ueber Prompt Engineering bis hin zu ethischen Grundlagen. Nach Abschluss bist du bestens geruestet, KI verantwortungsvoll und effektiv im Alltag einzusetzen.',
+        'ki-grundlagen-einsteiger',
         'beginner',
         4.5,
         'Route',
@@ -53,7 +53,7 @@ ON CONFLICT (id) DO NOTHING;
 -- 2. LEARNING PATH COURSES (Mapping)
 -- =============================================================================
 
--- Lernpfad 1: KI-Grundlagen fuer LR Partner
+-- Lernpfad 1: KI-Grundlagen fuer Einsteiger
 -- Reihenfolge: Grundlagen -> Prompt Engineering -> Ethik
 INSERT INTO learning_path_courses (id, learning_path_id, course_id, order_index, is_required)
 VALUES

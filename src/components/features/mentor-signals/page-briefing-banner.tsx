@@ -93,16 +93,16 @@ export function PageBriefingBanner({ pageContext }: PageBriefingBannerProps) {
                     <div
                         className={cn(
                             "relative flex items-center gap-3 rounded-xl px-4 py-3",
-                            "bg-gradient-to-r from-white to-lr-green-50/50",
-                            "border border-lr-green-200/50",
+                            "bg-gradient-to-r from-white to-brand-primary-50/50",
+                            "border border-brand-primary-200/50",
                             "shadow-sm",
                         )}
                     >
                         {/* Gradient left accent */}
-                        <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-gradient-to-b from-lr-green-500 to-lr-gold-500" />
+                        <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-gradient-to-b from-brand-primary-500 to-brand-accent-500" />
 
                         {/* AI Mentor Avatar */}
-                        <div className="cosmos-core-mini flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lr-green-500 to-lr-gold-500 shadow-sm">
+                        <div className="cosmos-core-mini flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary-500 to-brand-accent-500 shadow-sm">
                             <Sparkles className="h-4 w-4 text-white" />
                         </div>
 
@@ -137,7 +137,7 @@ export function PageBriefingBanner({ pageContext }: PageBriefingBannerProps) {
                             initial={{ scaleX: 1 }}
                             animate={{ scaleX: 0 }}
                             transition={{ duration: 8, ease: "linear" }}
-                            className="absolute bottom-0 left-0 right-0 h-[2px] origin-left bg-gradient-to-r from-lr-green-500 to-lr-gold-500"
+                            className="absolute bottom-0 left-0 right-0 h-[2px] origin-left bg-gradient-to-r from-brand-primary-500 to-brand-accent-500"
                         />
                     </div>
                 </motion.div>

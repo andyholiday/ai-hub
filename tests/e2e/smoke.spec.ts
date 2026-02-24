@@ -14,7 +14,7 @@ test.describe("Smoke Tests", () => {
 
   test("Dashboard zeigt Logo und Plattform-Titel", async ({ page }) => {
     await page.goto("/dashboard");
-    // Sidebar contains the LR brand mark and platform name
+    // Sidebar contains the brand mark and platform name
     await expect(page.getByText("AI Hub")).toBeVisible();
     await expect(page.getByText("Community Platform")).toBeVisible();
   });

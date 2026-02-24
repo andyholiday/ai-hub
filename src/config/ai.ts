@@ -6,8 +6,8 @@
 export const aiConfig = {
   // System prompt for the AI Mentor persona
   mentorPersona: {
-    name: "LR AI Mentor",
-    role: "KI-Berater fuer LR Partner",
+    name: "AI Mentor",
+    role: "KI-Berater fuer Community-Mitglieder",
     language: "de",
   },
 

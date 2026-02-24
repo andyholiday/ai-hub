@@ -144,7 +144,7 @@ export function TopicListSidebar({
           className={cn(
             "rounded-full px-2.5 py-1 text-overline font-medium transition-colors",
             !highlightCategory
-              ? "bg-lr-green-500 text-white"
+              ? "bg-brand-primary-500 text-white"
               : "bg-surface-100 text-surface-600 hover:bg-surface-200",
           )}
         >
@@ -159,7 +159,7 @@ export function TopicListSidebar({
             className={cn(
               "rounded-full px-2.5 py-1 text-overline font-medium transition-colors",
               highlightCategory === cat
-                ? "bg-lr-green-500 text-white"
+                ? "bg-brand-primary-500 text-white"
                 : "bg-surface-100 text-surface-600 hover:bg-surface-200",
             )}
           >
@@ -221,7 +221,7 @@ export function TopicListSidebar({
                         className={cn(
                           "flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left transition-colors",
                           selectedItemId === item.id
-                            ? "bg-lr-green-50 ring-1 ring-inset ring-lr-green-200"
+                            ? "bg-brand-primary-50 ring-1 ring-inset ring-brand-primary-200"
                             : "hover:bg-surface-50",
                         )}
                       >
@@ -231,7 +231,7 @@ export function TopicListSidebar({
                               className={cn(
                                 "text-body-sm font-medium line-clamp-1",
                                 selectedItemId === item.id
-                                  ? "text-lr-green-700"
+                                  ? "text-brand-primary-700"
                                   : "text-surface-800",
                               )}
                             >

@@ -98,7 +98,7 @@ export function XpProgress({ className }: XpProgressProps) {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="flex items-center gap-2 font-display text-base font-semibold text-surface-900">
-          <Rocket className="h-4.5 w-4.5 text-lr-green-500" aria-hidden="true" />
+          <Rocket className="h-4.5 w-4.5 text-brand-primary-500" aria-hidden="true" />
           Dein Fortschritt
         </h3>
 
@@ -108,7 +108,7 @@ export function XpProgress({ className }: XpProgressProps) {
           <span
             className={cn(
               "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5",
-              "bg-lr-green-50 text-caption font-bold text-lr-green-600"
+              "bg-brand-primary-50 text-caption font-bold text-brand-primary-600"
             )}
           >
             <Zap className="h-3.5 w-3.5" aria-hidden="true" />
@@ -149,7 +149,7 @@ export function XpProgress({ className }: XpProgressProps) {
         <div
           className={cn(
             "h-full rounded-lg",
-            "bg-gradient-to-r from-lr-green-500 to-lr-gold-500",
+            "bg-gradient-to-r from-brand-primary-500 to-brand-accent-500",
             "transition-all duration-1500 ease-smooth"
           )}
           style={{ width: animated ? `${percentage}%` : "0%" }}
@@ -159,20 +159,20 @@ export function XpProgress({ className }: XpProgressProps) {
       {/* Details */}
       <div className="mt-2 flex items-center justify-between text-caption text-surface-400">
         <div>
-          <span className="font-semibold text-lr-green-500">
+          <span className="font-semibold text-brand-primary-500">
             {currentXpDisplay.toLocaleString("de-DE")}
           </span>{" "}
           / {maxXpDisplay.toLocaleString("de-DE")} XP
         </div>
         <div>
           {isMaxLevel ? (
-            <span className="font-semibold text-lr-green-500">
+            <span className="font-semibold text-brand-primary-500">
               Maximales Level erreicht!
             </span>
           ) : (
             <>
               Noch{" "}
-              <span className="font-semibold text-lr-green-500">
+              <span className="font-semibold text-brand-primary-500">
                 {remaining.toLocaleString("de-DE")} XP
               </span>{" "}
               bis Level {nextLevel.level}

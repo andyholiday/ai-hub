@@ -2,7 +2,7 @@
 
 export const metadata = {
   title: "Analytics | Admin",
-  description: "Analytics-Dashboard fuer die LR AI Hub Administration",
+  description: "Analytics-Dashboard fuer die Administration",
 };
 
 export default function AdminAnalyticsPage() {

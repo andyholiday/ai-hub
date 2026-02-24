@@ -133,8 +133,8 @@ export default function AdminPage() {
       {/* Page Header */}
       <div className="mb-7">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-lr-green-50">
-            <Shield className="h-5 w-5 text-lr-green-600" strokeWidth={2} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-primary-50">
+            <Shield className="h-5 w-5 text-brand-primary-600" strokeWidth={2} />
           </div>
           <div>
             <h1 className="font-display text-2xl font-bold text-surface-900">
@@ -164,11 +164,11 @@ export default function AdminPage() {
 
       {/* Test Result Banner */}
       {testMessage && (
-        <div className="mb-5 flex items-start gap-3 rounded-[14px] border border-lr-green-200 bg-lr-green-50 p-4">
-          <div className="flex-1 text-[13px] text-lr-green-700">{testMessage}</div>
+        <div className="mb-5 flex items-start gap-3 rounded-[14px] border border-brand-primary-200 bg-brand-primary-50 p-4">
+          <div className="flex-1 text-[13px] text-brand-primary-700">{testMessage}</div>
           <button
             onClick={() => setTestMessage(null)}
-            className="shrink-0 rounded-md p-1 text-lr-green-400 transition-colors hover:bg-lr-green-100 hover:text-lr-green-600"
+            className="shrink-0 rounded-md p-1 text-brand-primary-400 transition-colors hover:bg-brand-primary-100 hover:text-brand-primary-600"
             aria-label="Nachricht schliessen"
           >
             <X className="h-4 w-4" />
@@ -189,7 +189,7 @@ export default function AdminPage() {
           {/* Initial Loading State */}
           {isInitialLoading ? (
             <div className="flex flex-col items-center justify-center gap-3 py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
+              <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
               <p className="text-sm text-surface-500">Daten werden geladen...</p>
             </div>
           ) : (
@@ -241,7 +241,7 @@ export default function AdminPage() {
                       onStats={handleViewStats}
                       className={
                         testingId === provider.id
-                          ? "ring-2 ring-lr-green-500 ring-offset-2"
+                          ? "ring-2 ring-brand-primary-500 ring-offset-2"
                           : undefined
                       }
                     />

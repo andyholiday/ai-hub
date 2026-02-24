@@ -146,8 +146,8 @@ export default function LearnHubPage() {
       {/* Stats Bar */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-lr-green-50">
-            <BookOpen className="h-5 w-5 text-lr-green-600" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-primary-50">
+            <BookOpen className="h-5 w-5 text-brand-primary-600" />
           </div>
           <div>
             <p className="text-caption text-surface-500">Verfuegbare Kurse</p>
@@ -170,8 +170,8 @@ export default function LearnHubPage() {
         </Card>
 
         <Card className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-lr-gold-50">
-            <Trophy className="h-5 w-5 text-lr-gold-600" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-accent-50">
+            <Trophy className="h-5 w-5 text-brand-accent-600" />
           </div>
           <div>
             <p className="text-caption text-surface-500">Abgeschlossen</p>
@@ -209,7 +209,7 @@ export default function LearnHubPage() {
                 )
               }
               className={`rounded-full px-3 py-1 text-caption font-medium transition-colors ${activeDifficulty === level
-                ? "bg-lr-green-500 text-white"
+                ? "bg-brand-primary-500 text-white"
                 : "bg-surface-100 text-surface-600 hover:bg-surface-200"
                 }`}
             >
@@ -230,7 +230,7 @@ export default function LearnHubPage() {
                 setActiveCategory(activeCategory === cat ? null : cat)
               }
               className={`rounded-full px-3 py-1 text-caption font-medium transition-colors ${activeCategory === cat
-                ? "bg-lr-green-500 text-white"
+                ? "bg-brand-primary-500 text-white"
                 : "bg-surface-100 text-surface-600 hover:bg-surface-200"
                 }`}
             >
@@ -250,7 +250,7 @@ export default function LearnHubPage() {
       {/* Loading */}
       {isLoading && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
         </div>
       )}
 
@@ -298,8 +298,8 @@ function CourseCard({ course }: { course: CourseWithProgress }) {
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-lr-green-100 to-lr-green-200">
-              <BookOpen className="h-12 w-12 text-lr-green-400" />
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-primary-100 to-brand-primary-200">
+              <BookOpen className="h-12 w-12 text-brand-primary-400" />
             </div>
           )}
 

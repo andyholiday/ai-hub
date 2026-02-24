@@ -145,7 +145,7 @@ export default function InnovationRadarPage() {
       <div className="space-y-6">
         <PageHeader />
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
         </div>
       </div>
     );
@@ -164,7 +164,7 @@ export default function InnovationRadarPage() {
           <p className="mt-1 text-body-sm text-surface-500">{error}</p>
           <button
             onClick={fetchItems}
-            className="mt-4 rounded-lg bg-lr-green-500 px-4 py-2 text-body-sm font-semibold text-white transition-colors hover:bg-lr-green-600"
+            className="mt-4 rounded-lg bg-brand-primary-500 px-4 py-2 text-body-sm font-semibold text-white transition-colors hover:bg-brand-primary-600"
           >
             Erneut versuchen
           </button>
@@ -324,7 +324,7 @@ function RadarLegend() {
             Ringe
           </p>
           <div className="mt-1.5 space-y-1">
-            <LegendItem color="#00A651" label="Adopt - Empfohlen" />
+            <LegendItem color="#3B82F6" label="Adopt - Empfohlen" />
             <LegendItem color="#42A5F5" label="Trial - Testen" />
             <LegendItem color="#FFA726" label="Assess - Bewerten" />
             <LegendItem color="#EF5350" label="Hold - Abwarten" />
@@ -337,9 +337,9 @@ function RadarLegend() {
             Quadranten
           </p>
           <div className="mt-1.5 space-y-1">
-            <LegendItem color="#00A651" label="Techniken" />
+            <LegendItem color="#3B82F6" label="Techniken" />
             <LegendItem color="#42A5F5" label="Tools" />
-            <LegendItem color="#C7A84E" label="Plattformen" />
+            <LegendItem color="#8B5CF6" label="Plattformen" />
             <LegendItem color="#7C3AED" label="Sprachen & Frameworks" />
           </div>
         </div>

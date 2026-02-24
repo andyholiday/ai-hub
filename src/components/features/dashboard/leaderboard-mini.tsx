@@ -58,7 +58,7 @@ const leaders: LeaderEntry[] = [
     rank: 7,
     name: "Du (Sarah)",
     initials: "SH",
-    avatarColor: "bg-lr-green-500",
+    avatarColor: "bg-brand-primary-500",
     department: "Vertrieb",
     xpGain: "+120 XP",
     isCurrentUser: true,
@@ -72,7 +72,7 @@ const leaders: LeaderEntry[] = [
 function getRankColor(rank: number): string {
   switch (rank) {
     case 1:
-      return "text-lr-gold-500";
+      return "text-brand-accent-500";
     case 2:
       return "text-surface-400";
     case 3:
@@ -98,7 +98,7 @@ export function LeaderboardMini({ className }: LeaderboardMiniProps) {
       {/* Section Title */}
       <h3 className="mb-3 flex items-center gap-2 font-display text-base font-semibold text-surface-900">
         <span
-          className="h-4 w-[3px] rounded-full bg-lr-green-500"
+          className="h-4 w-[3px] rounded-full bg-brand-primary-500"
           aria-hidden="true"
         />
         Top der Woche
@@ -113,7 +113,7 @@ export function LeaderboardMini({ className }: LeaderboardMiniProps) {
               "flex items-center gap-2.5 py-2",
               // Highlighted "Du" row
               entry.isCurrentUser && [
-                "-mx-2 rounded-lg bg-lr-green-50 px-2",
+                "-mx-2 rounded-lg bg-brand-primary-50 px-2",
               ]
             )}
           >
@@ -122,7 +122,7 @@ export function LeaderboardMini({ className }: LeaderboardMiniProps) {
               className={cn(
                 "w-5 text-center font-display text-body-sm font-bold",
                 entry.isCurrentUser
-                  ? "text-lr-green-500"
+                  ? "text-brand-primary-500"
                   : getRankColor(entry.rank)
               )}
             >
@@ -147,7 +147,7 @@ export function LeaderboardMini({ className }: LeaderboardMiniProps) {
                 className={cn(
                   "truncate text-caption font-semibold",
                   entry.isCurrentUser
-                    ? "text-lr-green-600"
+                    ? "text-brand-primary-600"
                     : "text-surface-900"
                 )}
               >
@@ -159,7 +159,7 @@ export function LeaderboardMini({ className }: LeaderboardMiniProps) {
             </div>
 
             {/* XP Gain */}
-            <span className="shrink-0 font-display text-caption font-semibold text-lr-green-500">
+            <span className="shrink-0 font-display text-caption font-semibold text-brand-primary-500">
               {entry.xpGain}
             </span>
           </div>

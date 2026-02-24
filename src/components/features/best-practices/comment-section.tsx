@@ -77,7 +77,7 @@ function CommentInput({
             "w-full resize-none rounded-[10px] border border-surface-300 bg-white px-3.5 py-2.5",
             "text-body text-surface-900 placeholder:text-surface-400",
             "transition-all duration-200 ease-out",
-            "focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20",
+            "focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20",
             compact && "text-body-sm py-2 px-3"
           )}
         />
@@ -152,7 +152,7 @@ function SingleComment({
                 "flex items-center gap-1 rounded-md px-2 py-1 text-caption font-medium",
                 "transition-colors duration-200",
                 isUpvoted
-                  ? "bg-lr-green-50 text-lr-green-600"
+                  ? "bg-brand-primary-50 text-brand-primary-600"
                   : "text-surface-400 hover:bg-surface-100 hover:text-surface-600"
               )}
               aria-label={isUpvoted ? "Upvote entfernen" : "Upvoten"}

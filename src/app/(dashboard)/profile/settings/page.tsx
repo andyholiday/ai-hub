@@ -278,7 +278,7 @@ export default function ProfileSettingsPage() {
                 w-full rounded-xl border bg-white px-3.5 py-2.5
                 text-body text-surface-900 placeholder:text-surface-400
                 transition-colors duration-150
-                focus:border-lr-green-500 focus:outline-none focus:ring-2 focus:ring-lr-green-500/20
+                focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20
                 ${fieldErrors.bio ? "border-error" : "border-surface-300"}
               `}
               placeholder="Erzaehle etwas ueber dich..."
@@ -301,7 +301,7 @@ export default function ProfileSettingsPage() {
 
           {/* Success / Error Messages */}
           {success && (
-            <div className="rounded-xl bg-lr-green-50 border border-lr-green-200 px-4 py-3 text-body-sm text-lr-green-700">
+            <div className="rounded-xl bg-brand-primary-50 border border-brand-primary-200 px-4 py-3 text-body-sm text-brand-primary-700">
               Profil erfolgreich aktualisiert!
             </div>
           )}

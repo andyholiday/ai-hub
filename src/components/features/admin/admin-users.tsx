@@ -171,7 +171,7 @@ export function AdminUsersTab() {
     if (isLoading && users.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center gap-3 py-20 animate-fade-in">
-                <Loader2 className="h-8 w-8 animate-spin text-lr-green-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
                 <p className="text-sm text-surface-500">Benutzerdaten werden geladen...</p>
             </div>
         );
@@ -189,7 +189,7 @@ export function AdminUsersTab() {
         <div className="animate-fade-in space-y-5">
             <div className="flex items-center justify-between rounded-[14px] border border-surface-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lr-green-50 text-lr-green-600">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-primary-50 text-brand-primary-600">
                         <Users className="h-6 w-6" />
                     </div>
                     <div>
@@ -199,7 +199,7 @@ export function AdminUsersTab() {
                 </div>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="flex items-center gap-2 rounded-xl bg-lr-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-lr-green-700"
+                    className="flex items-center gap-2 rounded-xl bg-brand-primary-600 px-4 py-2 font-medium text-white transition-colors hover:bg-brand-primary-700"
                 >
                     <Plus className="h-4 w-4" />
                     Neuer Benutzer
@@ -273,7 +273,7 @@ export function AdminUsersTab() {
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => handleEditUser(user)}
-                                                className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-lr-green-600"
+                                                className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-brand-primary-600"
                                                 title="Bearbeiten"
                                             >
                                                 <Pencil className="h-4 w-4" />
@@ -328,7 +328,7 @@ export function AdminUsersTab() {
                                     required
                                     value={editFullName}
                                     onChange={e => setEditFullName(e.target.value)}
-                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
                                     placeholder="Max Mustermann"
                                 />
                             </div>
@@ -338,7 +338,7 @@ export function AdminUsersTab() {
                                     type="text"
                                     value={editDepartment}
                                     onChange={e => setEditDepartment(e.target.value)}
-                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
                                     placeholder="z.B. Marketing"
                                 />
                             </div>
@@ -348,7 +348,7 @@ export function AdminUsersTab() {
                                     type="text"
                                     value={editPosition}
                                     onChange={e => setEditPosition(e.target.value)}
-                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
                                     placeholder="z.B. Team Lead"
                                 />
                             </div>
@@ -358,7 +358,7 @@ export function AdminUsersTab() {
                                     <select
                                         value={editRole}
                                         onChange={e => setEditRole(e.target.value)}
-                                        className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                        className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
                                     >
                                         <option value="user">User</option>
                                         <option value="admin">Admin</option>
@@ -370,7 +370,7 @@ export function AdminUsersTab() {
                                             type="checkbox"
                                             checked={editIsApproved}
                                             onChange={e => setEditIsApproved(e.target.checked)}
-                                            className="h-4 w-4 rounded border-surface-300 text-lr-green-600 focus:ring-lr-green-500"
+                                            className="h-4 w-4 rounded border-surface-300 text-brand-primary-600 focus:ring-brand-primary-500"
                                         />
                                         Freigegeben
                                     </label>
@@ -388,7 +388,7 @@ export function AdminUsersTab() {
                                 <button
                                     type="submit"
                                     disabled={isSavingEdit}
-                                    className="flex items-center rounded-xl bg-lr-green-600 px-4 py-2 font-medium text-white hover:bg-lr-green-700 disabled:opacity-50"
+                                    className="flex items-center rounded-xl bg-brand-primary-600 px-4 py-2 font-medium text-white hover:bg-brand-primary-700 disabled:opacity-50"
                                 >
                                     {isSavingEdit && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Speichern
@@ -421,7 +421,7 @@ export function AdminUsersTab() {
                                     required
                                     value={fullName}
                                     onChange={e => setFullName(e.target.value)}
-                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
                                     placeholder="Max Mustermann"
                                 />
                             </div>
@@ -432,7 +432,7 @@ export function AdminUsersTab() {
                                     required
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
-                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
                                     placeholder="max@example.com"
                                 />
                             </div>
@@ -443,7 +443,7 @@ export function AdminUsersTab() {
                                     required
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
-                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
                                     placeholder="Mind. 6 Zeichen"
                                     minLength={6}
                                 />
@@ -454,7 +454,7 @@ export function AdminUsersTab() {
                                     <select
                                         value={role}
                                         onChange={e => setRole(e.target.value)}
-                                        className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-lr-green-500 focus:ring-1 focus:ring-lr-green-500"
+                                        className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 outline-none focus:border-brand-primary-500 focus:ring-1 focus:ring-brand-primary-500"
                                     >
                                         <option value="user">User</option>
                                         <option value="admin">Admin</option>
@@ -466,7 +466,7 @@ export function AdminUsersTab() {
                                             type="checkbox"
                                             checked={isApproved}
                                             onChange={e => setIsApproved(e.target.checked)}
-                                            className="h-4 w-4 rounded border-surface-300 text-lr-green-600 focus:ring-lr-green-500"
+                                            className="h-4 w-4 rounded border-surface-300 text-brand-primary-600 focus:ring-brand-primary-500"
                                         />
                                         Direkt freigeben
                                     </label>
@@ -484,7 +484,7 @@ export function AdminUsersTab() {
                                 <button
                                     type="submit"
                                     disabled={isCreating}
-                                    className="flex items-center rounded-xl bg-lr-green-600 px-4 py-2 font-medium text-white hover:bg-lr-green-700 disabled:opacity-50"
+                                    className="flex items-center rounded-xl bg-brand-primary-600 px-4 py-2 font-medium text-white hover:bg-brand-primary-700 disabled:opacity-50"
                                 >
                                     {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Benutzer anlegen

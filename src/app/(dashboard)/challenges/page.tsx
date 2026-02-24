@@ -286,7 +286,7 @@ export default function ChallengesPage() {
             )}
           >
             Aktive
-            <span className="ml-1.5 rounded-full bg-lr-green-100 px-1.5 py-0.5 text-overline font-semibold text-lr-green-700">
+            <span className="ml-1.5 rounded-full bg-brand-primary-100 px-1.5 py-0.5 text-overline font-semibold text-brand-primary-700">
               {activeCount}
             </span>
           </button>

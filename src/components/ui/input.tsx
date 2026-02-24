@@ -1,6 +1,6 @@
 // =============================================================================
 // Input Component
-// LR AI Hub Design System
+// AI Hub Design System
 // =============================================================================
 
 import React, { forwardRef, type InputHTMLAttributes, type ReactNode } from "react";
@@ -151,7 +151,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 : [
                     "border-surface-300",
                     "hover:border-surface-400",
-                    "focus:border-lr-green-500 focus:ring-lr-green-500/20",
+                    "focus:border-brand-primary-500 focus:ring-brand-primary-500/20",
                   ].join(" "),
               className
             )}

@@ -70,9 +70,9 @@ interface ColorScheme {
 }
 
 const DEFAULT_COLOR: ColorScheme = {
-  bg: "bg-lr-green-50",
-  icon: "text-lr-green-600",
-  gradient: "from-lr-green-500 to-lr-green-600",
+  bg: "bg-brand-primary-50",
+  icon: "text-brand-primary-600",
+  gradient: "from-brand-primary-500 to-brand-primary-600",
 };
 
 const COLOR_MAP: Record<string, ColorScheme> = {
@@ -83,9 +83,9 @@ const COLOR_MAP: Record<string, ColorScheme> = {
     gradient: "from-blue-500 to-blue-600",
   },
   gold: {
-    bg: "bg-lr-gold-50",
-    icon: "text-lr-gold-600",
-    gradient: "from-lr-gold-500 to-lr-gold-600",
+    bg: "bg-brand-accent-50",
+    icon: "text-brand-accent-600",
+    gradient: "from-brand-accent-500 to-brand-accent-600",
   },
   purple: {
     bg: "bg-purple-50",

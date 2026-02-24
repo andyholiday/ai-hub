@@ -51,12 +51,12 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         className="w-full max-w-lg overflow-hidden rounded-[24px] bg-white shadow-2xl"
                     >
-                        <div className="bg-lr-gradient px-8 py-10 text-center">
+                        <div className="bg-brand-gradient px-8 py-10 text-center">
                             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-white backdrop-blur-md">
                                 <Sparkles className="h-8 w-8" strokeWidth={2} />
                             </div>
                             <h2 className="font-display text-3xl font-bold text-white">
-                                Willkommen im LR AI Hub!
+                                Willkommen im AI Hub!
                             </h2>
                             <p className="mt-3 text-[15px] font-medium text-white/90">
                                 Hallo {displayName}! Schön, dass du dabei bist.
@@ -115,7 +115,7 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
                                         placeholder="z.B. Marketing, Vertrieb..."
                                         value={department}
                                         onChange={(e) => setDepartment(e.target.value)}
-                                        className="block w-full rounded-xl border-surface-200 bg-surface-50 py-2.5 pl-10 pr-3 text-[14px] outline-none transition-all placeholder:text-surface-400 focus:border-lr-green-500 focus:bg-white focus:ring-1 focus:ring-lr-green-500"
+                                        className="block w-full rounded-xl border-surface-200 bg-surface-50 py-2.5 pl-10 pr-3 text-[14px] outline-none transition-all placeholder:text-surface-400 focus:border-brand-primary-500 focus:bg-white focus:ring-1 focus:ring-brand-primary-500"
                                     />
                                 </div>
                             </div>
@@ -133,7 +133,7 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
                                         placeholder="z.B. Social Media Manager..."
                                         value={position}
                                         onChange={(e) => setPosition(e.target.value)}
-                                        className="block w-full rounded-xl border-surface-200 bg-surface-50 py-2.5 pl-10 pr-3 text-[14px] outline-none transition-all placeholder:text-surface-400 focus:border-lr-green-500 focus:bg-white focus:ring-1 focus:ring-lr-green-500"
+                                        className="block w-full rounded-xl border-surface-200 bg-surface-50 py-2.5 pl-10 pr-3 text-[14px] outline-none transition-all placeholder:text-surface-400 focus:border-brand-primary-500 focus:bg-white focus:ring-1 focus:ring-brand-primary-500"
                                     />
                                 </div>
                             </div>
@@ -163,14 +163,14 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         className="w-full max-w-lg overflow-hidden rounded-[24px] bg-white shadow-2xl p-10 text-center"
                     >
-                        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-lr-green-100 ring-8 ring-lr-green-50">
-                            <CheckCircle2 className="h-10 w-10 text-lr-green-600" />
+                        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-brand-primary-100 ring-8 ring-brand-primary-50">
+                            <CheckCircle2 className="h-10 w-10 text-brand-primary-600" />
                         </div>
 
                         <h2 className="font-display text-3xl font-bold text-surface-900 mb-3">
                             Du bist startklar!
                         </h2>
-                        <p className="mb-2 text-[15px] font-medium text-lr-green-600">
+                        <p className="mb-2 text-[15px] font-medium text-brand-primary-600">
                             🎉 +50 XP Onboarding Bonus freigeschaltet!
                         </p>
                         <p className="mb-8 text-[15px] leading-relaxed text-surface-600">
