@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useBrandingStore } from "@/stores/branding-store";
+import { isSSOEnabled, ssoConfig } from "@/config/sso";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,8 +16,29 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/dashboard";
 
+  const [ssoDomain, setSsoDomain] = useState("");
+  const [ssoLoading, setSsoLoading] = useState(false);
+
   const { branding, hydrate } = useBrandingStore();
   useEffect(() => { hydrate(); }, [hydrate]);
+
+  async function handleSSOLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSsoLoading(true);
+
+    const supabase = createClient();
+
+    const { error: ssoError } = await supabase.auth.signInWithSSO({
+      domain: ssoDomain,
+    });
+
+    if (ssoError) {
+      setError(ssoError.message);
+      setSsoLoading(false);
+    }
+    // On success, the browser is redirected to the IdP automatically
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -120,6 +142,46 @@ export default function LoginPage() {
             {loading ? "Wird angemeldet..." : "Anmelden"}
           </button>
         </form>
+
+        {isSSOEnabled() && (
+          <>
+            <div className="relative mt-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-surface-200" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-surface-400">oder</span>
+              </div>
+            </div>
+
+            <form className="mt-6" onSubmit={handleSSOLogin}>
+              <label
+                htmlFor="sso-domain"
+                className="block text-sm font-medium text-surface-700"
+              >
+                SSO Domain
+              </label>
+              <div className="mt-1 flex gap-2">
+                <input
+                  id="sso-domain"
+                  type="text"
+                  required
+                  value={ssoDomain}
+                  onChange={(e) => setSsoDomain(e.target.value)}
+                  className="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
+                  placeholder={ssoConfig.domainInputPlaceholder}
+                />
+                <button
+                  type="submit"
+                  disabled={ssoLoading}
+                  className="shrink-0 rounded-lg border border-surface-300 bg-white px-4 py-2 text-sm font-semibold text-surface-700 transition-colors hover:bg-surface-50 disabled:opacity-50"
+                >
+                  {ssoLoading ? "Wird weitergeleitet..." : ssoConfig.buttonLabel}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
 
         <p className="mt-6 text-center text-sm text-surface-500">
           Noch kein Konto?{" "}

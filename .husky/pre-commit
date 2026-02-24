@@ -1,0 +1,104 @@
+#!/usr/bin/env sh
+
+# =============================================================================
+# Pre-commit Hook: Secret Detection
+# =============================================================================
+# Prevents accidental commits of API keys, tokens, and other secrets.
+# Scans only staged files. Excludes safe files (env, docs, tests, hooks).
+# =============================================================================
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED_FILES" ]; then
+  exit 0
+fi
+
+# Filter out files that are expected to contain secret references:
+# - .env* files (hold actual secrets, should be in .gitignore)
+# - .husky/ (this hook itself contains patterns)
+# - *.md files (documentation may reference key concepts)
+# - docs/ (setup guides reference key formats)
+# - tests/ (test fixtures use fake keys)
+FILTERED_FILES=$(echo "$STAGED_FILES" | grep -v '\.env' | grep -v '\.husky/' | grep -v '\.md$' | grep -v '^docs/' | grep -v '^tests/' || true)
+
+if [ -z "$FILTERED_FILES" ]; then
+  exit 0
+fi
+
+FOUND_SECRETS=0
+
+echo ""
+echo "--- Secret Detection: Scanning staged files ---"
+echo ""
+
+# Pattern 1: Supabase secret keys (actual values, not variable names)
+MATCHES=$(echo "$FILTERED_FILES" | xargs grep -rnE 'sb_secret_[a-zA-Z0-9_-]{10,}' 2>/dev/null || true)
+if [ -n "$MATCHES" ]; then
+  FOUND_SECRETS=1
+  echo "  [BLOCKED] Supabase Secret Key value detected"
+  echo "$MATCHES" | while IFS= read -r line; do echo "    -> $line"; done
+  echo ""
+fi
+
+# Pattern 2: Supabase publishable keys (actual values)
+MATCHES=$(echo "$FILTERED_FILES" | xargs grep -rnE 'sb_publishable_[a-zA-Z0-9_-]{10,}' 2>/dev/null || true)
+if [ -n "$MATCHES" ]; then
+  FOUND_SECRETS=1
+  echo "  [BLOCKED] Supabase Publishable Key value detected"
+  echo "$MATCHES" | while IFS= read -r line; do echo "    -> $line"; done
+  echo ""
+fi
+
+# Pattern 3: JWT tokens (base64-encoded header)
+MATCHES=$(echo "$FILTERED_FILES" | xargs grep -rnE 'eyJhbGciOi[a-zA-Z0-9_-]{20,}' 2>/dev/null || true)
+if [ -n "$MATCHES" ]; then
+  FOUND_SECRETS=1
+  echo "  [BLOCKED] JWT Token detected"
+  echo "$MATCHES" | while IFS= read -r line; do echo "    -> $line"; done
+  echo ""
+fi
+
+# Pattern 4: OpenAI API keys (actual values like sk-proj-...)
+MATCHES=$(echo "$FILTERED_FILES" | xargs grep -rnE 'sk-[a-zA-Z0-9]{20,}' 2>/dev/null || true)
+if [ -n "$MATCHES" ]; then
+  FOUND_SECRETS=1
+  echo "  [BLOCKED] OpenAI API Key detected"
+  echo "$MATCHES" | while IFS= read -r line; do echo "    -> $line"; done
+  echo ""
+fi
+
+# Pattern 5: Groq API keys
+MATCHES=$(echo "$FILTERED_FILES" | xargs grep -rnE 'gsk_[a-zA-Z0-9]{20,}' 2>/dev/null || true)
+if [ -n "$MATCHES" ]; then
+  FOUND_SECRETS=1
+  echo "  [BLOCKED] Groq API Key detected"
+  echo "$MATCHES" | while IFS= read -r line; do echo "    -> $line"; done
+  echo ""
+fi
+
+# Pattern 6: Google API keys (actual values)
+MATCHES=$(echo "$FILTERED_FILES" | xargs grep -rnE 'AIzaSy[a-zA-Z0-9_-]{33}' 2>/dev/null || true)
+if [ -n "$MATCHES" ]; then
+  FOUND_SECRETS=1
+  echo "  [BLOCKED] Google API Key detected"
+  echo "$MATCHES" | while IFS= read -r line; do echo "    -> $line"; done
+  echo ""
+fi
+
+if [ "$FOUND_SECRETS" -ne 0 ]; then
+  echo "==========================================="
+  echo "  COMMIT ABORTED: Secrets found in staged files."
+  echo ""
+  echo "  To fix:"
+  echo "    1. Remove the secrets from the listed files"
+  echo "    2. Use environment variables via .env.local instead"
+  echo ""
+  echo "  To bypass (NOT recommended):"
+  echo "    git commit --no-verify"
+  echo "==========================================="
+  exit 1
+fi
+
+echo "  No secrets detected. Proceeding with commit."
+echo ""
+exit 0

@@ -2,7 +2,7 @@
 # Supabase Local Development Configuration
 # =============================================================================
 
-project_id = "ziwqxnzsrnyhzhsircqh"
+project_id = "your-project-ref"
 
 [api]
 enabled = true

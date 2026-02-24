@@ -4,8 +4,21 @@
 // =============================================================================
 
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { Plus_Jakarta_Sans, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "@/app/globals.css";
+
+// ---------------------------------------------------------------------------
+// Analytics (lazy-loaded, renders nothing)
+// ---------------------------------------------------------------------------
+
+const WebVitalsReporter = dynamic(
+  () =>
+    import("@/components/analytics/web-vitals-reporter").then(
+      (mod) => mod.WebVitalsReporter,
+    ),
+  { ssr: false },
+);
 
 // ---------------------------------------------------------------------------
 // Font Configuration
@@ -72,6 +85,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-surface-50 font-sans text-surface-900 antialiased">
+        <WebVitalsReporter />
         {children}
       </body>
     </html>

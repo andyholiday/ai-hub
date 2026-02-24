@@ -33,6 +33,10 @@ export const updateProviderSchema = z.object({
     .optional(),
   is_active: z.boolean().optional(),
   is_primary: z.boolean().optional(),
+  api_key_encrypted: z
+    .string()
+    .max(500, "API key must be <= 500 characters")
+    .optional(),
   fallback_provider_id: z.string().uuid("Invalid fallback provider ID").nullable().optional(),
   monthly_budget_limit: z.number().min(0).nullable().optional(),
 });

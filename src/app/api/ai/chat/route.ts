@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { NextRequest, NextResponse } from "next/server";
-import { getAIRouter } from "@/lib/ai/router";
+import { type AIRouter, getAIRouterWithDBKeys } from "@/lib/ai/router";
 import { requireAuth } from "@/lib/api/require-auth";
 import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import type { AIProvider, ChatMessage } from "@/lib/ai/types";
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       timestamp: new Date(),
     }));
 
-    const router = getAIRouter();
+    const router = await getAIRouterWithDBKeys();
 
     // --- Streaming response ---
     if (body.stream !== false) {
@@ -134,8 +134,8 @@ export async function POST(req: NextRequest): Promise<Response> {
 // ---------------------------------------------------------------------------
 
 function handleStreamingResponse(
-  router: ReturnType<typeof getAIRouter>,
-  request: Parameters<ReturnType<typeof getAIRouter>["chatStream"]>[0],
+  router: AIRouter,
+  request: Parameters<AIRouter["chatStream"]>[0],
   userId: string,
 ): Response {
   const encoder = new TextEncoder();

@@ -3,7 +3,8 @@
 // Central configuration for all AI providers
 // =============================================================================
 
-import type { AIModel, AIProvider, RouterConfig, RoutingStrategy } from "./types";
+import type { AIModel, AIProvider, ProviderConfig, RouterConfig, RoutingStrategy } from "./types";
+import { getProviderApiKeysFromDB } from "./provider-keys";
 
 // ---------------------------------------------------------------------------
 // Model Registry
@@ -225,5 +226,48 @@ export function getRouterConfig(): RouterConfig {
         enabled: !!process.env.MISTRAL_API_KEY,
       },
     },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Async Router Configuration (env var > DB key > empty)
+// ---------------------------------------------------------------------------
+
+/**
+ * Async version of `getRouterConfig()` that enriches the config with API keys
+ * stored in the database (`ai_providers.api_key_encrypted`).
+ *
+ * Priority per provider:
+ *   1. Environment variable (if set and non-empty)
+ *   2. DB key from `ai_providers` table
+ *   3. Empty string (provider disabled)
+ *
+ * The synchronous `getRouterConfig()` remains unchanged for callers that
+ * cannot use async (e.g. module-level initialisations).
+ */
+export async function getRouterConfigWithDBKeys(): Promise<RouterConfig> {
+  const config = getRouterConfig();
+  const dbKeys = await getProviderApiKeysFromDB();
+
+  // Merge DB keys into each provider where the env var is empty
+  const providers = { ...config.providers };
+
+  for (const key of Object.keys(providers) as AIProvider[]) {
+    const providerConfig = providers[key];
+    const envKey = providerConfig.apiKey;
+
+    if (!envKey && dbKeys[key]) {
+      const mergedConfig: ProviderConfig = {
+        ...providerConfig,
+        apiKey: dbKeys[key],
+        enabled: true,
+      };
+      providers[key] = mergedConfig;
+    }
+  }
+
+  return {
+    ...config,
+    providers,
   };
 }

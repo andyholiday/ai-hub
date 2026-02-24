@@ -114,7 +114,7 @@ async function main() {
     } else {
         console.log('\n❌ No direct SQL endpoint available.');
         console.log('\n💡 Alternative: Log into Supabase Dashboard to execute the migration.');
-        console.log('   URL: https://supabase.com/dashboard/project/ziwqxnzsrnyhzhsircqh/sql/new');
+        console.log(`   URL: https://supabase.com/dashboard/project/${new URL(SUPABASE_URL).hostname.split('.')[0]}/sql/new`);
         console.log('   File: supabase/migrations/00010_mentor_signals.sql');
 
         // Try one more thing: PostgREST might allow us to call functions

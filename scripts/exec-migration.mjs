@@ -4,8 +4,16 @@
 
 import { readFileSync, existsSync } from 'fs';
 import { execSync } from 'child_process';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
 
-const PROJECT_REF = 'ziwqxnzsrnyhzhsircqh';
+const PROJECT_REF = process.env.SUPABASE_PROJECT_REF || (() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const match = url.match(/https:\/\/([^.]+)\.supabase\.co/);
+    if (match) return match[1];
+    console.error('❌ Set SUPABASE_PROJECT_REF or NEXT_PUBLIC_SUPABASE_URL');
+    process.exit(1);
+})();
 
 function getToken() {
     // Try env var first

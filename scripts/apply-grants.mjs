@@ -237,7 +237,7 @@ async function main() {
     } else {
         console.log('\n❌ Cannot automatically apply GRANTs.');
         console.log('\n📋 MANUAL STEPS REQUIRED:');
-        console.log('   1. Go to: https://supabase.com/dashboard/project/ziwqxnzsrnyhzhsircqh/sql/new');
+        console.log(`   1. Go to: https://supabase.com/dashboard/project/${new URL(SUPABASE_URL).hostname.split('.')[0]}/sql/new`);
         console.log('   2. Copy and paste the contents of: supabase/migrations/00008_fix_grants.sql');
         console.log('   3. Click "Run"');
         console.log('   4. Then paste and run: supabase/migrations/00009_optimize_rls_jwt_roles.sql');

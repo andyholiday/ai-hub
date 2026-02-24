@@ -11,7 +11,7 @@ import type {
   RouterConfig,
   StreamChunk,
 } from "./types";
-import { getRouterConfig } from "./config";
+import { getRouterConfig, getRouterConfigWithDBKeys } from "./config";
 import { createAllProviders } from "./providers";
 
 // ---------------------------------------------------------------------------
@@ -204,4 +204,18 @@ export function getAIRouter(): AIRouter {
     routerInstance = new AIRouter();
   }
   return routerInstance;
+}
+
+/**
+ * Create an AIRouter instance whose config is enriched with API keys stored
+ * in the database.  Unlike the synchronous `getAIRouter()`, this function
+ * is async because it fetches keys from Supabase (with 60 s in-memory cache).
+ *
+ * A new instance is created on every call so that key changes in the DB are
+ * picked up after the cache expires.  The DB call itself is cached for 60 s
+ * inside `getProviderApiKeysFromDB()`.
+ */
+export async function getAIRouterWithDBKeys(): Promise<AIRouter> {
+  const config = await getRouterConfigWithDBKeys();
+  return new AIRouter(config);
 }
