@@ -153,6 +153,30 @@ export async function GET(req: NextRequest) {
 }
 
 // ---------------------------------------------------------------------------
+// DELETE - DSGVO Right-to-Erasure (Art. 17 GDPR)
+// Deletes the authenticated user from auth.users; cascades to profiles via FK.
+// ---------------------------------------------------------------------------
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const auth = await requireAuth(req);
+    if ("response" in auth) return auth.response;
+
+    const supabase = createAdminClient();
+
+    const { error } = await supabase.auth.admin.deleteUser(auth.userId);
+
+    if (error) {
+      return apiInternalError(error.message);
+    }
+
+    return apiSuccess({ deleted: true });
+  } catch {
+    return apiInternalError();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // PATCH - Update profile fields
 // ---------------------------------------------------------------------------
 
