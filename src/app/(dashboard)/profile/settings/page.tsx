@@ -157,7 +157,7 @@ export default function ProfileSettingsPage() {
   }
 
   async function handleDeleteAccount() {
-    if (deleteConfirmInput !== "LÖSCHEN") return;
+    if (deleteConfirmInput.trim() !== "LÖSCHEN") return;
     setDeleting(true);
     setDeleteError(null);
 
@@ -458,7 +458,7 @@ export default function ProfileSettingsPage() {
                 size="md"
                 type="button"
                 onClick={handleDeleteAccount}
-                disabled={deleteConfirmInput !== "LÖSCHEN" || deleting}
+                disabled={deleteConfirmInput.trim() !== "LÖSCHEN" || deleting}
                 className="bg-error text-white hover:bg-red-700 disabled:opacity-40"
               >
                 {deleting ? "Wird gelöscht..." : "Account endgültig löschen"}
