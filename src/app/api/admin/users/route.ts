@@ -12,13 +12,22 @@ export async function GET(req: NextRequest) {
 
         const supabase = createAdminClient();
 
-        // Fetch real email addresses from Supabase Auth via service-role client.
-        const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
-        if (authError) return apiInternalError(authError.message);
+        // Fetch all auth users via paginated loop (default listUsers() returns only 50).
+        // Pagination ensures the email map is complete even for > 1 000 users.
+        const PER_PAGE = 1000;
+        let page = 1;
+        const allAuthUsers: { id: string; email?: string }[] = [];
+        while (true) {
+            const { data: authData, error: authError } = await supabase.auth.admin.listUsers({ page, perPage: PER_PAGE });
+            if (authError) return apiInternalError(authError.message);
+            allAuthUsers.push(...(authData.users ?? []));
+            if ((authData.users ?? []).length < PER_PAGE) break;
+            page++;
+        }
 
         // Build a lookup map: auth user id → email
         const emailMap = new Map<string, string>(
-            (authData.users ?? []).map(u => [u.id, u.email ?? ""])
+            allAuthUsers.map(u => [u.id, u.email ?? ""])
         );
 
         // Fetch profile data to enrich with app-level fields
