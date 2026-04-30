@@ -1,6 +1,8 @@
 // =============================================================================
 // Provider API Keys from Database
-// Reads api_key_encrypted from ai_providers table with in-memory caching
+// Reads decrypted API keys from Supabase Vault via the
+// get_active_provider_keys() RPC (SECURITY DEFINER, see migration 00014).
+// Results are cached in-memory for 60 seconds to minimise DB round-trips.
 // =============================================================================
 
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -11,6 +13,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 /** Maps provider_key (e.g. "gemini", "openai") to its API key string. */
 export type ProviderKeyMap = Record<string, string>;
+
+interface ProviderKeyRow {
+  provider_key: string;
+  api_key: string;
+}
 
 // ---------------------------------------------------------------------------
 // In-Memory Cache (60s TTL)
@@ -38,14 +45,19 @@ export function invalidateProviderKeyCache(): void {
 // ---------------------------------------------------------------------------
 
 /**
- * Fetch all API keys from the `ai_providers` table.
+ * Fetch all active API keys from Supabase Vault via the
+ * `get_active_provider_keys` RPC function.
  *
  * Returns a `Record<string, string>` where the key is `provider_key`
- * (e.g. "gemini", "claude", "openai") and the value is the raw
- * `api_key_encrypted` column value.
+ * (e.g. "gemini", "claude", "openai") and the value is the decrypted API key.
  *
- * Results are cached in-memory for 60 seconds to minimise DB round-trips.
- * Only active providers with a non-empty key are included.
+ * The RPC function performs a JOIN on vault.decrypted_secrets server-side
+ * using SECURITY DEFINER, so the service-role client is sufficient.
+ * The raw vault UUID in ai_providers.api_key_encrypted is never returned.
+ *
+ * Note: The generated Database type does not include the new RPC functions
+ * from migration 00014 yet (requires `supabase gen types` after db push).
+ * We cast through `unknown` to work around the missing entry in the type map.
  */
 export async function getProviderApiKeysFromDB(): Promise<ProviderKeyMap> {
   // Return cached data if still valid
@@ -55,14 +67,14 @@ export async function getProviderApiKeysFromDB(): Promise<ProviderKeyMap> {
 
   const supabase = createAdminClient();
 
-  const { data: providers, error } = await supabase
-    .from("ai_providers")
-    .select("provider_key, api_key_encrypted, is_active")
-    .eq("is_active", true);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC not yet in generated types (run `supabase gen types` after migration 00014)
+  const { data: rows, error } = await (supabase.rpc as any)(
+    "get_active_provider_keys",
+  ) as { data: ProviderKeyRow[] | null; error: { message: string } | null };
 
   if (error) {
     console.error(
-      "[provider-keys] Failed to fetch API keys from DB:",
+      "[provider-keys] Failed to fetch API keys from Vault:",
       error.message,
     );
     // On error, return stale cache if available, otherwise empty map
@@ -71,9 +83,9 @@ export async function getProviderApiKeysFromDB(): Promise<ProviderKeyMap> {
 
   const keyMap: ProviderKeyMap = {};
 
-  for (const row of providers ?? []) {
-    if (row.provider_key && row.api_key_encrypted) {
-      keyMap[row.provider_key] = row.api_key_encrypted;
+  for (const row of rows ?? []) {
+    if (row.provider_key && row.api_key) {
+      keyMap[row.provider_key] = row.api_key;
     }
   }
 
