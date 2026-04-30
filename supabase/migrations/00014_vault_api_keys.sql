@@ -49,7 +49,7 @@ BEGIN
         SELECT id, provider_key, api_key_encrypted
         FROM ai_providers
         WHERE api_key_encrypted IS NOT NULL
-          AND length(api_key_encrypted) <> 36  -- not yet a UUID
+          AND api_key_encrypted !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'  -- not yet a UUID
     LOOP
         SELECT vault.create_secret(
             r.api_key_encrypted,
@@ -84,7 +84,7 @@ AS $$
         ON ds.id = p.api_key_encrypted::UUID
     WHERE p.is_active = TRUE
       AND p.api_key_encrypted IS NOT NULL
-      AND length(p.api_key_encrypted) = 36;
+      AND p.api_key_encrypted ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
 $$;
 
 -- Only service_role may call this function (anon/authenticated have no access)
