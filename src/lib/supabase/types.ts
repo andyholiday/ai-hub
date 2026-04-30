@@ -606,6 +606,33 @@ export type Database = {
           },
         ]
       }
+      gdpr_erasure_log: {
+        Row: {
+          id: string
+          user_id: string
+          requested_at: string
+          deleted_at: string | null
+          ip_hash: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          requested_at?: string
+          deleted_at?: string | null
+          ip_hash?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          requested_at?: string
+          deleted_at?: string | null
+          ip_hash?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       innovation_radar_items: {
         Row: {
           added_by: string | null
