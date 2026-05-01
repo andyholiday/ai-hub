@@ -185,10 +185,23 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Mark erasure as complete in the audit log.
-    await supabase
+    const { error: updateError } = await supabase
       .from("gdpr_erasure_log")
       .update({ deleted_at: new Date().toISOString() })
       .eq("id", erasureRow.id);
+
+    if (updateError) {
+      // The user is already deleted. The audit row stays with deleted_at = NULL
+      // as "completed but unconfirmed". Log so the ops team can reconcile.
+      console.error(
+        JSON.stringify({
+          event: "erasure_log_update_failed",
+          user_id: auth.userId,
+          erasure_log_id: erasureRow.id,
+          error: updateError.message,
+        }),
+      );
+    }
 
     return apiSuccess({ deleted: true });
   } catch {
