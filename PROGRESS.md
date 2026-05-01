@@ -1,10 +1,10 @@
-# Projektfortschritt - LR AI Hub
+# Projektfortschritt - AI Hub
 
 ## Uebersicht
 
 | Feld | Wert |
 |------|------|
-| **Projekt** | LR AI Hub - KI-Community-Plattform fuer LR Health & Beauty Systems |
+| **Projekt** | AI Hub - KI-Community-Plattform |
 | **Version** | 0.1.0 (MVP Phase) |
 | **Stand** | 2026-02-24 (Session 15) |
 | **Stack** | Next.js 14.2 | TypeScript 5.6 | Supabase Cloud | Multi-AI-Provider (6) | Vercel |

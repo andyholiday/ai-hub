@@ -1,10 +1,10 @@
-# ADR-001: LR AI Hub Projektarchitektur
+# ADR-001: AI Hub Projektarchitektur
 
 ## Status
 Accepted
 
 ## Kontext
-Die LR AI Hub Plattform benoetigte eine skalierbare, wartbare Projektstruktur fuer eine KI-Community-Plattform, die Feature-basierte Organisation mit klarer Trennung von Concerns verbindet. Die Plattform muss mehrere KI-Provider unterstuetzen, Echtzeit-Features bieten und ein Gamification-System integrieren.
+Die AI Hub Plattform benoetigte eine skalierbare, wartbare Projektstruktur fuer eine KI-Community-Plattform, die Feature-basierte Organisation mit klarer Trennung von Concerns verbindet. Die Plattform muss mehrere KI-Provider unterstuetzen, Echtzeit-Features bieten und ein Gamification-System integrieren.
 
 ## Entscheidung
 Feature-Sliced Architecture mit Next.js 14 App Router, getrennt in:

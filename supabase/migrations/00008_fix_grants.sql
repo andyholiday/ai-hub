@@ -1,5 +1,5 @@
 -- =============================================================================
--- LR AI Hub - Fix Missing GRANT Statements (Critical Bug Fix)
+-- AI Hub - Fix Missing GRANT Statements (Critical Bug Fix)
 -- Version: 00008
 -- Date: 2026-02-21
 -- Description: Adds GRANT statements for all tables, sequences, and functions.

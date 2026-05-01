@@ -1,5 +1,5 @@
 -- =============================================================================
--- LR AI Hub - Semantic Search RPC Functions
+-- AI Hub - Semantic Search RPC Functions
 -- Version: 00003
 -- Date: 2026-02-20
 -- Description: Enhanced RPC functions for pgvector semantic search with

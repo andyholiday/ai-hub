@@ -1,4 +1,4 @@
-# IMPROVEMENTS.md — Verbesserungs-Roadmap LR AI Hub
+# IMPROVEMENTS.md — Verbesserungs-Roadmap AI Hub
 
 > **Stand:** 2026-04-30
 > **Quelle:** Konsolidierte Outputs aus 4 parallelen Sub-Agent-Reviews
@@ -186,7 +186,7 @@ Detaillierte Verdicts in den jeweiligen `VERDICT.md`-Dateien.
 Aus dem Architect-Review, bisher nicht als formale ADRs persistiert:
 
 - **ADR-001:** AI SDK v4 als einheitliche Provider-Abstraktionsschicht (siehe Phase 5.1)
-- **ADR-002:** Monorepo-Strategie für lr-ai-hub und ai-hub-opensource (siehe Phase 5.2)
+- **ADR-002:** Monorepo-Strategie für ai-hub und ai-hub-opensource (siehe Phase 5.2)
 - **ADR-003:** API-Key-Encryption für `ai_providers`-Tabelle (siehe Phase 0.2)
 - **ADR-004:** Polymorphe Entities durch FK-Tabellen-Design ersetzen (siehe Phase 5.3)
 - **ADR-005:** Orb-Chat-Session-Persistenz (siehe Phase 2.2)

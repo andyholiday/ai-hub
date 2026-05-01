@@ -1,5 +1,5 @@
 -- =============================================================================
--- LR AI Hub - Fix Supabase Linter Warnings
+-- AI Hub - Fix Supabase Linter Warnings
 -- Version: 00005
 -- Date: 2026-02-21
 -- Description: Fixes search_path on all functions and tightens 2 RLS policies.

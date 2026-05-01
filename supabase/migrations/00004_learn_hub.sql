@@ -1,5 +1,5 @@
 -- =============================================================================
--- LR AI Hub - Learn Hub Progress Tracking Migration
+-- AI Hub - Learn Hub Progress Tracking Migration
 -- Version: 00004
 -- Date: 2026-02-20
 -- Description: Adds user_lesson_progress table and certificate_id to

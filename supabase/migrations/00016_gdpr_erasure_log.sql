@@ -1,5 +1,5 @@
 -- =============================================================================
--- LR AI Hub - GDPR Art. 30 Erasure Audit Log
+-- AI Hub - GDPR Art. 30 Erasure Audit Log
 -- Version: 00016
 -- Date: 2026-04-30
 -- Description: Audit log for Right-to-Erasure (Art. 17 GDPR) requests.
