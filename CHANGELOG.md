@@ -89,3 +89,12 @@ for the full audit (28 findings, 3 critical).
   module-global. Counter state leaks between test contexts in Vitest. Future
   `remaining` assertions will be order-dependent. Fix: export
   `clearInMemoryStore()` test-only helper and add `beforeEach` reset.
+
+### Fixed (Phase 2 — in Bearbeitung)
+
+- TODO: 2.1 Pricing-Layer — `COST_PER_1K` aus `route.ts` extrahiert in
+  `src/lib/ai/pricing.ts`; Groq + Mistral korrekt abgerechnet.
+  Siehe [docs/features/pricing-layer.md](docs/features/pricing-layer.md).
+- TODO: 2.2 Orb-Chat-Persistenz — `OrbProvider` laedt/speichert Messages in
+  `ai_chat_sessions` / `ai_chat_messages` via `useOrbChat()`-Hook.
+  Siehe [docs/features/orb-chat-persistence.md](docs/features/orb-chat-persistence.md).
