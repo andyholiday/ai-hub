@@ -26,8 +26,6 @@ export interface ChatMessage {
 }
 
 export interface UseAiChatOptions {
-  /** System prompt sent with every request */
-  systemPrompt?: string;
   /** Preferred AI provider */
   provider?: AIProvider;
   /** Preferred model override */
@@ -69,7 +67,6 @@ export interface UseAiChatReturn {
 
 export function useAiChat(options: UseAiChatOptions = {}): UseAiChatReturn {
   const {
-    systemPrompt,
     provider,
     model,
     temperature,
@@ -144,7 +141,6 @@ export function useAiChat(options: UseAiChatOptions = {}): UseAiChatReturn {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: apiMessages,
-            systemPrompt,
             context,
             provider,
             model,
@@ -276,7 +272,6 @@ export function useAiChat(options: UseAiChatOptions = {}): UseAiChatReturn {
     [
       messages,
       generateId,
-      systemPrompt,
       context,
       provider,
       model,

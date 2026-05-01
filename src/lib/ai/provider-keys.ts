@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Database as GeneratedDatabase } from "@/lib/supabase/types.generated";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -13,11 +14,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 /** Maps provider_key (e.g. "gemini", "openai") to its API key string. */
 export type ProviderKeyMap = Record<string, string>;
-
-interface ProviderKeyRow {
-  provider_key: string;
-  api_key: string;
-}
 
 // ---------------------------------------------------------------------------
 // In-Memory Cache (60s TTL)
@@ -55,9 +51,10 @@ export function invalidateProviderKeyCache(): void {
  * using SECURITY DEFINER, so the service-role client is sufficient.
  * The raw vault UUID in ai_providers.api_key_encrypted is never returned.
  *
- * Note: The generated Database type does not include the new RPC functions
- * from migration 00014 yet (requires `supabase gen types` after db push).
- * We cast through `unknown` to work around the missing entry in the type map.
+ * The admin client is typed against types.ts; types.generated.ts includes the
+ * get_active_provider_keys RPC added in migration 00014. We re-type the client
+ * via `unknown` at the narrowest scope to use the generated types without
+ * losing type safety on the returned rows.
  */
 export async function getProviderApiKeysFromDB(): Promise<ProviderKeyMap> {
   // Return cached data if still valid
@@ -67,10 +64,10 @@ export async function getProviderApiKeysFromDB(): Promise<ProviderKeyMap> {
 
   const supabase = createAdminClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC not yet in generated types (run `supabase gen types` after migration 00014)
-  const { data: rows, error } = await (supabase.rpc as any)(
-    "get_active_provider_keys",
-  ) as { data: ProviderKeyRow[] | null; error: { message: string } | null };
+  // Cast the client to the generated Database type so the RPC call is fully
+  // typed. The cast is scoped to this variable — no `any` escapes this block.
+  const typedSupabase = supabase as unknown as import("@supabase/supabase-js").SupabaseClient<GeneratedDatabase>;
+  const { data: rows, error } = await typedSupabase.rpc("get_active_provider_keys");
 
   if (error) {
     console.error(

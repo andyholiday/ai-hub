@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { Plus_Jakarta_Sans, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "@/app/globals.css";
+import { ConsentBanner } from "@/components/consent-banner";
 
 // ---------------------------------------------------------------------------
 // Analytics (lazy-loaded, renders nothing)
@@ -86,6 +87,7 @@ export default function RootLayout({
     >
       <body className="min-h-screen bg-surface-50 font-sans text-surface-900 antialiased">
         <WebVitalsReporter />
+        <ConsentBanner />
         {children}
       </body>
     </html>
