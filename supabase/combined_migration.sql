@@ -1,5 +1,5 @@
 -- =============================================================================
--- LR AI Hub - COMBINED MIGRATION (all 4 files)
+-- AI Hub - COMBINED MIGRATION (all 4 files)
 -- Paste this into: Supabase Dashboard → SQL Editor → New Query → Run
 -- =============================================================================
 

@@ -1,4 +1,4 @@
-# Feature-Liste & Testanleitung -- LR AI Hub
+# Feature-Liste & Testanleitung -- AI Hub
 
 > Umfassende Liste aller Features mit Testanweisungen fuer manuelles Testen.
 

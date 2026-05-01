@@ -8,7 +8,7 @@ Accepted
 
 ## Kontext
 
-Das LR AI Hub Projekt (Next.js 14 + Supabase Free Tier) hat eine zu hohe Query-Last, die das Free Tier Limit gefaehrdet. Eine Analyse der Hotspots ergab, dass ein einzelner Dashboard-Load zwischen 10 und 13 Datenbank-Queries ausloest. Hinzu kommt eine "RLS-Amplifikation": Die Helper-Funktionen `is_admin()` und `is_moderator_or_above()` fuehren bei JEDEM RLS-Policy-Check einen zusaetzlichen Profile-Query aus. Da diese Funktionen in Policies von ueber 15 Tabellen referenziert werden, multipliziert sich die Last massiv.
+Das AI Hub Projekt (Next.js 14 + Supabase Free Tier) hat eine zu hohe Query-Last, die das Free Tier Limit gefaehrdet. Eine Analyse der Hotspots ergab, dass ein einzelner Dashboard-Load zwischen 10 und 13 Datenbank-Queries ausloest. Hinzu kommt eine "RLS-Amplifikation": Die Helper-Funktionen `is_admin()` und `is_moderator_or_above()` fuehren bei JEDEM RLS-Policy-Check einen zusaetzlichen Profile-Query aus. Da diese Funktionen in Policies von ueber 15 Tabellen referenziert werden, multipliziert sich die Last massiv.
 
 ### Ist-Zustand (vor Optimierung)
 

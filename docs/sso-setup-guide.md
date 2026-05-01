@@ -1,8 +1,8 @@
-# SSO/SAML 2.0 Setup Guide - LR AI Hub
+# SSO/SAML 2.0 Setup Guide - AI Hub
 
 ## Uebersicht
 
-Diese Anleitung beschreibt die Einrichtung von SAML 2.0 Single Sign-On (SSO) fuer den LR AI Hub mit Supabase Auth. SSO ermoeglicht es Organisationen, ihre bestehenden Identity Provider (IdP) wie Azure AD, Okta oder Google Workspace fuer die Authentifizierung zu nutzen.
+Diese Anleitung beschreibt die Einrichtung von SAML 2.0 Single Sign-On (SSO) fuer den AI Hub mit Supabase Auth. SSO ermoeglicht es Organisationen, ihre bestehenden Identity Provider (IdP) wie Azure AD, Okta oder Google Workspace fuer die Authentifizierung zu nutzen.
 
 ## Voraussetzungen
 
@@ -14,7 +14,7 @@ Diese Anleitung beschreibt die Einrichtung von SAML 2.0 Single Sign-On (SSO) fue
 ## Architektur
 
 ```
-User --> LR AI Hub Login --> Supabase Auth --> SAML IdP --> Supabase Auth --> Redirect
+User --> AI Hub Login --> Supabase Auth --> SAML IdP --> Supabase Auth --> Redirect
 ```
 
 Der Login-Flow laeuft wie folgt ab:

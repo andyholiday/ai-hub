@@ -1,5 +1,5 @@
 -- =============================================================================
--- LR AI Hub - Vault API Key Encryption
+-- AI Hub - Vault API Key Encryption
 -- Version: 00014
 -- Date: 2026-04-30
 -- Description: Migrates plaintext API keys in ai_providers.api_key_encrypted

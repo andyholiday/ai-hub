@@ -1,5 +1,5 @@
 -- =============================================================================
--- LR AI Hub - Learning Paths Migration
+-- AI Hub - Learning Paths Migration
 -- Version: 00006
 -- Date: 2026-02-21
 -- Description: Adds learning_paths, learning_path_courses, and

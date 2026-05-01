@@ -1,5 +1,5 @@
 -- =============================================================================
--- LR AI Hub - Feature Flags Table
+-- AI Hub - Feature Flags Table
 -- Version: 00002
 -- Date: 2026-02-20
 -- Description: Feature flags table for runtime feature toggling via Admin UI.

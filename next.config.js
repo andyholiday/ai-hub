@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // ---------------------------------------------------------------------------
-  // LR AI Hub - Next.js 14 Configuration
+  // AI Hub - Next.js Configuration
   // ---------------------------------------------------------------------------
 
   // React strict mode for development quality
@@ -26,7 +26,7 @@ const nextConfig = {
 
   // Environment variables that are safe for the client
   env: {
-    NEXT_PUBLIC_APP_NAME: "LR AI Hub",
+    NEXT_PUBLIC_APP_NAME: "AI Hub",
     NEXT_PUBLIC_APP_VERSION: "0.1.0",
   },
 

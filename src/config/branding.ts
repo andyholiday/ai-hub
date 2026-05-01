@@ -1,7 +1,7 @@
 // =============================================================================
 // Branding Configuration
 // Central branding config with presets for white-label support.
-// Default preset: AppManufaktor. Additional preset: LR Health & Beauty.
+// Default preset: AppManufaktor.
 // =============================================================================
 
 // ---------------------------------------------------------------------------
@@ -35,23 +35,9 @@ export const BRANDING_APPMANUFAKTOR: BrandingConfig = {
   loginSubtext: "Melde dich bei deinem AI Hub Konto an.",
 };
 
-/** Custom preset: LR Health & Beauty (white-label example) */
-export const BRANDING_LR: BrandingConfig = {
-  appName: "AI Hub",
-  appSubtitle: "Community Platform",
-  companyName: "LR Health & Beauty Systems",
-  logoText: "LR",
-  logoGradient: "bg-brand-gradient",
-  primaryColor: "green",
-  description:
-    "Die KI-Community-Plattform fuer LR Health & Beauty Systems Partner",
-  loginSubtext: "Melde dich bei deinem LR AI Hub Konto an.",
-};
-
 /** All available presets keyed by id */
 export const BRANDING_PRESETS = {
   appmanufaktor: BRANDING_APPMANUFAKTOR,
-  lr: BRANDING_LR,
 } as const;
 
 export type BrandingPresetId = keyof typeof BRANDING_PRESETS;

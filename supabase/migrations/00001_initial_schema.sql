@@ -1,8 +1,8 @@
 -- =============================================================================
--- LR AI Hub - Initial Database Schema Migration
+-- AI Hub - Initial Database Schema Migration
 -- Version: 00001
 -- Date: 2026-02-20
--- Description: Complete database schema for the LR AI Hub platform including
+-- Description: Complete database schema for the AI Hub platform including
 --   all tables, enums, RLS policies, indexes, triggers, and helper functions.
 -- =============================================================================
 

@@ -1,6 +1,6 @@
-# Architektur-Dokumentation -- LR AI Hub
+# Architektur-Dokumentation -- AI Hub
 
-> Technische Architektur der KI-Community-Plattform fuer LR Health & Beauty Systems.
+> Technische Architektur der KI-Community-Plattform.
 
 **Version:** 0.1.0 | **Stand:** 2026-02-21
 
@@ -23,7 +23,7 @@
 
 ```
 +===========================================================================+
-|                          LR AI HUB - Systemarchitektur                    |
+|                          AI HUB - Systemarchitektur                       |
 +===========================================================================+
 
 +-------------------+       +-------------------+       +-------------------+

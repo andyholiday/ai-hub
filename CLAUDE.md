@@ -68,7 +68,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 # Part B — Project Context
 
-## Project: lr-ai-hub
+## Project: ai-hub
 
 Next.js 14 + React 18 + Supabase AI-Hub-Plattform. Multi-Provider AI-Routing
 (Anthropic, OpenAI, Google, Groq, Mistral). Liegt aktuell in `_archiv/`,

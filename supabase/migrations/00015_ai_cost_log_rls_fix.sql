@@ -1,5 +1,5 @@
 -- =============================================================================
--- LR AI Hub - Fix ai_cost_log INSERT RLS Policy
+-- AI Hub - Fix ai_cost_log INSERT RLS Policy
 -- Version: 00015
 -- Date: 2026-04-30
 -- Description: Tightens the INSERT policy on ai_cost_log.
