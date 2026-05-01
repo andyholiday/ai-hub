@@ -172,7 +172,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     // Fehler hier sind nicht blockierend für den Chat-Stream.
     let resolvedSessionId: string | undefined;
     let userMessageDbId: string | undefined;
-    const userMessage = body.messages.find((m) => m.role === "user");
+    const userMessage = body.messages.findLast((m) => m.role === "user");
 
     if (userMessage) {
       try {
@@ -183,8 +183,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           userMessage.content,
         );
       } catch (err) {
-        // Session-Fehler sind nicht blockierend
-        console.error("[/api/ai/chat] Session-Persistenz fehlgeschlagen:", err);
+        console.error("[/api/ai/chat] Session-Persistenz fehlgeschlagen:", err instanceof Error ? err.stack : err);
       }
     }
 
