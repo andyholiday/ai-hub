@@ -14,6 +14,7 @@ import {
 } from "@/lib/api/response";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateProviderSchema } from "@/lib/validators/admin";
+import { invalidateProviderKeyCache } from "@/lib/ai/provider-keys";
 
 export const dynamic = 'force-dynamic';
 
@@ -78,8 +79,44 @@ export async function PUT(req: NextRequest) {
       return apiValidationError(parsed.error);
     }
 
-    const { id, ...updates } = parsed.data;
+    const { id, api_key_encrypted: incomingApiKey, ...updates } = parsed.data;
     const supabase = createAdminClient();
+
+    // If a new API key is provided, store it in Vault and write the UUID back
+    if (incomingApiKey) {
+      // Fetch the provider_key so the Vault secret can be named correctly
+      const { data: existing, error: fetchError } = await supabase
+        .from("ai_providers")
+        .select("provider_key")
+        .eq("id", id)
+        .single();
+
+      if (fetchError || !existing) {
+        return apiNotFound("Provider not found");
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC not yet in generated types (run `supabase gen types` after migration 00014)
+      const { data: vaultUuid, error: vaultError } = await (supabase.rpc as any)(
+        "upsert_provider_vault_key",
+        {
+          p_provider_key: existing.provider_key,
+          p_api_key: incomingApiKey,
+        },
+      ) as { data: string | null; error: { message: string } | null };
+
+      if (vaultError || !vaultUuid) {
+        return apiInternalError(
+          vaultError?.message ?? "Failed to store key in Vault",
+        );
+      }
+
+      // Write the vault UUID into the column (never the plaintext key)
+      (updates as Record<string, unknown>).api_key_encrypted =
+        vaultUuid as string;
+
+      // Invalidate the in-memory key cache so the new key is picked up immediately
+      invalidateProviderKeyCache();
+    }
 
     // If setting as primary, unset any existing primary provider first
     if (updates.is_primary === true) {

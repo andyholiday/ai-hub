@@ -153,6 +153,50 @@ export async function GET(req: NextRequest) {
 }
 
 // ---------------------------------------------------------------------------
+// DELETE - DSGVO Right-to-Erasure (Art. 17 GDPR)
+// Deletes the authenticated user from auth.users; cascades to profiles via FK.
+// ---------------------------------------------------------------------------
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const auth = await requireAuth(req);
+    if ("response" in auth) return auth.response;
+
+    const supabase = createAdminClient();
+
+    // GDPR Art. 30: write erasure audit entry BEFORE deleting the user.
+    // ip_hash is left NULL — GDPR requires the audit record, not the IP itself.
+    const { data: erasureRow, error: insertError } = await supabase
+      .from("gdpr_erasure_log")
+      .insert({ user_id: auth.userId })
+      .select("id")
+      .single();
+
+    if (insertError || !erasureRow) {
+      // Fail-safe: abort erasure if we cannot write the audit record.
+      return apiInternalError("Audit-Log konnte nicht geschrieben werden.");
+    }
+
+    const { error } = await supabase.auth.admin.deleteUser(auth.userId);
+
+    if (error) {
+      // Audit record stays with deleted_at = NULL as a failed-attempt marker.
+      return apiInternalError(error.message);
+    }
+
+    // Mark erasure as complete in the audit log.
+    await supabase
+      .from("gdpr_erasure_log")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", erasureRow.id);
+
+    return apiSuccess({ deleted: true });
+  } catch {
+    return apiInternalError();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // PATCH - Update profile fields
 // ---------------------------------------------------------------------------
 

@@ -5,9 +5,10 @@
 
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { Button, Card, Input } from "@/components/ui";
+import { createBrowserClient } from "@supabase/ssr";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -91,6 +92,13 @@ export default function ProfileSettingsPage() {
   const [success, setSuccess] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
+  // Delete account modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
   const [form, setForm] = useState<FormState>({
     full_name: "",
     bio: "",
@@ -129,6 +137,52 @@ export default function ProfileSettingsPage() {
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  // --- Delete modal helpers ---
+  function openDeleteModal() {
+    setDeleteConfirmInput("");
+    setDeleteError(null);
+    setShowDeleteModal(true);
+    // Use requestAnimationFrame to ensure the dialog is mounted before showModal()
+    requestAnimationFrame(() => {
+      dialogRef.current?.showModal();
+    });
+  }
+
+  function closeDeleteModal() {
+    dialogRef.current?.close();
+    setShowDeleteModal(false);
+    setDeleteConfirmInput("");
+    setDeleteError(null);
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteConfirmInput.trim() !== "LÖSCHEN") return;
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const res = await fetch("/api/profile", { method: "DELETE" });
+      const json = await res.json() as { error?: { message?: string } };
+
+      if (json.error) {
+        setDeleteError(json.error.message ?? "Fehler beim Löschen des Accounts.");
+        return;
+      }
+
+      // Sign out and redirect to home
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      );
+      await supabase.auth.signOut();
+      window.location.href = "/";
+    } catch {
+      setDeleteError("Verbindungsfehler. Bitte versuche es erneut.");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   // --- Handle field changes ---
   function handleChange(field: keyof FormState, value: string) {
@@ -330,6 +384,89 @@ export default function ProfileSettingsPage() {
           </div>
         </form>
       </Card>
+
+      {/* Danger Zone — Account löschen */}
+      <Card>
+        <div className="space-y-3">
+          <h2 className="font-heading text-body-lg font-semibold text-error">
+            Gefahrenzone
+          </h2>
+          <p className="text-body-sm text-surface-500">
+            Das Löschen deines Accounts ist endgültig. Alle deine Daten werden
+            unwiderruflich gelöscht und können nicht wiederhergestellt werden.
+          </p>
+          <Button
+            variant="ghost"
+            size="md"
+            type="button"
+            onClick={openDeleteModal}
+            className="border border-red-300 text-error hover:bg-red-50"
+          >
+            Account löschen
+          </Button>
+        </div>
+      </Card>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <dialog
+          ref={dialogRef}
+          className="rounded-2xl border border-surface-200 bg-white p-6 shadow-xl backdrop:bg-black/40 w-full max-w-md"
+          onClose={closeDeleteModal}
+        >
+          <div className="space-y-4">
+            <h3 className="font-heading text-body-lg font-bold text-surface-900">
+              Account wirklich löschen?
+            </h3>
+            <p className="text-body-sm text-surface-600">
+              Diese Aktion ist <strong>unwiderruflich</strong>. Dein Account,
+              dein Profil und alle zugehörigen Daten werden dauerhaft gelöscht.
+            </p>
+            <div className="space-y-1.5">
+              <label className="block text-body-sm font-medium text-surface-700">
+                Tippe <span className="font-mono font-bold">LÖSCHEN</span> zur
+                Bestätigung
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmInput}
+                onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                placeholder="LÖSCHEN"
+                className="w-full rounded-xl border border-surface-300 bg-white px-3.5 py-2.5 text-body text-surface-900 placeholder:text-surface-400 focus:border-error focus:outline-none focus:ring-2 focus:ring-red-200"
+                autoComplete="off"
+              />
+            </div>
+
+            {deleteError && (
+              <div className="rounded-xl bg-error-light border border-red-200 px-4 py-3 text-body-sm text-error">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 pt-1">
+              <Button
+                variant="ghost"
+                size="md"
+                type="button"
+                onClick={closeDeleteModal}
+                disabled={deleting}
+              >
+                Abbrechen
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirmInput.trim() !== "LÖSCHEN" || deleting}
+                className="bg-error text-white hover:bg-red-700 disabled:opacity-40"
+              >
+                {deleting ? "Wird gelöscht..." : "Account endgültig löschen"}
+              </Button>
+            </div>
+          </div>
+        </dialog>
+      )}
     </div>
   );
 }
