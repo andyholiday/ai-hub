@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // ---------------------------------------------------------------------------
-  // LR AI Hub - Next.js 14 Configuration
+  // AI Hub - Next.js Configuration
   // ---------------------------------------------------------------------------
 
   // React strict mode for development quality

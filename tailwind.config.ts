@@ -1,8 +1,8 @@
 import type { Config } from "tailwindcss";
 
 // =============================================================================
-// LR AI Hub - Tailwind CSS Configuration
-// LR Health & Beauty Systems Corporate Design Tokens
+// AI Hub - Tailwind CSS Configuration
+// Corporate Design Tokens
 // =============================================================================
 
 const config: Config = {
