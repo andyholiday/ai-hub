@@ -85,6 +85,16 @@ if [ -n "$MATCHES" ]; then
   echo ""
 fi
 
+
+# Pattern 7: Mistral API keys (mistral_pat_ prefix + 32 alphanum chars)
+MATCHES=$(echo "$FILTERED_FILES" | xargs grep -rnE 'mistral_pat_[a-zA-Z0-9]{32}' 2>/dev/null || true)
+if [ -n "$MATCHES" ]; then
+  FOUND_SECRETS=1
+  echo "  [BLOCKED] Mistral API Key detected"
+  echo "$MATCHES" | while IFS= read -r line; do echo "    -> $line"; done
+  echo ""
+fi
+
 if [ "$FOUND_SECRETS" -ne 0 ]; then
   echo "==========================================="
   echo "  COMMIT ABORTED: Secrets found in staged files."
