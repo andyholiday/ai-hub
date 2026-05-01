@@ -3,11 +3,10 @@
 // Verifies that the current request is from an authenticated user.
 // Reusable across all API route handlers requiring authentication.
 //
-// OPTIMIZED:
-// - Uses getSession() instead of getUser() to avoid Auth API round-trip.
-//   The JWT is cryptographically signed; local validation is sufficient.
+// SECURITY:
+// - Uses getUser() to validate the JWT server-side via an Auth API round-trip.
+//   This prevents session-spoofing via a tampered cookie.
 // - Reads user role from JWT app_metadata instead of a separate DB query.
-//   This eliminates 2 queries per API call (getUser + profile role fetch).
 // =============================================================================
 
 import { NextRequest, NextResponse } from "next/server";
@@ -64,13 +63,13 @@ export async function requireAuth(
     },
   );
 
-  // --- Validate session from JWT (no Auth API round-trip) ---
+  // --- Validate user via Auth API (server-side JWT verification) ---
   const {
-    data: { session },
+    data: { user },
     error: sessionError,
-  } = await supabase.auth.getSession();
+  } = await supabase.auth.getUser();
 
-  if (sessionError || !session?.user) {
+  if (sessionError || !user) {
     return {
       response: NextResponse.json(
         {
@@ -84,8 +83,6 @@ export async function requireAuth(
       ),
     };
   }
-
-  const user = session.user;
 
   // --- Read role from JWT app_metadata (no DB query) ---
   const role = (user.app_metadata?.role ?? "user") as AuthResult["role"];

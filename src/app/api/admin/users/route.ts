@@ -12,9 +12,25 @@ export async function GET(req: NextRequest) {
 
         const supabase = createAdminClient();
 
-        // In this specific Supabase environment, auth.admin.listUsers() throws a 500 error.
-        // So we fetch everything directly from the profiles table.
-        // The profiles table has all necessary fields via triggers and manual inserts.
+        // Fetch all auth users via paginated loop (default listUsers() returns only 50).
+        // Pagination ensures the email map is complete even for > 1 000 users.
+        const PER_PAGE = 1000;
+        let page = 1;
+        const allAuthUsers: { id: string; email?: string }[] = [];
+        while (true) {
+            const { data: authData, error: authError } = await supabase.auth.admin.listUsers({ page, perPage: PER_PAGE });
+            if (authError) return apiInternalError(authError.message);
+            allAuthUsers.push(...(authData.users ?? []));
+            if ((authData.users ?? []).length < PER_PAGE) break;
+            page++;
+        }
+
+        // Build a lookup map: auth user id → email
+        const emailMap = new Map<string, string>(
+            allAuthUsers.map(u => [u.id, u.email ?? ""])
+        );
+
+        // Fetch profile data to enrich with app-level fields
         const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select("id, full_name, role, created_at, last_login_at, xp, level, department, position, is_approved")
@@ -22,10 +38,9 @@ export async function GET(req: NextRequest) {
 
         if (profileError) return apiInternalError(profileError.message);
 
-        // Fallback email to full_name if no auth user
         const users = (profileData || []).map(p => ({
             id: p.id,
-            email: p.full_name?.toLowerCase().replace(" ", ".") + "@example.com", // Mock email since auth fails
+            email: emailMap.get(p.id) ?? "",
             full_name: p.full_name || 'User',
             role: p.role || 'user',
             created_at: p.created_at,

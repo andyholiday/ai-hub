@@ -23,7 +23,8 @@ interface ChatRequestBody {
     role: "system" | "user" | "assistant";
     content: string;
   }>;
-  systemPrompt?: string;
+  // systemPrompt intentionally omitted: client-supplied prompts are rejected
+  // to prevent prompt-injection. The system prompt is set server-side only.
   context?: Record<string, unknown>;
   provider?: AIProvider;
   model?: string;
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (body.stream !== false) {
       return handleStreamingResponse(router, {
         messages,
-        systemPrompt: body.systemPrompt,
+        // systemPrompt not forwarded: server-side only, never from client input
         context: body.context,
         provider: body.provider,
         model: body.model,
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     // --- Non-streaming response ---
     const result = await router.chat({
       messages,
-      systemPrompt: body.systemPrompt,
+      // systemPrompt not forwarded: server-side only, never from client input
       context: body.context,
       provider: body.provider,
       model: body.model,

@@ -2,10 +2,8 @@
 // Next.js Middleware
 // Auth protection, session refresh, route guards
 //
-// OPTIMIZED: Uses getSession() instead of getUser() to avoid an Auth API call
-// on every request. getSession() reads the JWT from the cookie and validates
-// it locally. The actual server-side verification happens in requireAuth()
-// within API routes where data mutations occur.
+// SECURITY: Uses getUser() to validate the session server-side via an Auth API
+// call on every matched request. This ensures the JWT has not been revoked.
 //
 // Admin role check uses JWT app_metadata instead of a DB query.
 // =============================================================================
@@ -28,16 +26,11 @@ export async function middleware(request: NextRequest) {
   const { supabase, response } = createMiddlewareClient(request);
   const { pathname } = request.nextUrl;
 
-  // Use getSession() - reads JWT from cookie, no Auth API call.
-  // This is safe for middleware route guards because:
-  // 1. The JWT is cryptographically signed and cannot be forged
-  // 2. API routes still use getUser() for server-side verification
-  // 3. Expired tokens will fail session parsing and redirect to login
+  // Use getUser() - validates the JWT server-side via Auth API round-trip.
+  // This ensures revoked or tampered tokens are rejected at the middleware layer.
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const user = session?.user ?? null;
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // Public routes - allow access without auth
   const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
