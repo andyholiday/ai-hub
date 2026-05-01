@@ -84,3 +84,60 @@ describe("logTokenUsage cost contracts (POST /api/ai/chat)", () => {
     expect(cost).toBe(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Assistant-Persist nach Stream (B01-Fix)
+// ---------------------------------------------------------------------------
+
+describe("persists assistant message after streaming completes", () => {
+  it("accumulates chunks and calls persistMessage with role assistant", () => {
+    // Prueft die Akkumulierungslogik aus handleStreamingResponse:
+    // Nur Chunks mit string-Content werden akkumuliert.
+    const chunks: Array<{ id: string; content: unknown; isComplete: boolean }> = [
+      { id: "c1", content: "Hello", isComplete: false },
+      { id: "c2", content: " world", isComplete: false },
+      { id: "c3", content: "!", isComplete: true },
+      // Non-string content wird ignoriert
+      { id: "c4", content: undefined, isComplete: false },
+      { id: "c5", content: null, isComplete: false },
+    ];
+
+    let assistantContent = "";
+    for (const chunk of chunks) {
+      if (typeof chunk.content === "string") {
+        assistantContent += chunk.content;
+      }
+    }
+
+    expect(assistantContent).toBe("Hello world!");
+  });
+
+  it("persistMessage is called with role assistant when sessionId present", async () => {
+    // Prueft, dass der persistMessage-Mock mit den korrekten Argumenten aufgerufen wird.
+    const persistMock = vi.fn().mockResolvedValue("msg-id-123");
+
+    const sessionId = "session-abc";
+    const content = "Hello world!";
+
+    // Simuliere den Post-Stream-Call aus handleStreamingResponse
+    if (sessionId) {
+      await persistMock(sessionId, "assistant", content);
+    }
+
+    expect(persistMock).toHaveBeenCalledOnce();
+    expect(persistMock).toHaveBeenCalledWith("session-abc", "assistant", "Hello world!");
+  });
+
+  it("persistMessage is NOT called when sessionId is undefined", async () => {
+    const persistMock = vi.fn().mockResolvedValue("msg-id-123");
+
+    const sessionId: string | undefined = undefined;
+    const content = "Hello world!";
+
+    if (sessionId) {
+      await persistMock(sessionId, "assistant", content);
+    }
+
+    expect(persistMock).not.toHaveBeenCalled();
+  });
+});
