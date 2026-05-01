@@ -6,12 +6,16 @@
 // Stores user choice under localStorage key "analytics-consent".
 // =============================================================================
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "analytics-consent";
+const HEADING_ID = "consent-banner-heading";
+const DESC_ID = "consent-banner-desc";
 
 export function ConsentBanner() {
   const [visible, setVisible] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const rejectRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     // Show banner only when no prior choice has been saved
@@ -19,6 +23,47 @@ export function ConsentBanner() {
       setVisible(true);
     }
   }, []);
+
+  // Focus first button on mount; manage Tab/Shift-Tab cycle within banner
+  useEffect(() => {
+    if (!visible) return;
+
+    // Move focus into the dialog on open
+    rejectRef.current?.focus();
+
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Tab") return;
+
+      const focusable = Array.from(
+        dialog!.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => !el.hasAttribute("disabled"));
+
+      if (focusable.length === 0) return;
+
+      const first = focusable[0] as HTMLElement;
+      const last = focusable[focusable.length - 1] as HTMLElement;
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    dialog.addEventListener("keydown", handleKeyDown);
+    return () => dialog.removeEventListener("keydown", handleKeyDown);
+  }, [visible]);
 
   if (!visible) return null;
 
@@ -34,12 +79,18 @@ export function ConsentBanner() {
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
-      aria-label="Cookie-Einwilligung"
+      aria-modal="true"
+      aria-labelledby={HEADING_ID}
+      aria-describedby={DESC_ID}
       className="fixed bottom-0 left-0 right-0 z-50 border-t border-surface-200 bg-white px-4 py-4 shadow-lg sm:px-6"
     >
       <div className="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-surface-700">
+        <p id={DESC_ID} className="text-sm text-surface-700">
+          <span id={HEADING_ID} className="sr-only">
+            Cookie-Einwilligung
+          </span>
           Wir messen Ladezeiten (Web Vitals), um die Performance zu verbessern.
           Deine Daten werden nur mit deiner Zustimmung erhoben.{" "}
           <span className="text-surface-500">
@@ -48,6 +99,7 @@ export function ConsentBanner() {
         </p>
         <div className="flex shrink-0 gap-2">
           <button
+            ref={rejectRef}
             type="button"
             onClick={handleReject}
             className="rounded-lg border border-surface-300 bg-white px-4 py-2 text-sm font-medium text-surface-700 hover:bg-surface-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500"
