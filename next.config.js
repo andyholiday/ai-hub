@@ -38,10 +38,28 @@ const nextConfig = {
 
   // Headers for security
   async headers() {
+    // NOTE: 'unsafe-inline' is a compromise required by Next.js inline styles/scripts.
+    // A stricter nonce-based CSP is tracked as Phase-3 work.
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https:",
+      "connect-src 'self' https://*.supabase.co https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://api.groq.com https://api.mistral.ai",
+      "frame-src 'none'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join("; ");
+
     return [
       {
         source: "/(.*)",
         headers: [
+          {
+            key: "Content-Security-Policy",
+            value: csp,
+          },
           {
             key: "X-Frame-Options",
             value: "DENY",
