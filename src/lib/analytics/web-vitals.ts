@@ -31,6 +31,19 @@ const VITALS_ENDPOINT = "/api/analytics/vitals";
 const isDevelopment = process.env.NODE_ENV === "development";
 
 // ---------------------------------------------------------------------------
+// Consent Check
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true only when the user has explicitly granted analytics consent.
+ * Applied consistently in both development and production paths (GDPR M02).
+ */
+export function hasAnalyticsConsent(): boolean {
+  if (typeof localStorage === "undefined") return false;
+  return localStorage.getItem("analytics-consent") === "granted";
+}
+
+// ---------------------------------------------------------------------------
 // Reporter
 // ---------------------------------------------------------------------------
 
@@ -39,8 +52,12 @@ const isDevelopment = process.env.NODE_ENV === "development";
  *
  * - **Development**: logs to the browser console with colour-coded ratings.
  * - **Production**: sends a POST request to the analytics endpoint.
+ *
+ * In both modes, consent is required before any data is logged or sent.
  */
 export function reportWebVital(metric: WebVitalMetric): void {
+  if (!hasAnalyticsConsent()) return;
+
   if (isDevelopment) {
     logMetricToConsole(metric);
     return;
@@ -80,15 +97,6 @@ function logMetricToConsole(metric: WebVitalMetric): void {
 // ---------------------------------------------------------------------------
 
 function sendMetricToEndpoint(metric: WebVitalMetric): void {
-  // GDPR: do not send unless the user has explicitly opted in
-  if (
-    typeof localStorage !== "undefined" &&
-    localStorage.getItem("analytics-consent") !== "granted"
-  ) {
-    return;
-  }
-
-
   const body = JSON.stringify({
     name: metric.name,
     value: metric.value,
