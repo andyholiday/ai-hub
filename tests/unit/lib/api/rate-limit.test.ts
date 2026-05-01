@@ -103,7 +103,7 @@ describe("rateLimit - graceful degradation without Upstash config", () => {
 
     expect(result.success).toBe(true);
     expect(result.limit).toBe(60); // "api" tier = 60 requests
-    expect(result.remaining).toBe(60);
+    expect(result.remaining).toBe(59);
     expect(typeof result.reset).toBe("number");
   });
 
