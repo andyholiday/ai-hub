@@ -45,10 +45,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [docs/quality/BRANDING-AUDIT-2026-05-01.md](docs/quality/BRANDING-AUDIT-2026-05-01.md)
 for the full audit (28 findings, 3 critical).
 
+### Security (Phase 1 — Compliance & Defense-in-Depth)
+
+- **1.1 CSP-Header** — Content-Security-Policy in `next.config.js` with
+  whitelisted AI-provider connect-srcs (Anthropic, OpenAI, Google, Groq,
+  Mistral) and Supabase. `'unsafe-inline'` as pragmatic compromise for Next.js
+  inline scripts; nonce-based CSP deferred to Phase 3.
+- **1.5 Rate-Limit-Fallback** — In-memory Map as fallback when Upstash ENV
+  vars are absent. Per-instance only — warning log emitted on activation.
+- **1.6 Pre-Commit-Hook** — Mistral PAT pattern added to `.husky/pre-commit`
+  (`mistral_pat_[a-zA-Z0-9]{32}`).
+- **1.7 Cron-Auth-Logging** — `/api/cron` 401 failures are now logged as
+  structured JSON (event, ip, user_agent, secret_prefix first 4 chars).
+- **1.8 RLS-Cleanup** — `GRANT SELECT ON mentor_signals TO anon` revoked
+  (was unintentionally open since migration 00010).
+- **1.9 search_path Hardening** — `award_xp()`, `update_login_streak()`, and
+  `increment_field()` now have `SET search_path = public, extensions`
+  (protection against search-path hijacking).
+
+### Added (Phase 1)
+
+- **1.2 Consent-Banner** — Cookie-free, localStorage-based
+  (key `analytics-consent`). Web-Vitals tracking respects the choice.
+  Banner has `aria-modal="true"` and focus-trap (A11y compliant).
+- **1.3 DPA-Notice in AI-Mentor** — User is informed of external provider
+  data processing (GDPR Art. 28 transparency).
+- **1.4 ai_chat_messages Retention** — `expires_at` as generated column
+  (`created_at + 90 days`). Cleanup via `cleanup_expired_chat_messages()`
+  function (manually triggerable; pg_cron schedule optional as DO block).
+
+### Fixed (Phase 0 carry-over)
+
+- **NF01** — `gdpr_erasure_log.deleted_at` UPDATE now has error handling via
+  structured logging (audit completeness).
+- **F03** — Dead `systemPrompt` field removed from `use-ai-chat.ts` hook
+  (field was ignored server-side since 0.5).
+- **F05** — `as any` casts removed from `provider-keys.ts`; now imports
+  `GeneratedDatabase` from `types.generated.ts`.
+
 ### Known Issues
 
-- **NF01** (Minor) — `src/app/api/profile/route.ts:188-191`:
-  `gdpr_erasure_log.deleted_at` UPDATE has no error handling. If the UPDATE
-  fails after a successful `deleteUser()`, the audit record remains with
-  `deleted_at = NULL` and is indistinguishable from a failed attempt. Tracked
-  for Phase 1.
+- **L01** (Minor) — `src/lib/api/rate-limit.ts:78`: `inMemoryStore` is
+  module-global. Counter state leaks between test contexts in Vitest. Future
+  `remaining` assertions will be order-dependent. Fix: export
+  `clearInMemoryStore()` test-only helper and add `beforeEach` reset.
