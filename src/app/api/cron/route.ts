@@ -14,6 +14,22 @@ export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
 
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      request.headers.get("x-real-ip") ??
+      "unknown";
+    const attemptedSecret = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice(7, 11)
+      : authHeader?.slice(0, 4) ?? "";
+    console.error(
+      JSON.stringify({
+        event: "cron_auth_failed",
+        timestamp: new Date().toISOString(),
+        ip,
+        user_agent: request.headers.get("user-agent") ?? "unknown",
+        attempted_secret_prefix: attemptedSecret,
+      }),
+    );
     return NextResponse.json(
       { error: "Unauthorized" },
       { status: 401 },
