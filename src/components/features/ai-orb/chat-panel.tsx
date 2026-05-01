@@ -27,6 +27,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatMessage, TypingIndicator } from "./chat-message";
 import { useOrb, type OrbState } from "./orb-provider";
+import { useOrbChat } from "./use-orb-chat";
 
 // -----------------------------------------------------------------------------
 // Status labels shown in the chat panel header subtitle
@@ -95,24 +96,24 @@ const panelVariants = {
 // -----------------------------------------------------------------------------
 
 export function ChatPanel() {
-  const {
-    minimize,
-    messages,
-    addMessage,
-    isTyping,
-    setIsTyping,
-    pageContext,
-    orbState,
-  } = useOrb();
+  const { minimize, pageContext, orbState, setOrbState } = useOrb();
+
+  // useOrbChat kapselt die gesamte Persistenz-Logik (ADR-005)
+  const { messages, sendMessage, isStreaming, error } = useOrbChat();
 
   const [inputValue, setInputValue] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Orb-State mit Streaming synchronisieren
+  useEffect(() => {
+    setOrbState(isStreaming ? "thinking" : "idle");
+  }, [isStreaming, setOrbState]);
+
   // Auto-scroll to latest message
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+  }, [messages, isStreaming]);
 
   // Focus input on mount
   useEffect(() => {
@@ -125,36 +126,17 @@ export function ChatPanel() {
   // Handle send message
   const handleSend = useCallback(() => {
     const trimmed = inputValue.trim();
-    if (!trimmed) return;
-
-    addMessage("user", trimmed);
+    if (!trimmed || isStreaming) return;
     setInputValue("");
-
-    // Simulate AI response
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      addMessage(
-        "ai",
-        "Das ist eine tolle Frage! Lass mich dir dabei helfen. Basierend auf deinem aktuellen Lernfortschritt habe ich ein paar Vorschlaege."
-      );
-    }, 2000);
-  }, [inputValue, addMessage, setIsTyping]);
+    void sendMessage(trimmed);
+  }, [inputValue, isStreaming, sendMessage]);
 
   // Handle quick action click
   const handleQuickAction = useCallback(
     (action: string) => {
-      addMessage("user", action);
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-        addMessage(
-          "ai",
-          `Gerne helfe ich dir mit "${action}". Was genau moechtest du wissen?`
-        );
-      }, 1500);
+      void sendMessage(action);
     },
-    [addMessage, setIsTyping]
+    [sendMessage]
   );
 
   // Handle keyboard submit
@@ -246,11 +228,27 @@ export function ChatPanel() {
       {/* ------------------------------------------------------------------- */}
       <div className="flex-1 overflow-y-auto py-3 no-scrollbar">
         {messages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
+          <ChatMessage
+            key={message.id}
+            message={{
+              id: message.id,
+              // Mapping: lokales "assistant" → UI-internes "ai" fuer ChatMessage-Komponente
+              role: message.role === "assistant" ? "ai" : "user",
+              content: message.content,
+              timestamp: message.timestamp,
+            }}
+          />
         ))}
 
-        {/* Typing indicator */}
-        {isTyping && <TypingIndicator />}
+        {/* Typing indicator waehrend Stream aktiv */}
+        {isStreaming && <TypingIndicator />}
+
+        {/* Fehleranzeige */}
+        {error && (
+          <p className="px-4 py-2 text-xs text-red-500" role="alert">
+            {error}
+          </p>
+        )}
 
         {/* Scroll anchor */}
         <div ref={chatEndRef} />
@@ -305,7 +303,7 @@ export function ChatPanel() {
           <button
             type="button"
             onClick={handleSend}
-            disabled={!inputValue.trim()}
+            disabled={!inputValue.trim() || isStreaming}
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
               "bg-brand-primary-500 text-white",

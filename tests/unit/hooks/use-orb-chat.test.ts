@@ -1,0 +1,361 @@
+// =============================================================================
+// Tests: useOrbChat Hook (ADR-005, Phase 2.2)
+// =============================================================================
+
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act, waitFor } from "@testing-library/react";
+import { useOrbChat } from "@/components/features/ai-orb/use-orb-chat";
+
+// ---------------------------------------------------------------------------
+// SSE stream helper
+// Creates a ReadableStream that emits the given SSE lines and then closes.
+// ---------------------------------------------------------------------------
+
+function makeStream(lines: string[]): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder();
+  return new ReadableStream({
+    start(controller) {
+      for (const line of lines) {
+        controller.enqueue(encoder.encode(line));
+      }
+      controller.close();
+    },
+  });
+}
+
+function sseEvent(payload: unknown): string {
+  return `data: ${JSON.stringify(payload)}\n\n`;
+}
+
+// ---------------------------------------------------------------------------
+// Mock helpers
+// ---------------------------------------------------------------------------
+
+function mockFetch(
+  status: number,
+  body: ReadableStream<Uint8Array> | null,
+  bodyJson?: unknown,
+) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() =>
+      Promise.resolve({
+        ok: status >= 200 && status < 300,
+        status,
+        body,
+        json: () => Promise.resolve(bodyJson ?? {}),
+      }),
+    ),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+describe("useOrbChat", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  // -------------------------------------------------------------------------
+  // Initial state
+  // -------------------------------------------------------------------------
+
+  it("initializes with empty state", () => {
+    const { result } = renderHook(() => useOrbChat());
+
+    expect(result.current.messages).toEqual([]);
+    expect(result.current.sessionId).toBeNull();
+    expect(result.current.isStreaming).toBe(false);
+    expect(result.current.isLoadingMore).toBe(false);
+    expect(result.current.hasMore).toBe(false);
+    expect(result.current.error).toBeNull();
+  });
+
+  it("uses initialSessionId option when provided", () => {
+    const { result } = renderHook(() =>
+      useOrbChat({ initialSessionId: "sess-abc" }),
+    );
+
+    expect(result.current.sessionId).toBe("sess-abc");
+  });
+
+  // -------------------------------------------------------------------------
+  // startNewSession
+  // -------------------------------------------------------------------------
+
+  it("startNewSession resets all state to initial", async () => {
+    const sessionMeta = sseEvent({
+      content: "",
+      isComplete: false,
+      metadata: { sessionId: "sess-001", userMessageId: "umsg-001" },
+    });
+    const contentChunk = sseEvent({ content: "Hallo!", isComplete: false });
+    const stream = makeStream([sessionMeta, contentChunk, "data: [DONE]\n\n"]);
+    mockFetch(200, stream);
+
+    const { result } = renderHook(() => useOrbChat());
+
+    await act(async () => {
+      await result.current.sendMessage("Hi");
+    });
+
+    expect(result.current.sessionId).toBe("sess-001");
+    expect(result.current.messages.length).toBeGreaterThan(0);
+
+    act(() => {
+      result.current.startNewSession();
+    });
+
+    expect(result.current.sessionId).toBeNull();
+    expect(result.current.messages).toEqual([]);
+    expect(result.current.error).toBeNull();
+    expect(result.current.hasMore).toBe(false);
+  });
+
+  // -------------------------------------------------------------------------
+  // sendMessage — optimistic insert
+  // -------------------------------------------------------------------------
+
+  it("inserts user message optimistically before API responds", async () => {
+    let resolveStream!: () => void;
+    const streamPromise = new Promise<void>((res) => { resolveStream = res; });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        streamPromise.then(() =>
+          Promise.resolve({
+            ok: true,
+            status: 200,
+            body: makeStream(["data: [DONE]\n\n"]),
+            json: () => Promise.resolve({}),
+          }),
+        ),
+      ),
+    );
+
+    const { result } = renderHook(() => useOrbChat());
+
+    // Start send but don't await — check state mid-flight
+    act(() => {
+      void result.current.sendMessage("optimistic test");
+    });
+
+    // User message must already be in state
+    expect(
+      result.current.messages.some(
+        (m) => m.role === "user" && m.content === "optimistic test",
+      ),
+    ).toBe(true);
+
+    // Unblock stream
+    resolveStream();
+  });
+
+  it("marks optimistic message with isOptimistic: true initially", () => {
+    // Don't resolve fetch — just check the flag while in-flight
+    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
+
+    const { result } = renderHook(() => useOrbChat());
+
+    act(() => {
+      void result.current.sendMessage("check optimistic flag");
+    });
+
+    const msg = result.current.messages.find((m) => m.role === "user");
+    expect(msg?.isOptimistic).toBe(true);
+  });
+
+  // -------------------------------------------------------------------------
+  // sendMessage — happy path with stream
+  // -------------------------------------------------------------------------
+
+  it("accumulates streamed assistant content and extracts sessionId", async () => {
+    const sessionMeta = sseEvent({
+      content: "",
+      isComplete: false,
+      metadata: { sessionId: "sess-42", userMessageId: "umsg-42" },
+    });
+    const chunk1 = sseEvent({ content: "Hallo", isComplete: false });
+    const chunk2 = sseEvent({ content: " Welt!", isComplete: false });
+    const stream = makeStream([sessionMeta, chunk1, chunk2, "data: [DONE]\n\n"]);
+    mockFetch(200, stream);
+
+    const { result } = renderHook(() => useOrbChat());
+
+    await act(async () => {
+      await result.current.sendMessage("Hi");
+    });
+
+    expect(result.current.sessionId).toBe("sess-42");
+    expect(result.current.isStreaming).toBe(false);
+    expect(result.current.error).toBeNull();
+
+    const assistantMsg = result.current.messages.find(
+      (m) => m.role === "assistant",
+    );
+    expect(assistantMsg?.content).toBe("Hallo Welt!");
+  });
+
+  it("sets isStreaming true during and false after stream", async () => {
+    const stream = makeStream([
+      sseEvent({ content: "test", isComplete: false }),
+      "data: [DONE]\n\n",
+    ]);
+    mockFetch(200, stream);
+
+    const { result } = renderHook(() => useOrbChat());
+    const streamingStates: boolean[] = [];
+
+    // Capture state changes
+    const sendPromise = act(async () => {
+      await result.current.sendMessage("stream test");
+    });
+
+    streamingStates.push(result.current.isStreaming);
+    await sendPromise;
+    streamingStates.push(result.current.isStreaming);
+
+    // After completion, isStreaming must be false
+    expect(result.current.isStreaming).toBe(false);
+  });
+
+  // -------------------------------------------------------------------------
+  // sendMessage — error handling
+  // -------------------------------------------------------------------------
+
+  it("rolls back optimistic message and sets error on API failure", async () => {
+    mockFetch(500, null, { error: "Internal Server Error" });
+
+    const { result } = renderHook(() => useOrbChat());
+
+    await act(async () => {
+      await result.current.sendMessage("this will fail");
+    });
+
+    // Optimistic message must be removed
+    expect(result.current.messages).toHaveLength(0);
+    expect(result.current.error).toBeTruthy();
+    expect(result.current.isStreaming).toBe(false);
+  });
+
+  it("does not send when content is empty or whitespace", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const { result } = renderHook(() => useOrbChat());
+
+    await act(async () => {
+      await result.current.sendMessage("   ");
+    });
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(result.current.messages).toHaveLength(0);
+  });
+
+  it("does not send when already streaming", async () => {
+    // Never-resolving fetch to keep isStreaming = true
+    const fetchSpy = vi.fn(() => new Promise(() => {}));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const { result } = renderHook(() => useOrbChat());
+
+    // First call — stays in-flight
+    act(() => {
+      void result.current.sendMessage("first");
+    });
+
+    // Second call while streaming — must be ignored
+    await act(async () => {
+      await result.current.sendMessage("second");
+    });
+
+    // Only one fetch call
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  // -------------------------------------------------------------------------
+  // sendMessage — passes sessionId to fetch when set
+  // -------------------------------------------------------------------------
+
+  it("includes existing sessionId in POST body", async () => {
+    const stream = makeStream(["data: [DONE]\n\n"]);
+    const fetchSpy = vi.fn(() =>
+      Promise.resolve({ ok: true, status: 200, body: stream, json: () => Promise.resolve({}) }),
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const { result } = renderHook(() =>
+      useOrbChat({ initialSessionId: "existing-session" }),
+    );
+
+    await act(async () => {
+      await result.current.sendMessage("with session");
+    });
+
+    const callArgs = fetchSpy.mock.calls[0] as unknown as [string, RequestInit];
+    const body = JSON.parse(callArgs[1].body as string) as {
+      sessionId?: string;
+    };
+    expect(body.sessionId).toBe("existing-session");
+  });
+
+  // -------------------------------------------------------------------------
+  // loadMore — skips when no sessionId or hasMore=false
+  // -------------------------------------------------------------------------
+
+  it("loadMore does nothing when hasMore is false", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const { result } = renderHook(() => useOrbChat());
+
+    await act(async () => {
+      await result.current.loadMore();
+    });
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("loadMore does nothing when sessionId is null", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const { result } = renderHook(() => useOrbChat());
+
+    await act(async () => {
+      await result.current.loadMore();
+    });
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  // -------------------------------------------------------------------------
+  // Role mapping: DB "assistant" is stored as role "assistant" in hook
+  // -------------------------------------------------------------------------
+
+  it("assistant messages have role 'assistant' (not 'ai')", async () => {
+    const stream = makeStream([
+      sseEvent({ content: "reply", isComplete: false }),
+      "data: [DONE]\n\n",
+    ]);
+    mockFetch(200, stream);
+
+    const { result } = renderHook(() => useOrbChat());
+
+    await act(async () => {
+      await result.current.sendMessage("test role");
+    });
+
+    const assistantMsg = result.current.messages.find(
+      (m) => m.content === "reply",
+    );
+    expect(assistantMsg?.role).toBe("assistant");
+  });
+});

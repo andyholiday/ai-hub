@@ -251,7 +251,25 @@ function handleStreamingResponse(
         let model: string | undefined;
         let assistantContent = "";
 
+        // Erstes Chunk-Event: sessionId + userMessageDbId mitschicken (ADR-005)
+        if (sessionId) {
+          const metaEvent = JSON.stringify({
+            content: "",
+            isComplete: false,
+            metadata: {
+              sessionId,
+              userMessageId: userMessageDbId ?? "",
+            },
+          });
+          controller.enqueue(encoder.encode(`data: ${metaEvent}\n\n`));
+        }
+
         for await (const chunk of router.chatStream(request)) {
+          // Akkumuliere Text-Content fuer Persistenz (ADR-005)
+          if (chunk.content) {
+            assistantContent += chunk.content;
+          }
+
           // Send each chunk as a server-sent event
           const data = JSON.stringify({
             id: chunk.id,
@@ -263,11 +281,6 @@ function handleStreamingResponse(
           controller.enqueue(
             encoder.encode(`data: ${data}\n\n`)
           );
-
-          // Akkumuliere Text-Content fuer Persistenz
-          if (typeof chunk.content === "string") {
-            assistantContent += chunk.content;
-          }
 
           // Track final metadata for logging
           if (chunk.metadata) {
@@ -292,14 +305,9 @@ function handleStreamingResponse(
           }, userId);
         }
 
-        // Persistiere Assistant-Antwort nach Stream-Ende (ADR-005)
-        if (sessionId) {
-          try {
-            await persistMessage(sessionId, "assistant", assistantContent);
-          } catch (err) {
-            console.error("[/api/ai/chat] Assistant-Persist fehlgeschlagen:", err instanceof Error ? err.stack : err);
-            // Stream nicht abbrechen — UI hat Antwort bereits, DB-Fail ist non-fatal
-          }
+        // Persistiere Assistant-Antwort nach Stream-Ende (ADR-005, fire-and-forget)
+        if (sessionId && assistantContent) {
+          void persistMessage(sessionId, "assistant", assistantContent, totalTokens);
         }
 
         // userMessageDbId ist fuer kuenftige Reply-Threading-Logik reserviert
