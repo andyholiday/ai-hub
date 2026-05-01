@@ -1430,6 +1430,7 @@ export type Database = {
           new_xp: number
         }[]
       }
+      cleanup_expired_chat_messages: { Args: never; Returns: number }
       generate_page_briefing: {
         Args: { p_page_context: string; p_user_id: string }
         Returns: string
