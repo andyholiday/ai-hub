@@ -479,6 +479,9 @@ export default function AIMentorPage() {
           <p className="mt-2 text-[10px] text-surface-400">
             KI-Antworten koennen ungenau sein. Ueberpruefe wichtige Informationen.
           </p>
+          <p className="mt-1 text-[10px] text-surface-400">
+            Deine Eingaben werden an externe AI-Provider (Anthropic, OpenAI, Google, Groq, Mistral) gesendet. Verarbeitung erfolgt nach DPA mit den jeweiligen Anbietern.
+          </p>
         </div>
       </Card>
     </div>
