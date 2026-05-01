@@ -80,6 +80,15 @@ function logMetricToConsole(metric: WebVitalMetric): void {
 // ---------------------------------------------------------------------------
 
 function sendMetricToEndpoint(metric: WebVitalMetric): void {
+  // GDPR: do not send unless the user has explicitly opted in
+  if (
+    typeof localStorage !== "undefined" &&
+    localStorage.getItem("analytics-consent") !== "granted"
+  ) {
+    return;
+  }
+
+
   const body = JSON.stringify({
     name: metric.name,
     value: metric.value,
