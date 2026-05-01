@@ -147,15 +147,18 @@ describe("useOrbChat", () => {
       void result.current.sendMessage("optimistic test");
     });
 
-    // User message must already be in state
-    expect(
-      result.current.messages.some(
-        (m) => m.role === "user" && m.content === "optimistic test",
-      ),
-    ).toBe(true);
+    // User message must already be in state (synchronous optimistic insert)
+    await waitFor(() => {
+      expect(
+        result.current.messages.some(
+          (m) => m.role === "user" && m.content === "optimistic test",
+        ),
+      ).toBe(true);
+    });
 
-    // Unblock stream
+    // Unblock stream so the hook can settle without leaking async work
     resolveStream();
+    await act(async () => { await streamPromise; });
   });
 
   it("marks optimistic message with isOptimistic: true initially", () => {
@@ -307,23 +310,56 @@ describe("useOrbChat", () => {
   });
 
   // -------------------------------------------------------------------------
-  // loadMore — skips when no sessionId or hasMore=false
+  // sendMessage — forwards full conversation context (F02 fix)
   // -------------------------------------------------------------------------
 
-  it("loadMore does nothing when hasMore is false", async () => {
-    const fetchSpy = vi.fn();
+  it("forwards all existing messages as conversation context on subsequent sends", async () => {
+    // First message: establishes a session and gets a reply
+    const stream1 = makeStream([
+      sseEvent({ content: "", isComplete: false, metadata: { sessionId: "sess-ctx", userMessageId: "umsg-1" } }),
+      sseEvent({ content: "Antwort 1", isComplete: false }),
+      "data: [DONE]\n\n",
+    ]);
+    const fetchSpy = vi.fn()
+      .mockResolvedValueOnce({ ok: true, status: 200, body: stream1, json: () => Promise.resolve({}) });
+
     vi.stubGlobal("fetch", fetchSpy);
 
     const { result } = renderHook(() => useOrbChat());
 
     await act(async () => {
-      await result.current.loadMore();
+      await result.current.sendMessage("Erste Frage");
     });
 
-    expect(fetchSpy).not.toHaveBeenCalled();
+    // State now has: user msg + assistant msg
+    expect(result.current.messages.length).toBe(2);
+
+    // Second message: must include prior messages as context
+    const stream2 = makeStream(["data: [DONE]\n\n"]);
+    fetchSpy.mockResolvedValueOnce({ ok: true, status: 200, body: stream2, json: () => Promise.resolve({}) });
+
+    await act(async () => {
+      await result.current.sendMessage("Zweite Frage");
+    });
+
+    const secondCall = fetchSpy.mock.calls[1] as unknown as [string, RequestInit];
+    const body = JSON.parse(secondCall[1].body as string) as {
+      messages: Array<{ role: string; content: string }>;
+    };
+
+    // Must contain prior user + assistant messages plus the new user message
+    expect(body.messages.length).toBeGreaterThanOrEqual(3);
+    expect(body.messages[0]).toMatchObject({ role: "user", content: "Erste Frage" });
+    expect(body.messages[1]).toMatchObject({ role: "assistant", content: "Antwort 1" });
+    expect(body.messages[body.messages.length - 1]).toMatchObject({ role: "user", content: "Zweite Frage" });
   });
 
-  it("loadMore does nothing when sessionId is null", async () => {
+  // -------------------------------------------------------------------------
+  // loadMore — no-op (Phase 3 stub, F01 fix)
+  // -------------------------------------------------------------------------
+
+  it("loadMore is a no-op (Phase 3 stub — /api/ai/chat/history not yet implemented)", async () => {
+    // F01 fix: loadMore returns immediately without fetching.
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
 
@@ -334,6 +370,7 @@ describe("useOrbChat", () => {
     });
 
     expect(fetchSpy).not.toHaveBeenCalled();
+    expect(result.current.isLoadingMore).toBe(false);
   });
 
   // -------------------------------------------------------------------------

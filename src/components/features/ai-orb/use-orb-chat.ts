@@ -14,13 +14,7 @@
 
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const DEFAULT_PAGE_SIZE = 50;
+import { useCallback, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // Types (lokale UI-Types — getrennt vom DB-Schema)
@@ -70,69 +64,21 @@ export function useOrbChat(options?: UseOrbChatOptions): UseOrbChatReturn {
   const [sessionId, setSessionId] = useState<string | null>(
     options?.initialSessionId ?? null
   );
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
+  // Phase 3: isLoadingMore and hasMore will be driven by /api/ai/chat/history
+  const isLoadingMore = false;
+  const hasMore = false;
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Cursor fuer Pagination: created_at des aeltesten geladenen Eintrags
-  const oldestTimestampRef = useRef<string | null>(null);
 
   // ---------------------------------------------------------------------------
   // loadMore — laedt aeltere Nachrichten (Seite 2+)
   // ---------------------------------------------------------------------------
 
   const loadMore = useCallback(async () => {
-    if (!sessionId || isLoadingMore || !hasMore) return;
-
-    setIsLoadingMore(true);
-    try {
-      const params = new URLSearchParams({
-        sessionId,
-        limit: String(DEFAULT_PAGE_SIZE),
-      });
-      if (oldestTimestampRef.current) {
-        params.set("before", oldestTimestampRef.current);
-      }
-
-      const res = await fetch(`/api/ai/chat/history?${params.toString()}`);
-      if (!res.ok) {
-        throw new Error(`Fehler beim Laden: ${res.status}`);
-      }
-
-      const json = (await res.json()) as {
-        messages: Array<{
-          id: string;
-          role: "user" | "assistant" | "system";
-          content: string;
-          created_at: string;
-        }>;
-        hasMore: boolean;
-      };
-
-      const older: ChatMessage[] = json.messages
-        .filter((m) => m.role !== "system")
-        .map((m) => ({
-          id: m.id,
-          role: m.role as "user" | "assistant",
-          content: m.content,
-          timestamp: new Date(m.created_at),
-        }));
-
-      if (older.length > 0) {
-        const oldest = older[0];
-        if (oldest) {
-          oldestTimestampRef.current = oldest.timestamp.toISOString();
-        }
-        setMessages((prev) => [...older, ...prev]);
-      }
-      setHasMore(json.hasMore);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unbekannter Fehler");
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [sessionId, isLoadingMore, hasMore]);
+    // TODO: Phase 3 — implement /api/ai/chat/history endpoint with paginated query
+    // Currently no-op since hasMore is never set to true by the API.
+    return;
+  }, []);
 
   // ---------------------------------------------------------------------------
   // sendMessage — Hauptflow (Optimistic UI + Stream + Reconciliation)
@@ -170,7 +116,10 @@ export function useOrbChat(options?: UseOrbChatOptions): UseOrbChatReturn {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            messages: [{ role: "user", content: content.trim() }],
+            messages: [
+              ...messages.map((m) => ({ role: m.role, content: m.content })),
+              { role: "user", content: content.trim() },
+            ],
             sessionId: sessionId ?? undefined,
             stream: true,
           }),
@@ -264,7 +213,7 @@ export function useOrbChat(options?: UseOrbChatOptions): UseOrbChatReturn {
         setIsStreaming(false);
       }
     },
-    [sessionId, isStreaming]
+    [messages, sessionId, isStreaming]
   );
 
   // ---------------------------------------------------------------------------
@@ -274,9 +223,7 @@ export function useOrbChat(options?: UseOrbChatOptions): UseOrbChatReturn {
   const startNewSession = useCallback(() => {
     setSessionId(null);
     setMessages([]);
-    setHasMore(false);
     setError(null);
-    oldestTimestampRef.current = null;
   }, []);
 
   return {
