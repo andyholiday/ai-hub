@@ -36,7 +36,7 @@ export type RateLimitHeaders = Record<string, string>;
 
 /**
  * Whether Upstash Redis is configured. Rate limiting is a feature flag:
- * when the env vars are missing, all requests are allowed without error.
+ * when the env vars are missing, an in-memory fallback is used instead.
  */
 const isConfigured =
   typeof process.env.UPSTASH_REDIS_REST_URL === "string" &&
@@ -58,6 +58,75 @@ export function getRedis(): Redis | null {
     });
   }
   return redis;
+}
+
+// ---------------------------------------------------------------------------
+// In-Memory Fallback (used when Upstash is not configured)
+// ---------------------------------------------------------------------------
+
+/**
+ * WARNING: In-memory rate limiting is per-process. In a multi-instance
+ * deployment (e.g. multiple Vercel serverless containers) each instance
+ * has its own counter — the aggregate limit across instances is higher
+ * than the configured per-tier limit. Use Upstash for shared enforcement.
+ */
+interface InMemoryBucket {
+  count: number;
+  resetAt: number;
+}
+
+const inMemoryStore = new Map<string, InMemoryBucket>();
+
+/**
+ * Parse a tier window string (e.g. "1 m", "60 s", "1 h") into milliseconds.
+ */
+function windowToMs(window: `${number} s` | `${number} m` | `${number} h`): number {
+  const [amount, unit] = window.split(" ") as [string, "s" | "m" | "h"];
+  const n = parseInt(amount, 10);
+  if (unit === "s") return n * 1_000;
+  if (unit === "m") return n * 60_000;
+  return n * 3_600_000; // h
+}
+
+/**
+ * Check and increment an in-memory counter for the given identifier+tier.
+ * Expired entries are cleaned up lazily on each call.
+ */
+function checkInMemory(
+  identifier: string,
+  tier: RateLimitTier,
+): RateLimitResult {
+  const config = TIER_CONFIG[tier];
+  const windowMs = windowToMs(config.window);
+  const key = `${tier}:${identifier}`;
+  const now = Date.now();
+
+  // Lazy cleanup: remove expired entries to avoid unbounded growth
+  for (const [k, bucket] of inMemoryStore) {
+    if (bucket.resetAt <= now) inMemoryStore.delete(k);
+  }
+
+  const bucket = inMemoryStore.get(key);
+
+  if (!bucket || bucket.resetAt <= now) {
+    // First request in this window
+    inMemoryStore.set(key, { count: 1, resetAt: now + windowMs });
+    return {
+      success: true,
+      limit: config.requests,
+      remaining: config.requests - 1,
+      reset: now + windowMs,
+    };
+  }
+
+  bucket.count += 1;
+  const remaining = Math.max(0, config.requests - bucket.count);
+  return {
+    success: bucket.count <= config.requests,
+    limit: config.requests,
+    remaining,
+    reset: bucket.resetAt,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -135,31 +204,32 @@ function getIdentifier(req: NextRequest, userId?: string): string {
  * @param userId - Optional authenticated user ID (preferred identifier).
  * @returns Rate limit result with `success`, `limit`, `remaining`, and `reset`.
  *
- * **Graceful Degradation**: If Upstash Redis is not configured or if the
- * Redis call fails, the function returns a successful result so that the
- * application continues to work without rate limiting.
+ * **Graceful Degradation**: If Upstash Redis is not configured, an in-memory
+ * per-process fallback is used (see WARNING on `checkInMemory`). If Redis is
+ * configured but unreachable, the in-memory fallback is used for that request.
  */
 export async function rateLimit(
   req: NextRequest,
   tier: RateLimitTier,
   userId?: string,
 ): Promise<RateLimitResult> {
-  const config = TIER_CONFIG[tier];
+  const identifier = getIdentifier(req, userId);
 
-  // --- Feature flag: skip if not configured ---
+  // --- In-memory fallback when Upstash is not configured ---
   const limiter = getLimiter(tier);
   if (!limiter) {
-    return {
-      success: true,
-      limit: config.requests,
-      remaining: config.requests,
-      reset: Date.now() + 60_000,
-    };
+    console.warn(
+      JSON.stringify({
+        event: "rate_limit_in_memory_fallback",
+        tier,
+        reason: "Upstash not configured — using per-process in-memory limiter",
+      }),
+    );
+    return checkInMemory(identifier, tier);
   }
 
   // --- Execute rate-limit check with graceful degradation ---
   try {
-    const identifier = getIdentifier(req, userId);
     const result = await limiter.limit(identifier);
 
     return {
@@ -170,18 +240,13 @@ export async function rateLimit(
     };
   } catch (error) {
     // Redis is unreachable or returned an unexpected error.
-    // Log the failure but do NOT block the request.
+    // Fall back to in-memory so requests are still gated.
     console.error(
-      `[rate-limit] Redis error for tier "${tier}" – skipping rate limit:`,
+      `[rate-limit] Redis error for tier "${tier}" – falling back to in-memory:`,
       error instanceof Error ? error.message : error,
     );
 
-    return {
-      success: true,
-      limit: config.requests,
-      remaining: config.requests,
-      reset: Date.now() + 60_000,
-    };
+    return checkInMemory(identifier, tier);
   }
 }
 
