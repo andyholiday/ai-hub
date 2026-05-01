@@ -31,12 +31,6 @@ const PRESET_CARDS: {
     logoText: "AM",
     gradientClass: "bg-gradient-to-br from-blue-500 to-indigo-600",
   },
-  {
-    id: "lr",
-    label: "LR Health & Beauty",
-    logoText: "LR",
-    gradientClass: "bg-brand-gradient",
-  },
 ];
 
 // ---------------------------------------------------------------------------
