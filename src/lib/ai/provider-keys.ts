@@ -70,10 +70,7 @@ export async function getProviderApiKeysFromDB(): Promise<ProviderKeyMap> {
   const { data: rows, error } = await typedSupabase.rpc("get_active_provider_keys");
 
   if (error) {
-    console.error(
-      "[provider-keys] Failed to fetch API keys from Vault:",
-      error.message,
-    );
+    console.error("[provider-keys] Failed to fetch API keys from Vault");
     // On error, return stale cache if available, otherwise empty map
     return cache?.data ?? {};
   }

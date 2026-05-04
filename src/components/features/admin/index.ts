@@ -35,3 +35,6 @@ export type {
 } from "./provider-sandbox";
 
 export { AdminBrandingTab } from "./admin-branding";
+
+export { ProviderKeyModal } from "./provider-key-modal";
+export type { ProviderKeyModalProps } from "./provider-key-modal";

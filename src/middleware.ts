@@ -16,7 +16,7 @@ import { createMiddlewareClient } from "@/lib/supabase/middleware";
 // ---------------------------------------------------------------------------
 
 const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/callback"];
-const ADMIN_ROUTES = ["/admin"];
+const ADMIN_ROUTES = ["/admin", "/api/admin"];
 
 // ---------------------------------------------------------------------------
 // Middleware
