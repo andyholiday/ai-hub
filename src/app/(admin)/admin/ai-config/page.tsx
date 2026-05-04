@@ -16,6 +16,7 @@ import {
   SystemPrompts,
   FeatureToggles,
   ProviderSandbox,
+  ProviderKeyModal,
 } from "@/components/features/admin";
 import { useAdminData } from "@/hooks/use-admin-data";
 
@@ -80,6 +81,29 @@ export default function AIConfigPage() {
       await admin.updateProvider(id, { is_active: true });
     },
     [admin],
+  );
+
+  // --- API-Key modal state ---
+  const [keyModalProviderId, setKeyModalProviderId] = useState<string | null>(null);
+
+  const keyModalProvider = keyModalProviderId
+    ? admin.providers.find((p) => p.id === keyModalProviderId) ?? null
+    : null;
+
+  const handleOpenKeyModal = useCallback((id: string) => {
+    setKeyModalProviderId(id);
+  }, []);
+
+  const handleCloseKeyModal = useCallback(() => {
+    setKeyModalProviderId(null);
+  }, []);
+
+  const handleSaveApiKey = useCallback(
+    async (plainKey: string): Promise<boolean> => {
+      if (!keyModalProviderId) return false;
+      return admin.updateProvider(keyModalProviderId, { api_key_encrypted: plainKey });
+    },
+    [admin, keyModalProviderId],
   );
 
   // --- Prompt edit handler ---
@@ -229,6 +253,7 @@ export default function AIConfigPage() {
                   onSetPrimary={admin.setProviderPrimary}
                   onSetup={handleSetupProvider}
                   onStats={handleViewStats}
+                  onSetApiKey={handleOpenKeyModal}
                   className={
                     testingId === provider.id
                       ? "ring-2 ring-brand-primary-500 ring-offset-2"
@@ -277,6 +302,18 @@ export default function AIConfigPage() {
           />
         </div>
       )}
+
+      {/* API-Key Modal */}
+      <ProviderKeyModal
+        isOpen={keyModalProviderId !== null}
+        providerName={keyModalProvider?.name ?? ""}
+        hasKey={
+          keyModalProvider !== null &&
+          keyModalProvider.apiKeyMasked !== "Nicht hinterlegt"
+        }
+        onSave={handleSaveApiKey}
+        onClose={handleCloseKeyModal}
+      />
     </div>
   );
 }

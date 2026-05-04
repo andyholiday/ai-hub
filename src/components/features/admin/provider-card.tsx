@@ -5,7 +5,7 @@
 // Displays a single AI provider's configuration and status
 // =============================================================================
 
-import { Pencil, Wrench, BarChart3, ArrowUp, Settings } from "lucide-react";
+import { Pencil, Wrench, BarChart3, ArrowUp, Settings, KeyRound } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui";
 
@@ -37,6 +37,7 @@ export interface ProviderCardProps {
   onSetPrimary?: (id: string) => void;
   onSetup?: (id: string) => void;
   onStats?: (id: string) => void;
+  onSetApiKey?: (id: string) => void;
   className?: string;
 }
 
@@ -67,6 +68,7 @@ export function ProviderCard({
   onSetPrimary,
   onSetup,
   onStats,
+  onSetApiKey,
   className,
 }: ProviderCardProps) {
   const isPrimary = provider.status === "primary";
@@ -184,16 +186,26 @@ export function ProviderCard({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {isInactive ? (
-          <Button
-            size="sm"
-            variant="primary"
-            iconLeft={<Settings />}
-            onClick={() => onSetup?.(provider.id)}
-          >
-            Jetzt einrichten
-          </Button>
+          <>
+            <Button
+              size="sm"
+              variant="primary"
+              iconLeft={<Settings />}
+              onClick={() => onSetup?.(provider.id)}
+            >
+              Jetzt einrichten
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              iconLeft={<KeyRound />}
+              onClick={() => onSetApiKey?.(provider.id)}
+            >
+              API-Key setzen
+            </Button>
+          </>
         ) : (
           <>
             <Button
@@ -211,6 +223,14 @@ export function ProviderCard({
               onClick={() => onTest?.(provider.id)}
             >
               Testen
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              iconLeft={<KeyRound />}
+              onClick={() => onSetApiKey?.(provider.id)}
+            >
+              API-Key ändern
             </Button>
             {isPrimary ? (
               <Button
