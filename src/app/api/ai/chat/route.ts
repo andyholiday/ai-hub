@@ -10,6 +10,7 @@ import { type AIRouter, getAIRouterWithDBKeys } from "@/lib/ai/router";
 import { requireAuth } from "@/lib/api/require-auth";
 import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import type { AIProvider, ChatMessage } from "@/lib/ai/types";
+import { calculateCost } from "@/lib/ai/pricing";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,85 @@ interface ChatRequestBody {
   temperature?: number;
   maxTokens?: number;
   stream?: boolean;
+  /** Optional: Bestehende Session-ID fuer Persistenz (ADR-005) */
+  sessionId?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Session-Persistenz Helpers (ADR-005)
+// ---------------------------------------------------------------------------
+
+/**
+ * Lookup oder Erstellung einer ai_chat_sessions-Zeile.
+ * Laeuft server-seitig mit dem Admin-Client (Service-Role).
+ * Gibt die Session-ID zurueck.
+ */
+async function resolveSession(
+  userId: string,
+  sessionId: string | undefined,
+): Promise<string> {
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const supabase = createAdminClient();
+
+  if (sessionId) {
+    // Verifizieren, dass die Session dem User gehoert
+    const { data, error } = await supabase
+      .from("ai_chat_sessions")
+      .select("id")
+      .eq("id", sessionId)
+      .eq("user_id", userId)
+      .single();
+
+    if (!error && data) return data.id;
+    // Session nicht gefunden oder falsche Ownership → neue Session erstellen
+  }
+
+  // Neue Session anlegen
+  const { data, error } = await supabase
+    .from("ai_chat_sessions")
+    .insert({
+      user_id: userId,
+      context_type: "orb",
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Session konnte nicht erstellt werden: ${error?.message ?? "unbekannt"}`);
+  }
+  return data.id;
+}
+
+/**
+ * Persistiert eine einzelne Nachricht in ai_chat_messages.
+ * Gibt die neue DB-ID zurueck.
+ */
+async function persistMessage(
+  sessionId: string,
+  role: "user" | "assistant",
+  content: string,
+  tokensUsed?: number,
+): Promise<string> {
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("ai_chat_messages")
+    .insert({
+      session_id: sessionId,
+      role,
+      content,
+      tokens_used: tokensUsed ?? null,
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    // Nicht-kritisch: log und weiter
+    console.error("[persistMessage] Insert failed:", error?.message);
+    return "";
+  }
+  return data.id;
 }
 
 // ---------------------------------------------------------------------------
@@ -87,6 +167,26 @@ export async function POST(req: NextRequest): Promise<Response> {
       timestamp: new Date(),
     }));
 
+    // --- Session-Persistenz (ADR-005): Session auflösen + User-Message persistieren ---
+    // Nur wenn sessionId übergeben oder Client die Session-Verwaltung nutzt.
+    // Fehler hier sind nicht blockierend für den Chat-Stream.
+    let resolvedSessionId: string | undefined;
+    let userMessageDbId: string | undefined;
+    const userMessage = body.messages.findLast((m) => m.role === "user");
+
+    if (userMessage) {
+      try {
+        resolvedSessionId = await resolveSession(userId, body.sessionId);
+        userMessageDbId = await persistMessage(
+          resolvedSessionId,
+          "user",
+          userMessage.content,
+        );
+      } catch (err) {
+        console.error("[/api/ai/chat] Session-Persistenz fehlgeschlagen:", err instanceof Error ? err.stack : err);
+      }
+    }
+
     const router = await getAIRouterWithDBKeys();
 
     // --- Streaming response ---
@@ -100,7 +200,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         temperature: body.temperature,
         maxTokens: body.maxTokens,
         stream: true,
-      }, userId);
+      }, userId, resolvedSessionId, userMessageDbId);
     }
 
     // --- Non-streaming response ---
@@ -138,6 +238,8 @@ function handleStreamingResponse(
   router: AIRouter,
   request: Parameters<AIRouter["chatStream"]>[0],
   userId: string,
+  sessionId?: string,
+  userMessageDbId?: string,
 ): Response {
   const encoder = new TextEncoder();
 
@@ -147,6 +249,7 @@ function handleStreamingResponse(
         let totalTokens: number | undefined;
         let provider: string | undefined;
         let model: string | undefined;
+        let assistantContent = "";
 
         for await (const chunk of router.chatStream(request)) {
           // Send each chunk as a server-sent event
@@ -160,6 +263,11 @@ function handleStreamingResponse(
           controller.enqueue(
             encoder.encode(`data: ${data}\n\n`)
           );
+
+          // Akkumuliere Text-Content fuer Persistenz
+          if (typeof chunk.content === "string") {
+            assistantContent += chunk.content;
+          }
 
           // Track final metadata for logging
           if (chunk.metadata) {
@@ -183,6 +291,19 @@ function handleStreamingResponse(
             totalTokens: totalTokens ?? 0,
           }, userId);
         }
+
+        // Persistiere Assistant-Antwort nach Stream-Ende (ADR-005)
+        if (sessionId) {
+          try {
+            await persistMessage(sessionId, "assistant", assistantContent);
+          } catch (err) {
+            console.error("[/api/ai/chat] Assistant-Persist fehlgeschlagen:", err instanceof Error ? err.stack : err);
+            // Stream nicht abbrechen — UI hat Antwort bereits, DB-Fail ist non-fatal
+          }
+        }
+
+        // userMessageDbId ist fuer kuenftige Reply-Threading-Logik reserviert
+        void userMessageDbId;
 
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
@@ -213,16 +334,6 @@ function handleStreamingResponse(
 // ---------------------------------------------------------------------------
 
 /**
- * Approximate cost per 1K tokens by provider key.
- */
-const COST_PER_1K: Record<string, { input: number; output: number }> = {
-  gemini: { input: 0.00025, output: 0.0005 },
-  openai: { input: 0.0005, output: 0.0015 },
-  claude: { input: 0.003, output: 0.015 },
-  copilot: { input: 0.001, output: 0.002 },
-};
-
-/**
  * Log token usage into the ai_cost_log Supabase table.
  *
  * This is intentionally fire-and-forget: we do NOT await the result so the
@@ -231,7 +342,7 @@ const COST_PER_1K: Record<string, { input: number; output: number }> = {
  */
 function logTokenUsage(
   provider: AIProvider | string,
-  _model: string,
+  model: string,
   usage: { promptTokens: number; completionTokens: number; totalTokens: number },
   userId?: string,
 ): void {
@@ -257,10 +368,7 @@ function logTokenUsage(
       }
 
       // --- Calculate estimated cost ---
-      const rates = COST_PER_1K[providerKey] ?? { input: 0, output: 0 };
-      const estimatedCost =
-        (usage.promptTokens / 1000) * rates.input +
-        (usage.completionTokens / 1000) * rates.output;
+      const { estimatedCost } = calculateCost(providerKey, model, usage);
 
       // --- Insert cost log row ---
       const { error: insertError } = await supabase
