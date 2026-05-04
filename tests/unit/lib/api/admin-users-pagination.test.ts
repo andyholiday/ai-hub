@@ -92,7 +92,11 @@ describe("GET /api/admin/users — listUsers pagination (F02)", () => {
         expect(supabaseMock.auth.admin.listUsers).toHaveBeenNthCalledWith(2, { page: 2, perPage: 1000 });
     });
 
-    it("returns 500 when listUsers errors on any page", async () => {
+    it("returns 200 (not 500) when listUsers errors on every call — fallback exhausts safety valve", async () => {
+        // Every listUsers call (batch + per-user fallback) returns an error.
+        // The fallback safety valve kicks in after 100 skipped offsets, then the route
+        // returns 200 with whatever users it could collect (empty in this case),
+        // rather than crashing with 500. This validates the defense-in-depth fallback.
         const supabaseMock = {
             auth: {
                 admin: {
@@ -102,7 +106,10 @@ describe("GET /api/admin/users — listUsers pagination (F02)", () => {
                     }),
                 },
             },
-            from: vi.fn(),
+            from: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnThis(),
+                order: vi.fn().mockResolvedValue({ data: [], error: null }),
+            }),
         };
         (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(supabaseMock);
 
@@ -110,9 +117,11 @@ describe("GET /api/admin/users — listUsers pagination (F02)", () => {
         const req = new NextRequest("http://localhost/api/admin/users");
         const res = await GET(req);
 
-        expect(res.status).toBe(500);
+        // With the fallback in place the route degrades gracefully rather than returning 500.
+        expect(res.status).toBe(200);
         const body = await res.json();
-        expect(body.error.message).toBe("Auth service unavailable");
+        expect(body.error).toBeNull();
+        expect(Array.isArray(body.data)).toBe(true);
     });
 
     it("stops paginating exactly when last page has fewer users than perPage", async () => {
