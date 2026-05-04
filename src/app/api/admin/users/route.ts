@@ -14,12 +14,42 @@ export async function GET(req: NextRequest) {
 
         // Fetch all auth users via paginated loop (default listUsers() returns only 50).
         // Pagination ensures the email map is complete even for > 1 000 users.
+        // Fallback: if batched fetch fails (e.g. corrupted metadata in one record),
+        // re-page with perPage=1 and skip individual broken users rather than failing entirely.
         const PER_PAGE = 1000;
         let page = 1;
         const allAuthUsers: { id: string; email?: string }[] = [];
-        while (true) {
+        let usedFallback = false;
+        let fallbackSkipCount = 0;
+
+        batchLoop: while (true) {
             const { data: authData, error: authError } = await supabase.auth.admin.listUsers({ page, perPage: PER_PAGE });
-            if (authError) return apiInternalError(authError.message);
+            if (authError) {
+                if (!usedFallback) {
+                    // Switch to per-user pagination to survive one broken record.
+                    usedFallback = true;
+                    console.warn("[/api/admin/users] fell back to per-user pagination after batched-fetch failed");
+                    // Re-fetch all pages with perPage=1, skipping broken offsets.
+                    let fallbackPage = 1;
+                    while (true) {
+                        const { data: singleData, error: singleError } = await supabase.auth.admin.listUsers({ page: fallbackPage, perPage: 1 });
+                        if (singleError) {
+                            // Skip this offset — one bad user record should not abort the list.
+                            console.warn(`[/api/admin/users] failed to fetch user metadata at offset ${fallbackPage} — skipping`);
+                            fallbackSkipCount++;
+                            fallbackPage++;
+                            // Safety valve: stop after too many consecutive errors to avoid infinite loops.
+                            if (fallbackSkipCount > 100) break;
+                            continue;
+                        }
+                        if (!singleData.users || singleData.users.length === 0) break;
+                        allAuthUsers.push(...singleData.users);
+                        fallbackPage++;
+                    }
+                    break batchLoop;
+                }
+                return apiInternalError(authError.message);
+            }
             allAuthUsers.push(...(authData.users ?? []));
             if ((authData.users ?? []).length < PER_PAGE) break;
             page++;
