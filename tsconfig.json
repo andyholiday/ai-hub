@@ -67,6 +67,7 @@
     ".next",
     "out",
     "dist",
-    "supabase/functions"
+    "supabase/functions",
+    "spikes"
   ]
 }
