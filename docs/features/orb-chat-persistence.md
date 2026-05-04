@@ -1,6 +1,6 @@
 # Orb-Chat-Persistenz
 
-**Status:** In Bearbeitung (Phase 2.2)
+**Status:** Implemented (2026-05-04)
 **Phase:** 2 — Funktionale Bugs
 **Owner:** Developer-Frontend
 
@@ -16,15 +16,16 @@ bisherigen reinen React-State und die simulierte AI-Antwort ohne API-Anbindung.
 
 ## Code-Refs
 
-- `src/components/features/ai-orb/orb-provider.tsx` — TODO: nach Merge
-  verifizieren (OrbProvider erweitert)
-- `src/components/features/ai-orb/use-orb-chat.ts` — TODO: neuer Hook (nach
-  Developer-Merge verifizieren)
-- `src/components/features/ai-orb/chat-panel.tsx` — TODO: konsumiert
-  `useOrbChat()` statt bisherigem simulierten Timeout
-- `src/app/api/ai/chat/route.ts` — TODO: `sessionId`-Parameter ergaenzt
-- `supabase/migrations/` — TODO: RLS-Policies fuer `ai_chat_sessions` /
-  `ai_chat_messages` (Migration-Nummer nach Merge eintragen)
+- `src/components/features/ai-orb/orb-provider.tsx` — OrbProvider erweitert
+  (merged in main, Commit `d59862d`)
+- `src/components/features/ai-orb/use-orb-chat.ts` — neuer Hook implementiert
+- `src/components/features/ai-orb/chat-panel.tsx` — konsumiert `useOrbChat()`
+  statt bisherigem simulierten Timeout
+- `src/app/api/ai/chat/route.ts` — `sessionId`-Parameter ergaenzt;
+  `handleStreamingResponse` auf 5 Parameter erweitert
+- `supabase/migrations/00001_initial_schema.sql` — RLS-Policies fuer
+  `ai_chat_sessions` und `ai_chat_messages` bereits vorhanden (Quality
+  verifiziert, kein Schema-Change in Phase 2.2 noetig)
 
 ## Oeffentliche API
 
@@ -50,12 +51,36 @@ Vollstaendige Signaturen, Sequenzdiagramm und Datenmodell:
 
 ## Open Issues
 
-- TODO: Implementierungs-Status nach Developer-Merge eintragen
-- TODO: RLS-Migration-Nummer ergaenzen
-- TODO: Test-Coverage-Ergebnis ergaenzen (Wave 3 — Quality)
-- TODO: `expires_at`-Kompatibilitaet mit Phase 1.4 nach Merge verifizieren
+- **F01 — `/api/ai/chat/history`-Route (Phase-3-Future-Work)** — `loadMore()` im
+  Hook ist ein bewusster No-Op mit TODO-Kommentar. Die Route existiert nicht.
+  Pagination-Implementierung ist Phase-3-Scope.
+- **F04 — OrbContext-Cleanup (Phase-3-Future-Work)** — `isTyping`, `addMessage`
+  und `messages` im `OrbContext` sind fuer `chat-panel.tsx` ungenutzt, aber noch
+  aktiv in `ai-mentor/page.tsx`. Migration auf `useOrbChat()` und Entfernung aus
+  dem Context ist Phase-3-Cleanup.
+- **Streaming-Token-Tracking** — Gilt analog zu Phase 2.1; siehe
+  [pricing-layer.md](./pricing-layer.md#open-issues).
+- **`sessionId` im React-State** — Tab-Reload verliert Session-Bindung; User
+  sieht leeren Chat, obwohl History in DB vorhanden. localStorage-Persistierung
+  ist Future Work (ADR-005).
+
+## Quality-Review
+
+Siehe [docs/quality/PHASE-2-FRONTEND-REVIEW.md](../quality/PHASE-2-FRONTEND-REVIEW.md)
+(2 Iterationen, final GO nach Commit `be4083d`).
+
+- Test-Coverage: 14 Hook-Tests in `tests/unit/hooks/use-orb-chat.test.ts`,
+  alle gruen
+- RLS: existierende Policies in `supabase/migrations/00001_initial_schema.sql`
+  ausreichend — Quality verifiziert (`ai_chat_sessions`: `user_id = auth.uid()`,
+  `ai_chat_messages`: EXISTS-Subquery via Session-FK)
+- `expires_at`: bereits in Phase 1.4 implementiert (90-Tage-Retention via
+  `expires_at`-generated-column). Additivkompatibel mit Phase 2.2-Schema.
+  Siehe [CHANGELOG.md — Phase 1 Added](../../CHANGELOG.md).
 
 ## History
 
+- 2026-05-04 — Branch `feature/phase-2-frontend` gemerged in `main` (Commit
+  `d59862d`). 219/219 Tests gruen. Status: Implemented.
 - 2026-05-01 — ADR-005 committed (Architect Wave 1). Developer-Implementation
   laeuft parallel (Phase 2 Wave 2).

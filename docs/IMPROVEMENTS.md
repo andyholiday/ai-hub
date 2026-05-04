@@ -55,6 +55,8 @@ Hardening, das die App rechtlich und sicherheitstechnisch absichert.
 
 ## Phase 2 — Funktionale Bugs
 
+> **Status:** abgeschlossen 2026-05-04 (Branches feature/phase-2-{backend,frontend,docs} merged in main)
+
 Echte Defekte, die User wahrnehmen oder das Geschäft beschädigen.
 
 | # | Task | Aufwand | Quelle |

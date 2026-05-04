@@ -26,9 +26,31 @@
 ### Phase 6 - Multi-Provider Erweiterung: 100% fertig
 ### Phase 7 - Security & Repo Migration: 100% fertig
 
+### IMPROVEMENTS.md Phase 0 — Hardening: 100% fertig (2026-04-30)
+### IMPROVEMENTS.md Phase 1 — Compliance & Defense-in-Depth: 100% fertig (2026-05-01)
+### IMPROVEMENTS.md Phase 2 — Funktionale Bugs: 100% fertig (2026-05-04)
+
 ---
 
 ## Session-Historie
+
+### Session 16 - Phase 2 (Pricing-Layer + Orb-Chat-Persistenz) (2026-05-04)
+
+| # | Task | Status |
+|---|------|--------|
+| 1 | Pricing-Layer (`src/lib/ai/pricing.ts`) extrahiert, alle 6 Provider abgedeckt | Erledigt |
+| 2 | Groq + Mistral Abrechnung korrigiert ($0 → korrekte Kosten) | Erledigt |
+| 3 | `useOrbChat()`-Hook implementiert (Session-Lifecycle, Optimistic-UI) | Erledigt |
+| 4 | Konversationskontext an AI-Provider weitergegeben | Erledigt |
+| 5 | Assistant-Message nach Stream persistiert | Erledigt |
+| 6 | Quality-Review (2 Iterationen Backend + 2 Frontend), alle Findings behoben | Erledigt |
+| 7 | 219/219 Tests gruen (main HEAD `92a42e1`) | Erledigt |
+
+**Branches gemerged:** `feature/phase-2-backend` + `feature/phase-2-frontend` + `feature/phase-2-docs`
+**Neue Dateien:** `src/lib/ai/pricing.ts`, `src/components/features/ai-orb/use-orb-chat.ts`, `tests/unit/lib/ai/pricing.test.ts`, `tests/integration/api/ai/chat.test.ts`, `tests/unit/hooks/use-orb-chat.test.ts`
+**Open Items (Phase 3):** Streaming-Token-Tracking (#issue-TBD), `/api/ai/chat/history`-Route (F01), OrbContext-Cleanup (F04)
+
+---
 
 ### Session 13 - Groq & Mistral Provider Integration (2026-02-24)
 

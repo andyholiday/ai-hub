@@ -90,11 +90,47 @@ for the full audit (28 findings, 3 critical).
   `remaining` assertions will be order-dependent. Fix: export
   `clearInMemoryStore()` test-only helper and add `beforeEach` reset.
 
-### Fixed (Phase 2 — in Bearbeitung)
+### Phase 2 — Funktionale Bugs (2026-05-04)
 
-- TODO: 2.1 Pricing-Layer — `COST_PER_1K` aus `route.ts` extrahiert in
-  `src/lib/ai/pricing.ts`; Groq + Mistral korrekt abgerechnet.
-  Siehe [docs/features/pricing-layer.md](docs/features/pricing-layer.md).
-- TODO: 2.2 Orb-Chat-Persistenz — `OrbProvider` laedt/speichert Messages in
-  `ai_chat_sessions` / `ai_chat_messages` via `useOrbChat()`-Hook.
+#### Added
+
+- **2.2 `useOrbChat()`-Hook** — neuer dedizierter Hook kapselt den gesamten
+  Nachrichten-Lebenszyklus des Living-Cloud-Mentors (Session-Erstellung,
+  Optimistic-UI, ID-Reconciliation, Error-Rollback). Ersetzt simulierten Timeout
+  in `chat-panel.tsx`.
   Siehe [docs/features/orb-chat-persistence.md](docs/features/orb-chat-persistence.md).
+- **2.2 Konversationskontext an AI-Provider** — `sendMessage` schickt gesamten
+  bisherigen Message-State als Kontext an `POST /api/ai/chat` (statt nur die
+  aktuelle User-Message). Orb-Antworten sind jetzt sessionbewusst.
+
+#### Changed
+
+- **2.1 Pricing-Layer** — `COST_PER_1K`-Inline-Konstante aus
+  `src/app/api/ai/chat/route.ts` extrahiert in `src/lib/ai/pricing.ts`.
+  Alle 6 Provider abgedeckt; `AI_MODELS` aus `config.ts` ist nun Single Source
+  of Truth fuer Token-Preise.
+  Siehe [docs/features/pricing-layer.md](docs/features/pricing-layer.md).
+- **2.2 `handleStreamingResponse`** — Signatur um `sessionId?` und
+  `userMessageDbId?` erweitert; AI-Antwort wird nach Stream-Ende in
+  `ai_chat_messages` persistiert (`onFinish`-Callback).
+
+#### Fixed
+
+- **2.1 Groq + Mistral Abrechnung** — bisher $0-Eintraege in `ai_cost_log` fuer
+  Groq und Mistral; jetzt werden korrekte Kosten via `calculateCost()` berechnet
+  und in `estimated_cost` geschrieben.
+- **2.1 Falsche User-Message bei Persistenz** — `body.messages.find()` durch
+  `body.messages.findLast()` ersetzt; persistiert jetzt die neueste User-Message,
+  nicht die erste im Array.
+- **2.2 Orb-Chat-Persistenz** — `OrbProvider` ignorierte bisher die existierenden
+  `ai_chat_sessions`/`ai_chat_messages`-Tabellen vollstaendig (reiner React-State,
+  simulierter Timeout). Chat-History ueberlebt jetzt Page-Navigation innerhalb
+  einer Browser-Session.
+
+#### Known Issues (Phase 2, offen)
+
+- **Streaming-Token-Tracking** — `promptTokens: 0, completionTokens: 0` im
+  Streaming-Pfad fuehrt zu `calculateCost` → `$0`. Streaming-Provider liefern
+  Token-Counts nicht im selben Chunk. Fix geplant als `#issue-TBD`.
+- **`/api/ai/chat/history`-Route** — Pagination-Stub in `useOrbChat.loadMore()`
+  ist ein bewusster No-Op (TODO-Kommentar). Route ist Phase-3-Scope.
