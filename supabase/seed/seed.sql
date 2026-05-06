@@ -20,10 +20,160 @@ BEGIN
 END $$;
 
 -- =============================================================================
--- 1. DEMO USERS (profiles)
--- Note: In production, profiles are created via the auth.users trigger.
--- For seeding, we insert directly into profiles with fixed UUIDs.
+-- 1. DEMO USERS (auth.users + auth.identities + profiles)
+-- auth.users and auth.identities must be inserted first so that the FK from
+-- profiles → auth.users is satisfied and the on_auth_user_created trigger
+-- fires correctly. The profiles INSERT then overwrites the minimal trigger
+-- row with the full demo data.
 -- =============================================================================
+
+INSERT INTO auth.users (
+    instance_id,
+    id,
+    aud,
+    role,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at
+)
+VALUES
+    (
+        '00000000-0000-0000-0000-000000000000',
+        '11111111-1111-1111-1111-111111111111',
+        'authenticated',
+        'authenticated',
+        'sarah.hoffmann@demo.local',
+        crypt('demo-password-123', gen_salt('bf')),
+        NOW(),
+        '{"provider":"email","providers":["email"]}'::jsonb,
+        '{"full_name":"Sarah Hoffmann","avatar_url":"https://api.dicebear.com/7.x/avataaars/svg?seed=sarah"}'::jsonb,
+        NOW(),
+        NOW()
+    ),
+    (
+        '00000000-0000-0000-0000-000000000000',
+        '22222222-2222-2222-2222-222222222222',
+        'authenticated',
+        'authenticated',
+        'markus.koenig@demo.local',
+        crypt('demo-password-123', gen_salt('bf')),
+        NOW(),
+        '{"provider":"email","providers":["email"]}'::jsonb,
+        '{"full_name":"Markus Koenig","avatar_url":"https://api.dicebear.com/7.x/avataaars/svg?seed=markus"}'::jsonb,
+        NOW(),
+        NOW()
+    ),
+    (
+        '00000000-0000-0000-0000-000000000000',
+        '33333333-3333-3333-3333-333333333333',
+        'authenticated',
+        'authenticated',
+        'lisa.peters@demo.local',
+        crypt('demo-password-123', gen_salt('bf')),
+        NOW(),
+        '{"provider":"email","providers":["email"]}'::jsonb,
+        '{"full_name":"Lisa Peters","avatar_url":"https://api.dicebear.com/7.x/avataaars/svg?seed=lisa"}'::jsonb,
+        NOW(),
+        NOW()
+    ),
+    (
+        '00000000-0000-0000-0000-000000000000',
+        '44444444-4444-4444-4444-444444444444',
+        'authenticated',
+        'authenticated',
+        'thomas.wagner@demo.local',
+        crypt('demo-password-123', gen_salt('bf')),
+        NOW(),
+        '{"provider":"email","providers":["email"]}'::jsonb,
+        '{"full_name":"Thomas Wagner","avatar_url":"https://api.dicebear.com/7.x/avataaars/svg?seed=thomas"}'::jsonb,
+        NOW(),
+        NOW()
+    ),
+    (
+        '00000000-0000-0000-0000-000000000000',
+        '55555555-5555-5555-5555-555555555555',
+        'authenticated',
+        'authenticated',
+        'julia.richter@demo.local',
+        crypt('demo-password-123', gen_salt('bf')),
+        NOW(),
+        '{"provider":"email","providers":["email"]}'::jsonb,
+        '{"full_name":"Julia Richter","avatar_url":"https://api.dicebear.com/7.x/avataaars/svg?seed=julia"}'::jsonb,
+        NOW(),
+        NOW()
+    )
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO auth.identities (
+    id,
+    user_id,
+    provider_id,
+    provider,
+    identity_data,
+    last_sign_in_at,
+    created_at,
+    updated_at
+)
+VALUES
+    (
+        gen_random_uuid(),
+        '11111111-1111-1111-1111-111111111111',
+        '11111111-1111-1111-1111-111111111111',
+        'email',
+        '{"sub":"11111111-1111-1111-1111-111111111111","email":"sarah.hoffmann@demo.local"}'::jsonb,
+        NOW(),
+        NOW(),
+        NOW()
+    ),
+    (
+        gen_random_uuid(),
+        '22222222-2222-2222-2222-222222222222',
+        '22222222-2222-2222-2222-222222222222',
+        'email',
+        '{"sub":"22222222-2222-2222-2222-222222222222","email":"markus.koenig@demo.local"}'::jsonb,
+        NOW(),
+        NOW(),
+        NOW()
+    ),
+    (
+        gen_random_uuid(),
+        '33333333-3333-3333-3333-333333333333',
+        '33333333-3333-3333-3333-333333333333',
+        'email',
+        '{"sub":"33333333-3333-3333-3333-333333333333","email":"lisa.peters@demo.local"}'::jsonb,
+        NOW(),
+        NOW(),
+        NOW()
+    ),
+    (
+        gen_random_uuid(),
+        '44444444-4444-4444-4444-444444444444',
+        '44444444-4444-4444-4444-444444444444',
+        'email',
+        '{"sub":"44444444-4444-4444-4444-444444444444","email":"thomas.wagner@demo.local"}'::jsonb,
+        NOW(),
+        NOW(),
+        NOW()
+    ),
+    (
+        gen_random_uuid(),
+        '55555555-5555-5555-5555-555555555555',
+        '55555555-5555-5555-5555-555555555555',
+        'email',
+        '{"sub":"55555555-5555-5555-5555-555555555555","email":"julia.richter@demo.local"}'::jsonb,
+        NOW(),
+        NOW(),
+        NOW()
+    )
+ON CONFLICT (provider_id, provider) DO NOTHING;
+
+-- The on_auth_user_created trigger fires on INSERT INTO auth.users above,
+-- creating a minimal profile row (id, full_name, avatar_url only).
+-- The INSERT below overwrites it with the full demo data via DO UPDATE SET.
 
 INSERT INTO profiles (id, username, full_name, avatar_url, department, position, bio, xp, level, role, streak_days, last_login_at, onboarding_completed)
 VALUES
@@ -92,7 +242,19 @@ VALUES
         NOW() - INTERVAL '2 days',
         false
     )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    username = EXCLUDED.username,
+    full_name = EXCLUDED.full_name,
+    avatar_url = EXCLUDED.avatar_url,
+    department = EXCLUDED.department,
+    position = EXCLUDED.position,
+    bio = EXCLUDED.bio,
+    xp = EXCLUDED.xp,
+    level = EXCLUDED.level,
+    role = EXCLUDED.role,
+    streak_days = EXCLUDED.streak_days,
+    last_login_at = EXCLUDED.last_login_at,
+    onboarding_completed = EXCLUDED.onboarding_completed;
 
 -- =============================================================================
 -- 2. BEST PRACTICES
