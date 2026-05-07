@@ -178,6 +178,9 @@ CREATE POLICY "ai_call_logs_insert_own"
   ON ai_call_logs FOR INSERT
   WITH CHECK (user_id = auth.uid() OR user_id IS NULL);
 
+-- UPDATE/DELETE intentionally omitted: RLS default = deny-all
+-- Telemetrie-Logs sind append-only, niemand darf sie nachtraeglich aendern
+
 CREATE INDEX IF NOT EXISTS idx_ai_call_logs_user_created
   ON ai_call_logs (user_id, created_at DESC);
 
