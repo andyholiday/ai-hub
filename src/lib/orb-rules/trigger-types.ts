@@ -1,3 +1,6 @@
+// ADR: docs/architecture/adr/ADR-008-proactive-bubble-rule-engine.md
+// Pattern P3.2 — Proaktive Orb-Bubble (regelbasiert, kein LLM-Call)
+
 // =============================================================================
 // Orb Bubble — Trigger Event Types (Pattern P3.2)
 // Discriminated Union der 8 Trigger-Events fuer die proaktive Orb-Bubble.

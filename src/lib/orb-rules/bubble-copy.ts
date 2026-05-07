@@ -1,3 +1,6 @@
+// ADR: docs/architecture/adr/ADR-008-proactive-bubble-rule-engine.md
+// Pattern P3.2 — Proaktive Orb-Bubble (regelbasiert, kein LLM-Call)
+
 // =============================================================================
 // Orb Bubble — MicroCopy (Pattern P3.2)
 // Deutsche Bubble-Texte fuer alle 8 Trigger-Events.

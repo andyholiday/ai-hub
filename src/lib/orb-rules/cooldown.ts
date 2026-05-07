@@ -1,3 +1,6 @@
+// ADR: docs/architecture/adr/ADR-008-proactive-bubble-rule-engine.md
+// Pattern P3.2 — Proaktive Orb-Bubble (regelbasiert, kein LLM-Call)
+
 // =============================================================================
 // Orb Bubble — Cooldown Gate (Pattern P3.2)
 // localStorage/sessionStorage-Wrapper fuer Frequency-Cap und Cooldown.

@@ -1,3 +1,6 @@
+// ADR: docs/architecture/adr/ADR-008-proactive-bubble-rule-engine.md
+// Pattern P3.2 — Proaktive Orb-Bubble (regelbasiert, kein LLM-Call)
+
 // =============================================================================
 // Orb Bubble — Rule Engine (Pattern P3.2)
 // Pure function: TriggerEvent + ctx -> BubblePayload | null
