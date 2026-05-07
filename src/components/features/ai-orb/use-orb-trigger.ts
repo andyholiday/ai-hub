@@ -11,7 +11,13 @@ import { decideBubble } from "@/lib/orb-rules/rule-engine";
 import { canShowBubble, markBubbleShown, markBubbleDismissed } from "@/lib/orb-rules/cooldown";
 import type { BubblePayload } from "@/lib/orb-rules/trigger-types";
 
-const SPIKE_TRIGGER_DELAY_MS = 5_000;
+// Allow test environments to override the spike delay via window.__SPIKE_TRIGGER_DELAY_MS__
+// SSR-safe: guarded by typeof window check.
+const SPIKE_TRIGGER_DELAY_MS =
+  typeof window !== 'undefined' &&
+  typeof (window as unknown as Record<string, unknown>).__SPIKE_TRIGGER_DELAY_MS__ === 'number'
+    ? (window as unknown as Record<string, unknown>).__SPIKE_TRIGGER_DELAY_MS__ as number
+    : 5_000;
 
 export function useOrbTrigger(): {
   payload: BubblePayload | null;

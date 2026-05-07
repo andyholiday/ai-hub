@@ -6,7 +6,12 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Orb Bubble — Spike Flow', () => {
-  test.beforeEach(async ({ context }) => {
+  test.beforeEach(async ({ context, page }) => {
+    // Override spike delay to 100ms for fast tests (no waitForTimeout needed)
+    await page.addInitScript(() => {
+      (window as unknown as Record<string, unknown>).__SPIKE_TRIGGER_DELAY_MS__ = 100;
+    });
+
     // Leere localStorage/sessionStorage vor jedem Test
     await context.addInitScript(() => {
       localStorage.clear();
@@ -16,9 +21,6 @@ test.describe('Orb Bubble — Spike Flow', () => {
 
   test('Bubble erscheint nach 5s und ist per ESC dismissbar', async ({ page }) => {
     await page.goto('/dashboard/best-practices');
-
-    // Warte 5+1 Sekunden auf Spike-Trigger
-    await page.waitForTimeout(6_000);
 
     // Bubble muss sichtbar sein (role="status" mit aria-live)
     const bubble = page.getByRole('status');
@@ -32,9 +34,6 @@ test.describe('Orb Bubble — Spike Flow', () => {
   test('Nach Dismiss: Bubble erscheint nach Reload nicht mehr (Session-Cap)', async ({ page }) => {
     await page.goto('/dashboard/best-practices');
 
-    // Warte auf Spike-Trigger
-    await page.waitForTimeout(6_000);
-
     const bubble = page.getByRole('status');
     await expect(bubble).toBeVisible({ timeout: 2_000 });
 
@@ -44,7 +43,6 @@ test.describe('Orb Bubble — Spike Flow', () => {
 
     // Reload — Session-Cap aktiv, Bubble darf nicht erscheinen
     await page.reload();
-    await page.waitForTimeout(6_000);
 
     // Bubble darf nicht sichtbar sein
     const bubbleAfterReload = page.getByRole('status');
