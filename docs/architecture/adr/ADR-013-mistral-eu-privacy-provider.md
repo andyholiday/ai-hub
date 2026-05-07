@@ -16,8 +16,7 @@ tags:
 
 **Status:** Accepted
 **Datum:** 2026-05-07
-**Supersedes:** ADR-011 (vormals `docs/architecture/ADR-005-eu-bedrock-llm-provider.md`,
-  wird in Wave 0b von knowledge auf ADR-011 renumeriert)
+**Supersedes:** [ADR-011](ADR-011-eu-bedrock-llm-provider.md)
 
 ---
 
@@ -117,8 +116,7 @@ gefuehrt; niemals im Repository.
 
 ## References
 
-- Superseded ADR: `docs/architecture/adr/ADR-011-eu-bedrock-llm-provider.md`
-  (in Wave 0b renumeriert aus `docs/architecture/ADR-005-eu-bedrock-llm-provider.md`)
+- Superseded ADR: [ADR-011](ADR-011-eu-bedrock-llm-provider.md)
 - Mistral DPA: https://legal.mistral.ai/terms/data-processing-addendum
 - Mistral Experiment-Plan FAQ: https://help.mistral.ai/en/articles/455206
 - Mistral Trust Center: https://trust.mistral.ai/
