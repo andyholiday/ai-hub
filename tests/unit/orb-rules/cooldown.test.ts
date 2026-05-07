@@ -89,6 +89,12 @@ describe('canShowBubble', () => {
     expect(canShowBubble()).toBe(true);
   });
 
+  it('gibt true zurueck wenn weeklyCount-Eintrag ungültiges JSON enthält (catch-Pfad)', () => {
+    localStorageMock.setItem('orb:bubble:weeklyCount', 'not-valid-json');
+    // catch-Zweig gibt 0 zurück → canShowBubble erlaubt anzeigen
+    expect(canShowBubble()).toBe(true);
+  });
+
   it('gibt false zurueck wenn Formular aktiv (input)', () => {
     (globalThis as unknown as { document: { activeElement: { tagName: string } } }).document.activeElement = { tagName: 'INPUT' };
     expect(canShowBubble()).toBe(false);
@@ -118,6 +124,24 @@ describe('markBubbleShown', () => {
     const parsed = JSON.parse(raw!) as { count: number };
     expect(parsed.count).toBe(1);
   });
+
+  it('inkrementiert weeklyCount neu wenn beim Increment das Fenster älter als 7 Tage ist', () => {
+    const oldWindowStart = Date.now() - (8 * 24 * 60 * 60 * 1000);
+    localStorage.setItem('orb:bubble:weeklyCount', JSON.stringify({ count: 3, windowStart: oldWindowStart }));
+    markBubbleShown();
+    const stored = JSON.parse(localStorage.getItem('orb:bubble:weeklyCount')!) as { count: number; windowStart: number };
+    expect(stored.count).toBe(1);
+    expect(stored.windowStart).toBeGreaterThan(oldWindowStart);
+  });
+
+  it('inkrementiert weeklyCount innerhalb eines gültigen Fensters', () => {
+    const recentWindowStart = Date.now() - (3 * 24 * 60 * 60 * 1000); // 3 Tage alt, noch gültig
+    localStorage.setItem('orb:bubble:weeklyCount', JSON.stringify({ count: 1, windowStart: recentWindowStart }));
+    markBubbleShown();
+    const stored = JSON.parse(localStorage.getItem('orb:bubble:weeklyCount')!) as { count: number; windowStart: number };
+    expect(stored.count).toBe(2);
+    expect(stored.windowStart).toBe(recentWindowStart);
+  });
 });
 
 describe('markBubbleDismissed', () => {
@@ -145,6 +169,18 @@ describe('SSR-Guard', () => {
     // Stattdessen pruefen wir den Guard-Pfad ueber typeof window === 'undefined'
     // indem wir den internen Guard manuell ueberpruefen
     expect(() => canShowBubble()).not.toThrow();
+    if (origWindow !== undefined) {
+      globalThis.window = origWindow;
+    }
+  });
+
+  it('markBubbleShown und markBubbleDismissed werfen keinen Fehler wenn window undefined (SSR-Pfad)', () => {
+    const origWindow = globalThis.window;
+    // @ts-expect-error -- intentionally deleting window for SSR test
+    delete globalThis.window;
+    // Deckt die isSSR()-Guards in incrementWeeklyCount, markBubbleShown, markBubbleDismissed ab
+    expect(() => markBubbleShown()).not.toThrow();
+    expect(() => markBubbleDismissed()).not.toThrow();
     if (origWindow !== undefined) {
       globalThis.window = origWindow;
     }
