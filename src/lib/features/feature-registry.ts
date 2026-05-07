@@ -106,6 +106,16 @@ export const FEATURE_REGISTRY: readonly FeatureConfig[] = [
     toggleStrategy: 'block',
   },
   {
+    id: 'proactive-orb-bubble',
+    label: 'Proaktive Orb-Bubble',
+    description: 'Regelbasierte Bubble-Hinweise im Living Orb (max 1/Session)',
+    defaultEnabled: false,
+    userToggleable: true,
+    orgToggleable: true,
+    deps: ['living-orb'],
+    toggleStrategy: 'cascade-off',
+  },
+  {
     id: 'privacy-mode',
     label: 'Privacy Mode',
     description: 'Lokale Embeddings + EU-Bedrock statt Cloud-LLM (DSGVO-by-default).',
@@ -114,6 +124,16 @@ export const FEATURE_REGISTRY: readonly FeatureConfig[] = [
     orgToggleable: true,
     deps: [],
     toggleStrategy: 'warn-and-allow',
+  },
+  {
+    id: 'hybrid-search',
+    label: 'Hybrid Search (Postgres-Native)',
+    description: 'BM25 + Vektor-Suche fusioniert in Supabase Postgres (ADR-014)',
+    defaultEnabled: false,
+    userToggleable: true,
+    orgToggleable: true,
+    deps: [],
+    toggleStrategy: 'block',
   },
 ] as const;
 
