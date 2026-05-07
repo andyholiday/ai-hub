@@ -17,7 +17,8 @@ export type FeatureId =
   | 'privacy-mode'
   | 'community-posts'
   | 'best-practices'
-  | 'gamification';
+  | 'gamification'
+  | 'browser-moderation';
 
 /**
  * Strategie beim Deaktivieren eines Features.

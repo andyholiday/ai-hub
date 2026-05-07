@@ -115,6 +115,16 @@ export const FEATURE_REGISTRY: readonly FeatureConfig[] = [
     deps: [],
     toggleStrategy: 'warn-and-allow',
   },
+  {
+    id: 'browser-moderation',
+    label: 'Browser-ONNX Moderation (Spike)',
+    description: 'Toxicity-Klassifikation im Browser via ONNX (kein Server, 0 EUR Fixkosten).',
+    defaultEnabled: false,
+    userToggleable: true,
+    orgToggleable: true,
+    deps: [],
+    toggleStrategy: 'warn-and-allow',
+  },
 ] as const;
 
 // ---------------------------------------------------------------------------
