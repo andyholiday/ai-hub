@@ -17,6 +17,8 @@ import {
 } from "@/lib/api/response";
 import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import { semanticSearchSchema } from "@/lib/validators/search";
+import { getFeature } from "@/lib/features/feature-registry";
+import { hybridSearchBestPractices } from "@/lib/search/hybrid-search";
 import type { Database } from "@/lib/supabase/types";
 
 export const dynamic = 'force-dynamic';
@@ -91,6 +93,19 @@ export async function POST(req: NextRequest) {
         { data: null, error: { code: "RATE_LIMITED", message: "Rate limit exceeded. Please try again later." } },
         { status: 429, headers: rateLimitHeaders(rl) },
       );
+    }
+
+    // --- Feature-Flag-Guard: delegate to hybrid route when hybrid-search is active ---
+    const hybridFeature = getFeature('hybrid-search');
+    if (hybridFeature.defaultEnabled) {
+      const body: unknown = await req.json();
+      const parsed = semanticSearchSchema.safeParse(body);
+      if (!parsed.success) return apiValidationError(parsed.error);
+      const hybridResults = await hybridSearchBestPractices(
+        { query: parsed.data.query, topK: parsed.data.limit },
+        user.id,
+      );
+      return apiSuccess({ results: hybridResults, meta: { query: parsed.data.query, totalResults: hybridResults.length, source: 'hybrid' } });
     }
 
     // --- Parse and validate request body ---
