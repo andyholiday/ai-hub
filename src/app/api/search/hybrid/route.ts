@@ -69,9 +69,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // --- Feature-Flag-Guard ---
   const feature = getFeature('hybrid-search');
   if (!feature.defaultEnabled) {
-    // Feature ist per Default off (POC, opt-in)
-    // In einer vollstaendigen Implementierung wuerden hier user/org-Prefs
-    // aus der DB geprueft werden. Fuer Wave 2 POC genuegt defaultEnabled-Check.
+    // TODO(Wave-3, P2.2): user/org-Prefs aus user_feature_prefs pruefen statt nur defaultEnabled
+    // Aktuell: POC-Verhalten — Feature global aus, opt-in via Wave-3-Settings-UX
     return apiError(
       'FEATURE_DISABLED',
       'Hybrid search is not enabled. Enable the "hybrid-search" feature to use this endpoint.',
