@@ -41,5 +41,7 @@ export async function logGateDecision(
     } catch (err) {
       console.warn('[gate/telemetry] Unexpected error:', err);
     }
-  })().catch(() => {});
+  // Inner try/catch exhausts all rejection paths; outer .catch is unreachable safety-net.
+  /* c8 ignore next */
+  })().catch(/* c8 ignore next */ () => {});
 }
