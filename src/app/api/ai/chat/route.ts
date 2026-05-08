@@ -11,6 +11,7 @@ import { requireAuth } from "@/lib/api/require-auth";
 import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import type { AIProvider, ChatMessage } from "@/lib/ai/types";
 import { calculateCost } from "@/lib/ai/pricing";
+import { buildManifest, persistManifest } from "@/lib/audit/c2pa-manifest";
 
 export const dynamic = 'force-dynamic';
 
@@ -308,6 +309,28 @@ function handleStreamingResponse(
         // Persistiere Assistant-Antwort nach Stream-Ende (ADR-005, fire-and-forget)
         if (sessionId && assistantContent) {
           void persistMessage(sessionId, "assistant", assistantContent, totalTokens);
+        }
+
+        // C2PA Audit-Log nach Stream-Ende (ADR-012, Pattern P4.3, fire-and-forget)
+        if (provider && model && assistantContent) {
+          const { createAdminClient } = await import("@/lib/supabase/admin");
+          const manifest = await buildManifest({
+            modelId: model,
+            provider,
+            region: process.env.AI_REGION ?? "eu-west-1",
+            privacyMode: false,
+            content: assistantContent,
+            userId,
+          });
+          persistManifest(createAdminClient(), {
+            userId,
+            modelId: model,
+            provider,
+            region: process.env.AI_REGION ?? "eu-west-1",
+            privacyMode: false,
+            content: assistantContent,
+            manifest,
+          });
         }
 
         // userMessageDbId ist fuer kuenftige Reply-Threading-Logik reserviert
