@@ -12,12 +12,15 @@ export type FeatureId =
   | 'leaderboard'
   | 'ai-mentor'
   | 'living-orb'
+  | 'proactive-orb-bubble'
   | 'innovation-radar'
   | 'learn-hub'
   | 'privacy-mode'
   | 'community-posts'
   | 'best-practices'
-  | 'gamification';
+  | 'gamification'
+  | 'hybrid-search'
+  | 'llm-gate';
 
 /**
  * Strategie beim Deaktivieren eines Features.
