@@ -76,6 +76,10 @@ export async function decideGate(
     decision = { route: 'llm', reason: 'has-entities' };
   }
   // 7. Safe-Default → LLM
+  // Defense-in-depth: Falls Rules 1-6 durch zukuenftige Erweiterungen einen
+  // Edge-Case auslassen, landet die Decision konservativ auf LLM statt local.
+  // Aktuell exhaustiv durch Rules 3-6 — dieser Pfad ist als Safety-Net erhalten.
+  /* c8 ignore next 3 */
   else {
     decision = { route: 'llm', reason: 'fallback' };
   }
