@@ -52,6 +52,10 @@ export class AIRouter {
   /**
    * Route a chat request to the appropriate provider.
    * On failure, walks the fallback chain until a provider succeeds.
+   *
+   * LLM-Gate (Pattern P1.2): Pre-call gate is applied at the API route layer
+   * (/api/ai/chat) where user context (tier, supabase) is available.
+   * This method receives only requests that passed the gate.
    */
   async chat(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
     this.ensureInitialised();
