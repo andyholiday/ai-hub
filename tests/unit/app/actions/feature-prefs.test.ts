@@ -134,4 +134,29 @@ describe('toggleFeaturePref', () => {
 
     expect(mockRevalidatePath).not.toHaveBeenCalled();
   });
+
+  it('ruft revalidatePath NICHT, wenn setUserFeaturePref wirft', async () => {
+    mockAuth('user-42');
+    mockSetUserFeaturePref.mockRejectedValue(new Error('Unknown feature'));
+
+    // @ts-expect-error — intentional invalid ID to trigger throw
+    const result = await toggleFeaturePref('bogus-throw-id', true);
+
+    expect(result.success).toBe(false);
+    expect(mockRevalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('gibt "Unknown error" zurueck wenn ein Non-Error-Wert geworfen wird', async () => {
+    mockAuth('user-42');
+    // Wirft einen primitiven Wert (kein Error-Objekt) — deckt den false-Branch des instanceof-Ternary ab
+    mockSetUserFeaturePref.mockRejectedValue('raw string throw');
+
+    const result = await toggleFeaturePref('leaderboard', true);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBe('Unknown error');
+    }
+    expect(mockRevalidatePath).not.toHaveBeenCalled();
+  });
 });
