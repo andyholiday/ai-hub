@@ -135,6 +135,16 @@ export const FEATURE_REGISTRY: readonly FeatureConfig[] = [
     deps: [],
     toggleStrategy: 'block',
   },
+  {
+    id: 'llm-gate',
+    label: 'LLM-Gate (Cost-Optimierung)',
+    description: 'Heuristisches Gate vor LLM-Calls reduziert API-Kosten (Pattern P1.2)',
+    defaultEnabled: false,
+    userToggleable: false,
+    orgToggleable: true,
+    deps: [],
+    toggleStrategy: 'block',
+  },
 ] as const;
 
 // ---------------------------------------------------------------------------
