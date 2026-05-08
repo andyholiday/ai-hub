@@ -13,6 +13,10 @@ import type {
 } from "./types";
 import { getRouterConfig, getRouterConfigWithDBKeys } from "./config";
 import { createAllProviders } from "./providers";
+import {
+  MistralEuProvider,
+  createMistralEuConfig,
+} from "./providers/mistral-eu";
 
 // ---------------------------------------------------------------------------
 // AI Router Class
@@ -56,6 +60,12 @@ export class AIRouter {
   async chat(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
     this.ensureInitialised();
 
+    // ADR-013: Privacy-Mode leitet zwingend auf Mistral EU Experiment-Tier um
+    if (request.privacyMode) {
+      const euProvider = new MistralEuProvider(createMistralEuConfig());
+      return euProvider.chat(request);
+    }
+
     const errors: Array<{ provider: string; error: Error }> = [];
 
     // Build the ordered list of providers to try
@@ -97,6 +107,13 @@ export class AIRouter {
     request: ChatCompletionRequest
   ): AsyncGenerator<StreamChunk> {
     this.ensureInitialised();
+
+    // ADR-013: Privacy-Mode leitet zwingend auf Mistral EU Experiment-Tier um
+    if (request.privacyMode) {
+      const euProvider = new MistralEuProvider(createMistralEuConfig());
+      yield* euProvider.chatStream(request);
+      return;
+    }
 
     const errors: Array<{ provider: string; error: Error }> = [];
     const chain = this.buildProviderChain(request.provider);
