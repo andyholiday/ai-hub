@@ -6,6 +6,13 @@
 // Auth is performed via the existing login flow (no separate mock auth).
 // The optimistic-UI assertion checks within 200ms — the toggle state change
 // should be visible before the Server Action round-trip completes.
+//
+// FIXME(Wave-4): E2E-Auth-Fixture nachreichen damit Optimistic-UI-Assertion in CI laeuft.
+// Aktuell: test.skip() bei fehlender Session — Optimistic-Path lokal manuell verifiziert.
+// Vorgeschlagener Ansatz: Playwright storageState via global-setup.ts (auth.setup.ts),
+// TEST_USER_EMAIL + TEST_USER_PASSWORD als CI-Secrets, dann test.use({ storageState })
+// in dieser Spec. Siehe: https://playwright.dev/docs/auth#basic-shared-account-in-all-tests
+// GitHub-Issue: Wave-4-Backlog — "E2E auth fixture fuer feature-settings.spec.ts"
 // =============================================================================
 
 import { test, expect } from '@playwright/test';
