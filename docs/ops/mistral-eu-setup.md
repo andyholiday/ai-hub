@@ -31,6 +31,17 @@ Auf Vercel: **Settings > Environment Variables** > `MISTRAL_EU_API_KEY` hinzufü
 Wichtig: `MISTRAL_EU_API_KEY` ist ein separater Key vom Standard `MISTRAL_API_KEY`.
 Beide können parallel existieren.
 
+## ⚠ Wichtig: Training-Klausel im Experiment-Tier
+
+Der Experiment-Tier nutzt Anfrage-Daten moeglicherweise fuer Modell-Training.
+Fuer Production-Privacy-Mode mit verbindlicher No-Training-Garantie:
+Scale-Plan-Upgrade noetig (siehe https://mistral.ai/pricing).
+
+**Verwendung des Experiment-Tiers im AI Hub:**
+- Wave-4-POC: Funktionalitaets-Validierung
+- Internal Tests: ja
+- User-Production: NEIN ohne Scale-Plan
+
 ## DSGVO / DPA
 
 Das Data Processing Addendum (DPA) ist verfügbar unter:
