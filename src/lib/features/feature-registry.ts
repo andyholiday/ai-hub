@@ -108,11 +108,11 @@ export const FEATURE_REGISTRY: readonly FeatureConfig[] = [
   {
     id: 'privacy-mode',
     label: 'Privacy Mode',
-    description: 'Lokale Embeddings + EU-Bedrock statt Cloud-LLM (DSGVO-by-default).',
+    description: 'Lokale Embeddings (P4.1) + Mistral EU Privacy-LLM (P4.2, ADR-013) statt Cloud-LLM (DSGVO-by-default).',
     defaultEnabled: false,
     userToggleable: true,
     orgToggleable: true,
-    deps: [],
+    deps: ['privacy-local-embeddings'],
     toggleStrategy: 'warn-and-allow',
   },
   {
