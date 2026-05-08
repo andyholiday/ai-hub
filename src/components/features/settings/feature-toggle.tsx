@@ -3,6 +3,10 @@
 // =============================================================================
 // FeatureToggle — Client Component (Pattern P2.2)
 // Renders a single toggleable feature with useOptimistic for instant UI.
+//
+// Pattern P2.2 — User-Settings-UX
+// useOptimistic kommt aus React 18.3 ('react'-Subpath, nicht 'react/experimental').
+// Stabil ab React 19. Bei Phase-6-Upgrade auf React 19 verifizieren — kein API-Change erwartet.
 // =============================================================================
 
 import { useOptimistic, useTransition } from 'react';
