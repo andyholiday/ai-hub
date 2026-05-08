@@ -12,6 +12,7 @@ export type FeatureId =
   | 'leaderboard'
   | 'ai-mentor'
   | 'living-orb'
+  | 'orb-idle-state'
   | 'innovation-radar'
   | 'learn-hub'
   | 'privacy-mode'

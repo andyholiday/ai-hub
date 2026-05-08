@@ -106,6 +106,16 @@ export const FEATURE_REGISTRY: readonly FeatureConfig[] = [
     toggleStrategy: 'block',
   },
   {
+    id: 'orb-idle-state',
+    label: 'Living Orb — Idle-Animationen',
+    description: 'XState-getriebene Atem-/Mini-/Maxi-Animationen wenn User idle (Pattern P3.3, ADR-009)',
+    defaultEnabled: true,
+    userToggleable: true,
+    orgToggleable: false,
+    deps: ['living-orb'],
+    toggleStrategy: 'cascade-off',
+  },
+  {
     id: 'privacy-mode',
     label: 'Privacy Mode',
     description: 'Lokale Embeddings + EU-Bedrock statt Cloud-LLM (DSGVO-by-default).',
