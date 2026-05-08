@@ -23,6 +23,8 @@ import { Sparkles } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { useOrb, type OrbState } from "./orb-provider";
 import { OrbParticles } from "./orb-particles";
+import { WanderLayer } from "./wander-layer";
+import { getFeature } from "@/lib/features/feature-registry";
 
 // ---------------------------------------------------------------------------
 // Lazy-load the ChatPanel (heavy: framer-motion animations, date-fns, icons).
@@ -76,6 +78,108 @@ const STATE_RING_CLASS: Record<OrbState, string> = {
 };
 
 // -----------------------------------------------------------------------------
+// Feature flag — evaluated once at module load (opt-in, defaultEnabled: false)
+// -----------------------------------------------------------------------------
+
+const ORB_WANDER_ENABLED = getFeature('orb-wander').defaultEnabled;
+
+// -----------------------------------------------------------------------------
+// Orb inner content — shared between wander and static layouts
+// -----------------------------------------------------------------------------
+
+interface OrbContentProps {
+  isHovered: boolean;
+  isExpanded: boolean;
+  tooltipText: string;
+  orbState: OrbState;
+  hasNotification: boolean;
+  handleClick: () => void;
+  setIsHovered: (v: boolean) => void;
+}
+
+function OrbContent({
+  isHovered,
+  isExpanded,
+  tooltipText,
+  orbState,
+  hasNotification,
+  handleClick,
+  setIsHovered,
+}: OrbContentProps) {
+  return (
+    <>
+      {/* Tooltip */}
+      <AnimatePresence>
+        {isHovered && !isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute -top-12 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap"
+          >
+            <div className="rounded-full bg-white px-3.5 py-1.5 text-xs font-medium text-surface-700 shadow-elevated">
+              {tooltipText}
+            </div>
+            {/* Arrow */}
+            <div className="mx-auto h-0 w-0 border-x-[6px] border-t-[6px] border-x-transparent border-t-white" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Celebration Particles */}
+      <OrbParticles active={orbState === "celebration"} />
+
+      {/* Rotating Ring */}
+      <div
+        className={cn(
+          "ai-orb-ring pointer-events-none absolute inset-1/2 h-[88px] w-[88px] -translate-x-1/2 -translate-y-1/2 rounded-full",
+          "border border-brand-primary-500/15",
+          STATE_RING_CLASS[orbState]
+        )}
+        aria-hidden="true"
+      >
+        {/* Gold Particle on the ring */}
+        <span className="absolute -top-[3px] left-1/2 h-[6px] w-[6px] -translate-x-1/2 rounded-full bg-brand-accent-500 shadow-brand-accent" />
+      </div>
+
+      {/* Orb Button */}
+      <button
+        type="button"
+        onClick={handleClick}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={cn(
+          "ai-orb-core group relative flex h-16 w-16 items-center justify-center rounded-full",
+          "bg-gradient-to-br",
+          STATE_GRADIENT[orbState],
+          "cursor-pointer outline-none transition-all duration-500 ease-out",
+          "hover:scale-110",
+          "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2",
+          STATE_CORE_CLASS[orbState]
+        )}
+        aria-label="AI Mentor oeffnen"
+      >
+        {/* Icon */}
+        <Sparkles className="h-7 w-7 text-white drop-shadow-sm" />
+
+        {/* Status Dot (online) */}
+        <span
+          className={cn(
+            "absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white",
+            {
+              "bg-brand-primary-400": !hasNotification,
+              "bg-brand-accent-500 ai-orb-notification-dot": hasNotification,
+            }
+          )}
+          aria-hidden="true"
+        />
+      </button>
+    </>
+  );
+}
+
+// -----------------------------------------------------------------------------
 // Orb Component
 // -----------------------------------------------------------------------------
 
@@ -100,6 +204,16 @@ export function AiOrb() {
   const handleClick = useCallback(() => {
     toggle();
   }, [toggle]);
+
+  const orbContentProps: OrbContentProps = {
+    isHovered,
+    isExpanded,
+    tooltipText,
+    orbState,
+    hasNotification,
+    handleClick,
+    setIsHovered,
+  };
 
   return (
     <>
@@ -126,86 +240,31 @@ export function AiOrb() {
       {/* ----------------------------------------------------------------- */}
       <AnimatePresence>
         {!isExpanded && (
-          <motion.div
-            key="ai-orb"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 25,
-            }}
-            className="fixed bottom-7 right-7 z-[9999]"
-          >
-            {/* Tooltip */}
-            <AnimatePresence>
-              {isHovered && !isExpanded && (
-                <motion.div
-                  initial={{ opacity: 0, y: 4, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 4, scale: 0.95 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute -top-12 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap"
-                >
-                  <div className="rounded-full bg-white px-3.5 py-1.5 text-xs font-medium text-surface-700 shadow-elevated">
-                    {tooltipText}
-                  </div>
-                  {/* Arrow */}
-                  <div className="mx-auto h-0 w-0 border-x-[6px] border-t-[6px] border-x-transparent border-t-white" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Celebration Particles */}
-            <OrbParticles active={orbState === "celebration"} />
-
-            {/* Rotating Ring */}
-            <div
-              className={cn(
-                "ai-orb-ring pointer-events-none absolute inset-1/2 h-[88px] w-[88px] -translate-x-1/2 -translate-y-1/2 rounded-full",
-                "border border-brand-primary-500/15",
-                STATE_RING_CLASS[orbState]
-              )}
-              aria-hidden="true"
+          ORB_WANDER_ENABLED ? (
+            // Wander mode: WanderLayer controls position via motion values
+            <WanderLayer key="ai-orb">
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              >
+                <OrbContent {...orbContentProps} />
+              </motion.div>
+            </WanderLayer>
+          ) : (
+            // Static mode: fixed bottom-right (original behaviour)
+            <motion.div
+              key="ai-orb"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="fixed bottom-7 right-7 z-[9999]"
             >
-              {/* Gold Particle on the ring */}
-              <span className="absolute -top-[3px] left-1/2 h-[6px] w-[6px] -translate-x-1/2 rounded-full bg-brand-accent-500 shadow-brand-accent" />
-            </div>
-
-            {/* Orb Button */}
-            <button
-              type="button"
-              onClick={handleClick}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-              className={cn(
-                "ai-orb-core group relative flex h-16 w-16 items-center justify-center rounded-full",
-                "bg-gradient-to-br",
-                STATE_GRADIENT[orbState],
-                "cursor-pointer outline-none transition-all duration-500 ease-out",
-                "hover:scale-110",
-                "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2",
-                STATE_CORE_CLASS[orbState]
-              )}
-              aria-label="AI Mentor oeffnen"
-            >
-              {/* Icon */}
-              <Sparkles className="h-7 w-7 text-white drop-shadow-sm" />
-
-              {/* Status Dot (online) */}
-              <span
-                className={cn(
-                  "absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white",
-                  {
-                    "bg-brand-primary-400": !hasNotification,
-                    "bg-brand-accent-500 ai-orb-notification-dot": hasNotification,
-                  }
-                )}
-                aria-hidden="true"
-              />
-            </button>
-          </motion.div>
+              <OrbContent {...orbContentProps} />
+            </motion.div>
+          )
         )}
       </AnimatePresence>
     </>
