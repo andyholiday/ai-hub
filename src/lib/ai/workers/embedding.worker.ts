@@ -8,7 +8,6 @@
 // ADR-010: docs/architecture/adr/ADR-010-privacy-mode-local-embeddings.md
 // =============================================================================
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 import { pipeline, env } from '@xenova/transformers';
 
 // Only load models from Hugging Face Hub, not from local paths.
