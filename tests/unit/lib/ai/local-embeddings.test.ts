@@ -157,6 +157,64 @@ describe('LocalEmbeddingService', () => {
     expect(instance).toBeInstanceOf(LocalEmbeddingService);
   });
 
+  it('erlaubt Re-Init nach erstem Fehler (initPromise wird zurückgesetzt)', async () => {
+    let callCount = 0;
+    class FailOnceWorkerClass {
+      private _messageHandlers: AnyHandler[] = [];
+      private _errorHandlers: AnyHandler[] = [];
+
+      postMessage = vi.fn((msg: unknown) => {
+        const m = msg as { type: string; requestId: string };
+        if (m.type === 'init') {
+          callCount++;
+          if (callCount === 1) {
+            // First attempt: reject via error message
+            setTimeout(() => this._triggerMessage({
+              type: 'error',
+              requestId: m.requestId,
+              payload: 'init failed',
+            }), 0);
+          } else {
+            // Second attempt: succeed
+            setTimeout(() => this._triggerMessage({ type: 'ready', requestId: m.requestId }), 0);
+          }
+        }
+      });
+
+      terminate = vi.fn();
+
+      addEventListener = vi.fn((event: string, handler: AnyHandler) => {
+        if (event === 'message') this._messageHandlers.push(handler);
+        if (event === 'error') this._errorHandlers.push(handler);
+      });
+
+      _triggerMessage(data: unknown) {
+        for (const h of this._messageHandlers) h({ data });
+      }
+
+      _triggerError(msg: string) {
+        for (const h of this._errorHandlers) h({ message: msg });
+      }
+
+      constructor() {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        lastWorkerInstance = this;
+      }
+    }
+
+    vi.stubGlobal('Worker', FailOnceWorkerClass);
+
+    const service = new LocalEmbeddingService();
+
+    // First init() should reject
+    await expect(service.init()).rejects.toThrow('init failed');
+
+    // After rejection, initPromise must be null so a retry is possible
+    await expect(service.init()).resolves.toBeUndefined();
+
+    service.dispose();
+  });
+
   it('rejects embed() when worker replies with an error message', async () => {
     class ErrorWorkerClass {
       private _messageHandlers: AnyHandler[] = [];

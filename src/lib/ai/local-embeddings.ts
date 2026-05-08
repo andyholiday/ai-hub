@@ -76,7 +76,10 @@ export class LocalEmbeddingService {
    */
   async init(): Promise<void> {
     if (this.initPromise) return this.initPromise;
-    this.initPromise = this._spawnAndInit();
+    this.initPromise = this._spawnAndInit().catch((err) => {
+      this.initPromise = null; // Allow retry after failure
+      throw err;
+    });
     return this.initPromise;
   }
 
