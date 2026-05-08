@@ -115,9 +115,9 @@ describe("MistralEuProvider", () => {
   });
 
   // -------------------------------------------------------------------------
-  // 2. Privacy-Mode-Header
+  // 2. Header-Set (kein X-Privacy-Mode — undokumentiert, B02)
   // -------------------------------------------------------------------------
-  it("should send X-Privacy-Mode: enabled header on chat()", async () => {
+  it("should not send X-Privacy-Mode header on chat()", async () => {
     fetchSpy.mockResolvedValueOnce(
       new Response(JSON.stringify(makeMistralApiResponse()), { status: 200 })
     );
@@ -128,7 +128,7 @@ describe("MistralEuProvider", () => {
     expect(fetchSpy).toHaveBeenCalledOnce();
     const [, options] = fetchSpy.mock.calls[0] as [string, RequestInit];
     const headers = options.headers as Record<string, string>;
-    expect(headers["X-Privacy-Mode"]).toBe("enabled");
+    expect(headers["X-Privacy-Mode"]).toBeUndefined();
   });
 
   // -------------------------------------------------------------------------
@@ -237,9 +237,9 @@ describe("MistralEuProvider", () => {
   });
 
   // -------------------------------------------------------------------------
-  // 8. chatStream() — SSE-Parsing mit Privacy-Header
+  // 8. chatStream() — SSE-Parsing (kein X-Privacy-Mode — undokumentiert, B02)
   // -------------------------------------------------------------------------
-  it("should yield StreamChunks and send X-Privacy-Mode header in chatStream()", async () => {
+  it("should yield StreamChunks and not send X-Privacy-Mode header in chatStream()", async () => {
     const sseEvents = [
       'data: {"id":"c1","choices":[{"index":0,"delta":{"content":"Bonjour"},"finish_reason":null}]}',
       'data: {"id":"c2","choices":[{"index":0,"delta":{"content":""},"finish_reason":"stop"}]}',
@@ -262,7 +262,7 @@ describe("MistralEuProvider", () => {
 
     const [, options] = fetchSpy.mock.calls[0] as [string, RequestInit];
     const headers = options.headers as Record<string, string>;
-    expect(headers["X-Privacy-Mode"]).toBe("enabled");
+    expect(headers["X-Privacy-Mode"]).toBeUndefined();
   });
 
   // -------------------------------------------------------------------------

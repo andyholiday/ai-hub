@@ -132,7 +132,8 @@ export class MistralEuProvider extends BaseAIProvider {
     return {
       "Content-Type": "application/json",
       Authorization: `Bearer ${this.config.apiKey}`,
-      "X-Privacy-Mode": "enabled",
+      // KEIN X-Privacy-Mode Header — Mistral API dokumentiert keinen solchen.
+      // Privacy-Garantie kommt aus DPA-Vertrag + Tier-Auswahl, nicht Request-Header.
     };
   }
 
