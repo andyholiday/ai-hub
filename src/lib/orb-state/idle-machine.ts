@@ -67,7 +67,7 @@ export const idleMachine = setup({
   },
   delays: {
     ACTIVITY_TIMEOUT: 15_000,
-    MINI_IDLE_DELAY: ({ context }) => context.miniIdleDelayMs,
+    MINI_IDLE_DELAY: ({ context }: { context: OrbIdleContext }) => context.miniIdleDelayMs,
     MINI_DURATION: 2_000,
     MAXI_TRIGGER_DELAY: 180_000,
     MAXI_DURATION: 4_000,
@@ -80,16 +80,16 @@ export const idleMachine = setup({
   },
   on: {
     // Aus jedem State (ausser muted-Override): ACTIVITY → active
-    ACTIVITY: { target: 'active' },
+    ACTIVITY: { target: '#orbIdle.active' },
     // Aus jedem State: MUTE_TOGGLE / REDUCED_MOTION → muted
-    MUTE_TOGGLE: { target: 'muted' },
-    REDUCED_MOTION: { target: 'muted' },
+    MUTE_TOGGLE: { target: '#orbIdle.muted' },
+    REDUCED_MOTION: { target: '#orbIdle.muted' },
   },
   states: {
     active: {
       after: {
         // Nach 15s ohne ACTIVITY → idle.breathing
-        ACTIVITY_TIMEOUT: { target: 'idle' },
+        ACTIVITY_TIMEOUT: { target: '#orbIdle.idle' },
       },
     },
 
@@ -129,7 +129,7 @@ export const idleMachine = setup({
     muted: {
       on: {
         // Nur UNMUTE_TOGGLE bricht muted auf → idle.breathing
-        UNMUTE_TOGGLE: { target: 'idle' },
+        UNMUTE_TOGGLE: { target: '#orbIdle.idle' },
         // Root-Handler ACTIVITY/MUTE_TOGGLE/REDUCED_MOTION lokal deaktivieren:
         // In muted soll ACTIVITY nichts aendern.
         ACTIVITY: {},
