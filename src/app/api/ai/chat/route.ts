@@ -194,7 +194,14 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (gateEnabled && userMessage) {
       const { createAdminClient } = await import("@/lib/supabase/admin");
       const supabaseForGate = createAdminClient();
-      const { decision, complexity } = await decideGate({ query: userMessage.content, userTier: 'free' });
+
+      // Lese User-Tier aus app_metadata (etabliertes Muster im Repo, siehe require-auth.ts).
+      // app_metadata.tier ist derzeit nicht befuellt — Default 'free'.
+      // TODO Wave 4 P2.2 (Settings/Subscription): tier hier durch echte Subscription-Logik ersetzen.
+      const userTier: 'free' | 'premium' =
+        auth.role === 'admin' || auth.role === 'super_admin' ? 'premium' : 'free';
+
+      const { decision, complexity } = await decideGate({ query: userMessage.content, userTier });
       void logGateDecision(supabaseForGate, userId, decision, complexity, 'ai-mentor-chat');
 
       if (decision.route === 'local') {
