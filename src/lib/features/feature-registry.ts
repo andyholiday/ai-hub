@@ -115,6 +115,16 @@ export const FEATURE_REGISTRY: readonly FeatureConfig[] = [
     deps: [],
     toggleStrategy: 'warn-and-allow',
   },
+  {
+    id: 'privacy-local-embeddings',
+    label: 'Privacy: Lokale Embeddings',
+    description: 'Generiert Embeddings im Browser statt via OpenAI API (Pattern P4.1, ADR-010)',
+    defaultEnabled: false,
+    userToggleable: true,
+    orgToggleable: true,
+    deps: [],
+    toggleStrategy: 'block',
+  },
 ] as const;
 
 // ---------------------------------------------------------------------------
