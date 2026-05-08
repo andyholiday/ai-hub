@@ -312,25 +312,35 @@ function handleStreamingResponse(
         }
 
         // C2PA Audit-Log nach Stream-Ende (ADR-012, Pattern P4.3, fire-and-forget)
+        // TODO(Wave-5): privacyMode aus user_feature_prefs server-side resolve
+        // und an chatStream weiterreichen. Aktuell: hardcoded false bis Wiring steht.
+        const PRIVACY_MODE_PLACEHOLDER_WAVE5 = false;
         if (provider && model && assistantContent) {
-          const { createAdminClient } = await import("@/lib/supabase/admin");
-          const manifest = await buildManifest({
-            modelId: model,
-            provider,
-            region: process.env.AI_REGION ?? "eu-west-1",
-            privacyMode: false,
-            content: assistantContent,
-            userId,
-          });
-          persistManifest(createAdminClient(), {
-            userId,
-            modelId: model,
-            provider,
-            region: process.env.AI_REGION ?? "eu-west-1",
-            privacyMode: false,
-            content: assistantContent,
-            manifest,
-          });
+          void (async () => {
+            try {
+              const { createAdminClient } = await import("@/lib/supabase/admin");
+              const adminClient = createAdminClient();
+              const manifest = await buildManifest({
+                modelId: model,
+                provider,
+                region: process.env.AI_REGION ?? "eu-west-1",
+                privacyMode: PRIVACY_MODE_PLACEHOLDER_WAVE5,
+                content: assistantContent,
+                userId,
+              });
+              persistManifest(adminClient, {
+                userId,
+                modelId: model,
+                provider,
+                region: process.env.AI_REGION ?? "eu-west-1",
+                privacyMode: PRIVACY_MODE_PLACEHOLDER_WAVE5,
+                content: assistantContent,
+                manifest,
+              });
+            } catch (err) {
+              console.error("c2pa-manifest-error", err);
+            }
+          })();
         }
 
         // userMessageDbId ist fuer kuenftige Reply-Threading-Logik reserviert

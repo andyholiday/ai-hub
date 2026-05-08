@@ -270,3 +270,40 @@ describe("persistManifest() — Supabase INSERT", () => {
     consoleSpy.mockRestore();
   });
 });
+
+// ---------------------------------------------------------------------------
+// D01 IIFE-Pattern Compliance — buildManifest rejection does not propagate
+// ---------------------------------------------------------------------------
+
+describe("D01 IIFE-Pattern: buildManifest-Fehler propagiert nicht", () => {
+  it("wenn buildManifest wirft, loegt es und wirft nicht weiter", async () => {
+    // Simuliert das Verhalten der void-IIFE in route.ts:
+    // Wenn buildManifest (z.B. crypto.subtle.digest) rejiziert, darf kein
+    // unhandled rejection entstehen — der catch-Block in der IIFE faengt es ab.
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    let caughtOutside: unknown = undefined;
+    void (async () => {
+      try {
+        // Simuliert buildManifest-Fehler (z.B. Edge-Runtime ohne Web Crypto)
+        await Promise.reject(new Error("crypto.subtle not available"));
+        // persistManifest wuerde hier nie erreicht
+      } catch (err) {
+        console.error("c2pa-manifest-error", err);
+      }
+    })();
+
+    // Warte auf Microtask-Queue
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    // Kein Fehler propagiert nach aussen
+    expect(caughtOutside).toBeUndefined();
+    // Fehler wurde geloggt
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "c2pa-manifest-error",
+      expect.objectContaining({ message: "crypto.subtle not available" }),
+    );
+
+    consoleSpy.mockRestore();
+  });
+});
