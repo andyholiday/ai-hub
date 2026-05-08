@@ -11,6 +11,8 @@ import { requireAuth } from "@/lib/api/require-auth";
 import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import type { AIProvider, ChatMessage } from "@/lib/ai/types";
 import { calculateCost } from "@/lib/ai/pricing";
+import { decideGate } from "@/lib/ai/gate/llm-gate";
+import { logGateDecision } from "@/lib/ai/gate/telemetry";
 
 export const dynamic = 'force-dynamic';
 
@@ -184,6 +186,30 @@ export async function POST(req: NextRequest): Promise<Response> {
         );
       } catch (err) {
         console.error("[/api/ai/chat] Session-Persistenz fehlgeschlagen:", err instanceof Error ? err.stack : err);
+      }
+    }
+
+    // --- LLM-Gate (opt-in via feature flag 'llm-gate') ---
+    const gateEnabled = process.env.FEATURE_LLM_GATE === 'true';
+    if (gateEnabled && userMessage) {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const supabaseForGate = createAdminClient();
+      const { decision, complexity } = await decideGate({ query: userMessage.content, userTier: 'free' });
+      void logGateDecision(supabaseForGate, userId, decision, complexity, 'ai-mentor-chat');
+
+      if (decision.route === 'local') {
+        return NextResponse.json({
+          id: `gate-local-${Date.now()}`,
+          message: {
+            id: `gate-msg-${Date.now()}`,
+            role: 'assistant',
+            content: 'Diese Frage könnte ich auch ohne LLM beantworten — bitte konkretisiere oder umformuliere.',
+            timestamp: new Date(),
+          },
+          provider: 'local',
+          model: 'heuristic-gate',
+          usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        });
       }
     }
 
