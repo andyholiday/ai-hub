@@ -114,6 +114,25 @@ gefuehrt; niemals im Repository.
 
 ---
 
+## Caveats — Experiment-Tier Trainings-Klausel
+
+Der Mistral La Plateforme **Experiment-Tier** (free) erlaubt laut Nutzungsbedingungen,
+Anfrage-Daten fuer Modell-Training zu verwenden. Das widerspricht dem
+„DSGVO-by-default"-Versprechen des Privacy-Mode-Features.
+
+**Konsequenz:**
+- Production-Privacy-Mode mit echtem No-Training-Garantie braucht den Mistral
+  **Scale-Plan** (kostenpflichtig, ab ~$0.20/1M Tokens) oder einen anderen
+  DSGVO-konformen Provider.
+- Experiment-Tier ist akzeptabel fuer Development, Internal-Tests und Demo-Phasen,
+  NICHT fuer regulaere User-Daten.
+- UI muss Caveat-Hinweis zeigen wenn Privacy-Mode aktiv ist (Wave-5-Aufgabe).
+
+**Status:** Diese ADR bleibt Accepted fuer Wave-4-POC. Vor Production muss
+Scale-Plan oder Alternative beschafft + ADR-Revision geschrieben werden.
+
+---
+
 ## References
 
 - Superseded ADR: [ADR-011](ADR-011-eu-bedrock-llm-provider.md)

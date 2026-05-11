@@ -7,6 +7,19 @@
 import type { AIProvider } from "./types";
 import { AI_MODELS } from "./config";
 
+// ---------------------------------------------------------------------------
+// Pricing für Provider außerhalb des Standard-AIProvider-Union-Types
+// ---------------------------------------------------------------------------
+
+/**
+ * Experiment-Tier free-tier; Production-Tier-Preise siehe https://mistral.ai/pricing
+ * ADR-013: Mistral EU Privacy Provider (Experiment-Tier, 0€/Monat)
+ */
+const MISTRAL_EU_PRICING = {
+  inputPer1k: 0,
+  outputPer1k: 0,
+} as const;
+
 export interface TokenCost {
   /** Estimated cost in USD */
   estimatedCost: number;
@@ -25,6 +38,11 @@ export function getPricingRates(
   provider: AIProvider | string,
   modelName: string,
 ): { inputPer1k: number; outputPer1k: number } {
+  // ADR-013: Mistral EU Experiment-Tier ist immer 0€
+  if (provider === "mistral-eu") {
+    return { inputPer1k: MISTRAL_EU_PRICING.inputPer1k, outputPer1k: MISTRAL_EU_PRICING.outputPer1k };
+  }
+
   const models = AI_MODELS[provider as AIProvider] ?? [];
   const model =
     models.find((m) => m.name === modelName || m.id === modelName) ??
