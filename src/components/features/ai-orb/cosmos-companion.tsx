@@ -98,13 +98,6 @@ export function CosmosCompanion() {
     const { state: idleState } = useOrbIdleState();
     const effectiveIdleState = idleEnabled ? idleState : "active";
 
-    // Debug overlay — visible only when URL contains ?debug=orb.
-    // Lets us verify the XState machine is firing without DevTools.
-    const [showOrbDebug, setShowOrbDebug] = useState(false);
-    useEffect(() => {
-        setShowOrbDebug(window.location.search.includes("debug=orb"));
-    }, []);
-
     // Track state changes for aria-live announcement
     const stateChanged = prevStateRef.current !== orbState;
     if (stateChanged) {
@@ -164,13 +157,6 @@ export function CosmosCompanion() {
             <div aria-live="polite" aria-atomic="true" className="sr-only">
                 {tooltipText}
             </div>
-
-            {/* Debug overlay — only with ?debug=orb in URL */}
-            {showOrbDebug && (
-                <div className="fixed left-2 top-2 z-[10000] rounded bg-black/80 px-2 py-1 font-mono text-xs text-white pointer-events-none">
-                    orb: {effectiveIdleState} | feature: {idleEnabled ? "on" : "off"}
-                </div>
-            )}
 
             {/* Split-View Chat Panel */}
             <AnimatePresence mode="wait">
