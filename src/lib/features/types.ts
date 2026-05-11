@@ -17,6 +17,7 @@ export type FeatureId =
   | 'innovation-radar'
   | 'learn-hub'
   | 'privacy-mode'
+  | 'privacy-local-embeddings'
   | 'community-posts'
   | 'best-practices'
   | 'gamification'

@@ -146,6 +146,16 @@ export const FEATURE_REGISTRY: readonly FeatureConfig[] = [
     toggleStrategy: 'block',
   },
   {
+    id: 'privacy-local-embeddings',
+    label: 'Privacy: Lokale Embeddings',
+    description: 'Generiert Embeddings im Browser statt via OpenAI API (Pattern P4.1, ADR-010)',
+    defaultEnabled: false,
+    userToggleable: true,
+    orgToggleable: true,
+    deps: [],
+    toggleStrategy: 'block',
+  },
+  {
     id: 'browser-moderation',
     label: 'Browser-ONNX Moderation (Spike)',
     description: 'Toxicity-Klassifikation im Browser via ONNX (kein Server, 0 EUR Fixkosten).',
