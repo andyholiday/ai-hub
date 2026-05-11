@@ -23,6 +23,9 @@ import { Sparkles } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { useOrb, type OrbState } from "./orb-provider";
 import { OrbParticles } from "./orb-particles";
+import { OrbAnimationLayer } from "./orb-animation-layer";
+import { useOrbIdleState } from "./use-orb-idle-state";
+import { getFeature } from "@/lib/features/feature-registry";
 
 // ---------------------------------------------------------------------------
 // Lazy-load the ChatPanel (heavy: framer-motion animations, date-fns, icons).
@@ -90,6 +93,11 @@ export function AiOrb() {
 
   const [isHovered, setIsHovered] = useState(false);
   const prevStateRef = useRef<OrbState>(orbState);
+
+  // Feature-Flag: orb-idle-state (opt-in, defaultEnabled: true)
+  const idleFeature = getFeature('orb-idle-state');
+  const idleEnabled = idleFeature.defaultEnabled;
+  const { state: idleState } = useOrbIdleState();
 
   // Track state changes for aria-live announcement
   const stateChanged = prevStateRef.current !== orbState;
@@ -173,38 +181,42 @@ export function AiOrb() {
               <span className="absolute -top-[3px] left-1/2 h-[6px] w-[6px] -translate-x-1/2 rounded-full bg-brand-accent-500 shadow-brand-accent" />
             </div>
 
-            {/* Orb Button */}
-            <button
-              type="button"
-              onClick={handleClick}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-              className={cn(
-                "ai-orb-core group relative flex h-16 w-16 items-center justify-center rounded-full",
-                "bg-gradient-to-br",
-                STATE_GRADIENT[orbState],
-                "cursor-pointer outline-none transition-all duration-500 ease-out",
-                "hover:scale-110",
-                "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2",
-                STATE_CORE_CLASS[orbState]
-              )}
-              aria-label="AI Mentor oeffnen"
+            {/* Orb Button — wrapped in IdleAnimationLayer when feature enabled */}
+            <OrbAnimationLayer
+              idleState={idleEnabled ? idleState : 'active'}
             >
-              {/* Icon */}
-              <Sparkles className="h-7 w-7 text-white drop-shadow-sm" />
-
-              {/* Status Dot (online) */}
-              <span
+              <button
+                type="button"
+                onClick={handleClick}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
                 className={cn(
-                  "absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white",
-                  {
-                    "bg-brand-primary-400": !hasNotification,
-                    "bg-brand-accent-500 ai-orb-notification-dot": hasNotification,
-                  }
+                  "ai-orb-core group relative flex h-16 w-16 items-center justify-center rounded-full",
+                  "bg-gradient-to-br",
+                  STATE_GRADIENT[orbState],
+                  "cursor-pointer outline-none transition-all duration-500 ease-out",
+                  "hover:scale-110",
+                  "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2",
+                  STATE_CORE_CLASS[orbState]
                 )}
-                aria-hidden="true"
-              />
-            </button>
+                aria-label="AI Mentor oeffnen"
+              >
+                {/* Icon */}
+                <Sparkles className="h-7 w-7 text-white drop-shadow-sm" />
+
+                {/* Status Dot (online) */}
+                <span
+                  className={cn(
+                    "absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white",
+                    {
+                      "bg-brand-primary-400": !hasNotification,
+                      "bg-brand-accent-500 ai-orb-notification-dot": hasNotification,
+                    }
+                  )}
+                  aria-hidden="true"
+                />
+              </button>
+            </OrbAnimationLayer>
           </motion.div>
         )}
       </AnimatePresence>

@@ -13,6 +13,7 @@ export type FeatureId =
   | 'ai-mentor'
   | 'living-orb'
   | 'proactive-orb-bubble'
+  | 'orb-idle-state'
   | 'innovation-radar'
   | 'learn-hub'
   | 'privacy-mode'
