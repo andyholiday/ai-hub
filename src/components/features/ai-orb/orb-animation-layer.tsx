@@ -38,20 +38,26 @@ function buildAnimationConfig(idleState: string): AnimationConfig {
   switch (idleState) {
     case 'idle.breathing':
       return {
-        animate: { scale: [1.0, 1.04, 1.0] },
+        // 8% scale loop — visible on a 120px orb (~10px difference) but still calm.
+        // Times keyframes pinned so framer-motion doesn't drop the cycle on
+        // animate-prop identity changes during React re-renders.
+        animate: { scale: [1.0, 1.08, 1.0] },
         transition: {
-          duration: 3,
+          duration: 2.8,
           repeat: Infinity,
+          repeatType: 'loop',
           ease: 'easeInOut',
+          times: [0, 0.5, 1],
         },
       };
 
     case 'idle.mini':
       return {
-        animate: { y: [0, -4, 0, 4, 0] },
+        animate: { y: [0, -10, 0, 10, 0] },
         transition: {
           duration: 2,
           ease: 'easeInOut',
+          times: [0, 0.25, 0.5, 0.75, 1],
         },
       };
 
