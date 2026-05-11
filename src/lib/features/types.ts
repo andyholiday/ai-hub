@@ -22,7 +22,8 @@ export type FeatureId =
   | 'best-practices'
   | 'gamification'
   | 'hybrid-search'
-  | 'browser-moderation';
+  | 'browser-moderation'
+  | 'llm-gate';
 
 /**
  * Strategie beim Deaktivieren eines Features.

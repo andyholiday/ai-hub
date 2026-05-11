@@ -156,6 +156,16 @@ export const FEATURE_REGISTRY: readonly FeatureConfig[] = [
     toggleStrategy: 'block',
   },
   {
+    id: 'llm-gate',
+    label: 'LLM-Gate (Cost-Optimierung)',
+    description: 'Heuristisches Gate vor LLM-Calls reduziert API-Kosten (Pattern P1.2)',
+    defaultEnabled: false,
+    userToggleable: false,
+    orgToggleable: true,
+    deps: [],
+    toggleStrategy: 'block',
+  },
+  {
     id: 'browser-moderation',
     label: 'Browser-ONNX Moderation (Spike)',
     description: 'Toxicity-Klassifikation im Browser via ONNX (kein Server, 0 EUR Fixkosten).',
