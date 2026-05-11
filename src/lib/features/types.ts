@@ -19,7 +19,8 @@ export type FeatureId =
   | 'community-posts'
   | 'best-practices'
   | 'gamification'
-  | 'hybrid-search';
+  | 'hybrid-search'
+  | 'browser-moderation';
 
 /**
  * Strategie beim Deaktivieren eines Features.
