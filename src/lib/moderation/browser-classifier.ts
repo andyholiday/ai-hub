@@ -91,10 +91,13 @@ export async function classifyToxicity(text: string): Promise<ToxicityScore> {
   const raw = (await classifier(text)) as RawClassificationResult;
   const latencyMs = Math.round(performance.now() - t0);
 
-  // toxic-bert returns labels like 'toxic' / 'non-toxic' or 'LABEL_0'/'LABEL_1'.
-  // We normalise: highest-score label wins, map to safe/toxic.
+  // Xenova/toxic-bert (Detoxify, unitary/toxic-bert) is a multi-label sigmoid
+  // classifier over 6 toxicity classes (toxic, severe_toxic, obscene, threat,
+  // insult, identity_hate). There is NO 'safe' label — every input gets one
+  // of the 6 returned, but with a near-zero score when the text is harmless.
+  // Decision: threshold on the top score.
   const top = raw.reduce((a, b) => (a.score >= b.score ? a : b));
-  const label = isToxicLabel(top.label) ? 'toxic' : 'safe';
+  const label = top.score >= TOXICITY_THRESHOLD ? 'toxic' : 'safe';
 
   return { label, score: top.score, latencyMs };
 }
@@ -103,11 +106,7 @@ export async function classifyToxicity(text: string): Promise<ToxicityScore> {
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-function isToxicLabel(label: string): boolean {
-  const l = label.toLowerCase();
-  // Xenova/toxic-bert uses 'toxic' directly; guard for LABEL_1 variants too.
-  return l === 'toxic' || l === 'label_1';
-}
+const TOXICITY_THRESHOLD = 0.5;
 
 /** Polls until model transitions out of 'loading', max 60 s. */
 async function waitForReady(): Promise<void> {

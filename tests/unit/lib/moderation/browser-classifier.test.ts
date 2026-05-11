@@ -80,21 +80,25 @@ describe('classifyToxicity', () => {
     vi.restoreAllMocks();
   });
 
-  it('returns a ToxicityScore with latencyMs for a safe input', async () => {
+  // toxic-bert (Detoxify) is multi-label sigmoid over 6 classes. There is NO
+  // 'safe' label — harmless input still gets a class with near-zero score.
+  // Decision is threshold-based (>= 0.5 → toxic, else safe).
+
+  it('returns label safe when top score is below threshold', async () => {
     mockPipeline.mockResolvedValue(
-      vi.fn().mockResolvedValue([{ label: 'non-toxic', score: 0.97 }])
+      vi.fn().mockResolvedValue([{ label: 'toxic', score: 0.003 }])
     );
 
     const { classifyToxicity } = await freshClassifier();
-    const result = await classifyToxicity('Hello, how are you?');
+    const result = await classifyToxicity('Have a great day!');
 
     expect(result.label).toBe('safe');
-    expect(result.score).toBeCloseTo(0.97);
+    expect(result.score).toBeCloseTo(0.003);
     expect(typeof result.latencyMs).toBe('number');
     expect(result.latencyMs).toBeGreaterThanOrEqual(0);
   });
 
-  it('returns label toxic when classifier returns toxic label', async () => {
+  it('returns label toxic when top score is at or above threshold', async () => {
     mockPipeline.mockResolvedValue(
       vi.fn().mockResolvedValue([{ label: 'toxic', score: 0.91 }])
     );
@@ -109,8 +113,8 @@ describe('classifyToxicity', () => {
   it('picks the highest-score label when multiple labels are returned', async () => {
     mockPipeline.mockResolvedValue(
       vi.fn().mockResolvedValue([
-        { label: 'non-toxic', score: 0.15 },
-        { label: 'toxic', score: 0.85 },
+        { label: 'obscene', score: 0.15 },
+        { label: 'insult', score: 0.85 },
       ])
     );
 
@@ -119,6 +123,19 @@ describe('classifyToxicity', () => {
 
     expect(result.label).toBe('toxic');
     expect(result.score).toBeCloseTo(0.85);
+  });
+
+  it('classifies as safe even when the top label name is a toxicity class but score is low', async () => {
+    // Regression: real toxic-bert always returns one of 6 toxicity classes;
+    // we must not look at the label name, only the score.
+    mockPipeline.mockResolvedValue(
+      vi.fn().mockResolvedValue([{ label: 'insult', score: 0.04 }])
+    );
+
+    const { classifyToxicity } = await freshClassifier();
+    const result = await classifyToxicity('Looking forward to our meeting tomorrow.');
+
+    expect(result.label).toBe('safe');
   });
 
   it('throws when model load fails (state becomes error)', async () => {
@@ -173,7 +190,7 @@ describe('WebGPU vs WASM branch', () => {
     setupNavigator({ gpu: true });
 
     mockPipeline.mockResolvedValue(
-      vi.fn().mockResolvedValue([{ label: 'non-toxic', score: 0.95 }])
+      vi.fn().mockResolvedValue([{ label: 'toxic', score: 0.01 }])
     );
 
     const { classifyToxicity } = await freshClassifier();
@@ -192,7 +209,7 @@ describe('WebGPU vs WASM branch', () => {
     setupNavigator({ gpu: false });
 
     mockPipeline.mockResolvedValue(
-      vi.fn().mockResolvedValue([{ label: 'non-toxic', score: 0.95 }])
+      vi.fn().mockResolvedValue([{ label: 'toxic', score: 0.01 }])
     );
 
     const { classifyToxicity } = await freshClassifier();
