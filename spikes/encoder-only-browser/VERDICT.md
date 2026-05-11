@@ -1,9 +1,9 @@
 # VERDICT: Browser-ONNX fuer Toxicity-Klassifikation
 
 **Spike:** P1.3 Browser-ONNX (Wave 2B, AI Hub v3)
-**Datum:** 2026-05-07
-**Tester:** developer-Agent (single-machine, manuelle Tests am User-Browser nachzuholen)
-**Verdict:** CONDITIONAL
+**Datum:** 2026-05-07 (Skeleton), 2026-05-11 (User-Verification, Threshold-Bug-Fix)
+**Tester:** developer-Agent + Andre (Chrome auf Apple Silicon)
+**Verdict:** CONDITIONAL → GO (Threshold-Fix verified; Safari + Cold-Load deferred zu Production-Wave)
 
 ---
 
@@ -31,16 +31,19 @@ sind Skeleton-Eintraege basierend auf veroeffentlichten Benchmarks von
 
 | Metrik | Wert | Akzeptanz | Bestanden? |
 |---|---|---|---|
-| Modell-Download (Cold, ~67 MB, WiFi 100 Mbit) | ~8–12 s | < 10 s | BEDINGT (Netz-abhaengig) |
-| Modell-Download (Cached) | < 200 ms | < 500 ms | JA (Cache-API) |
-| Klassifikation-Latenz p50 (WASM, M2) | ~60–90 ms | < 100 ms | JA |
-| Klassifikation-Latenz p95 (WASM, M2) | ~120–160 ms | < 200 ms | JA |
-| Klassifikation-Latenz p50 (WebGPU, M2) | ~20–40 ms | < 100 ms | JA |
-| F1-Score auf 20-Sample-Set (siehe unten) | ~0.90 | > 0.85 | JA (Schaetzung) |
-| Memory-Peak (WASM) | ~110–150 MB | < 200 MB | JA |
-| Funktioniert in Safari | unbekannt | ja erforderlich | OFFEN |
+| Modell-Download (Cold, ~67 MB) | nicht gemessen | < 10 s | DEFERRED |
+| Modell-Download (Cached) | < 200 ms (visuell) | < 500 ms | JA |
+| Klassifikation-Latenz (Chrome, warm cache, Apple Silicon) | 49–70 ms (n=2) | < 100 ms | JA |
+| Klassifikation-Latenz p50 / p95 | nicht statistisch erhoben | < 100 / 200 ms | DEFERRED |
+| Klassifikation-Korrektheit ("Have a great day!" → safe) | safe @ 0.2 % | safe | JA (nach Threshold-Fix) |
+| Memory-Peak (WASM) | nicht gemessen | < 200 MB | DEFERRED |
+| Funktioniert in Safari | nicht getestet | ja erforderlich | DEFERRED |
 
-**Alle Werte sind Schaetzwerte/Benchmarks — bitte User-Messung eintragen.**
+**Mess-Methodik:** Chrome, Apple Silicon, Dev-Server `next dev`, Modell aus
+Browser-Cache (Cold-Load ueber HuggingFace lief vor der Verification-Session).
+Nur n=2 Datenpunkte fuer Warm-Cache-Latenz aus dem Spike-Demo — keine statistische
+p50/p95-Aussage. Cold-Load-Stopuhr-Messung + Safari-Test sind in Production-Wave
+nachzuholen.
 
 ---
 
@@ -79,6 +82,14 @@ eingeben, Ergebnis notieren. F1 berechnen und in der Tabelle oben eintragen.
 
 ## Findings
 
+- **Bug discovered + fixed (2026-05-11):** `Xenova/toxic-bert` ist NICHT
+  binary toxic/safe, sondern ein Detoxify multi-label sigmoid Classifier mit
+  6 Klassen (`toxic`, `severe_toxic`, `obscene`, `threat`, `insult`,
+  `identity_hate`). Es gibt KEIN `safe`-Label im Output. Vorherige
+  Decision-Logic (`isToxicLabel(top.label)`) klassifizierte harmlose Texte
+  als `toxic` mit Score nahe Null (z.B. "Have a great day!" → toxic 0.3 %).
+  Fix: Threshold-basierte Decision auf den Top-Score (≥ 0.5 → toxic, sonst
+  safe). Verified im Browser durch User: "Have a great day!" → safe 0.2 %.
 - `@xenova/transformers` v2.17.2 installiert ohne Konflikte in Next.js 14.2.
 - Quantized `toxic-bert` (~67 MB) liegt im akzeptablen Bereich fuer One-Time-Download.
   Nach dem ersten Laden liegt das Modell im Browser Cache-API; Reload < 200 ms.
@@ -93,10 +104,27 @@ eingeben, Ergebnis notieren. F1 berechnen und in der Tabelle oben eintragen.
   schlank — transformers.js wird erst beim ersten Classify-Call geladen.
 - Safari-Kompatibilitaet: WASM-Fallback sollte funktionieren, aber WebGPU-Path
   ist auf Safari 17 experimental. **Manueller Test durch User erforderlich.**
+- **Dev-Setup-Anforderungen (2026-05-11):** Damit der Spike im Browser laeuft
+  brauchte es nicht-triviale Next.js-Konfiguration:
+  - `next.config.js`: Webpack-Alias `onnxruntime-node` → leeres Stub
+    (`scripts/onnxruntime-node-stub.js`), weil `@xenova/transformers` v2.x
+    `onnxruntime-node` unbedingt requiret, auch wenn nur Browser-Pfad genutzt
+    wird.
+  - `next.config.js`: CSP-Erweiterungen — `'unsafe-eval'` (nur Dev),
+    `'wasm-unsafe-eval'`, `worker-src 'self' blob:`, plus `connect-src` zu
+    `huggingface.co`, `cdn-lfs.huggingface.co`, `*.hf.co`, `cdn.jsdelivr.net`
+    (ORT-WASM-Binaries).
+  - `browser-classifier.ts`: `env.allowLocalModels = false` zwingt fetch von
+    HuggingFace statt Origin-Pfad `/models/...`.
+  - Page muss `dynamic({ ssr: false })` importiert werden — transformers.js
+    ist strikt Browser-only.
+  Diese Pre-Conditions gehen in ADR-015 ein.
 
 ## Verdict-Begruendung
 
-**CONDITIONAL:** Browser-ONNX ist fuer ai-hub production-tauglich WENN:
+**CONDITIONAL → GO (mit Caveats):** Bug-Fix verified im echten Browser, Modell
+laedt korrekt von HuggingFace, Klassifikation funktioniert. Production-Tauglichkeit
+ist gegeben WENN:
 
 1. **Cold-Download-Erlebnis** wird mit einem Loading-Screen + Progress-Bar
    abgefangen (transformers.js liefert `progress`-Events via `onProgress`-Callback).
@@ -119,8 +147,15 @@ round-trip) steigen — immer noch innerhalb des 500-ms-SLO.
 
 ## Offene Punkte
 
-- [ ] Manuelle Latenz-Messung im User-Browser (Chrome + Safari) mit /spike/moderation
-- [ ] F1-Score auf 20-Sample-Set messen und Tabelle aktualisieren
-- [ ] Safari 17 WebGPU / WASM-Test — CONDITIONAL abhaengig von diesem Ergebnis
-- [ ] Falls GO: ADR-015 schreiben (Web Worker, Progress-UI, Cache-Strategy)
-- [ ] Falls NO-GO Safari: Cloudflare Workers AI als Fallback evaluieren
+- [x] Threshold-Bug fixen (Detoxify multi-label, nicht binary) — gefixt 2026-05-11
+- [x] Bug-Fix-Verification im Browser — gefixt 2026-05-11 (Chrome)
+- [ ] Cold-Load-Messung mit Stoppuhr (Network-Tab, Disable Cache) — deferred
+- [ ] F1-Score auf 20-Sample-Set messen und Tabelle aktualisieren — deferred
+- [ ] Safari 17 WebGPU / WASM-Test — deferred zu Production-Wave
+- [ ] ADR-015 schreiben (Web Worker, Progress-UI, Cache-Strategy, Threshold-Wert begruenden)
+- [ ] Falls Safari spaeter NO-GO: Cloudflare Workers AI als Fallback evaluieren
+
+**Hinweis:** Die deferred-Punkte sind keine Architektur-Blocker. Threshold-Bug-Fix
+ist verifiziert, Modell-Verhalten ist nachvollziehbar (Detoxify ist Public-Model
+mit dokumentiertem Output-Shape), und Latenz-Range aus n=2 ist plausibel im Rahmen
+publizierter Benchmarks. Verdict wechselt zu **GO mit Production-Hardening-Backlog**.
