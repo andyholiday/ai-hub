@@ -16,6 +16,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { BubblePayload } from "@/lib/orb-rules/trigger-types";
 
 // -----------------------------------------------------------------------------
 // Types
@@ -60,6 +61,10 @@ export const ORB_STATE_LABELS: Record<OrbState, string> = {
 };
 
 interface OrbContextValue {
+  /** Current proactive bubble payload — null when no bubble active */
+  bubblePayload: BubblePayload | null;
+  /** Update the bubble payload */
+  setBubblePayload: (payload: BubblePayload | null) => void;
   /** Whether the chat panel is expanded */
   isExpanded: boolean;
   /** Toggle between orb (minimized) and chat panel (expanded) */
@@ -124,6 +129,7 @@ export function OrbProvider({
     "Ich habe einen Tipp fuer dich!"
   );
   const [hasNotification, setHasNotification] = useState(false);
+  const [bubblePayload, setBubblePayload] = useState<BubblePayload | null>(null);
 
   // Auto-reset timer ref for transient states (celebration, greeting)
   const transientTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -185,6 +191,8 @@ export function OrbProvider({
 
   const value = useMemo<OrbContextValue>(
     () => ({
+      bubblePayload,
+      setBubblePayload,
       isExpanded,
       toggle,
       expand,
@@ -203,6 +211,7 @@ export function OrbProvider({
       setHasNotification,
     }),
     [
+      bubblePayload,
       isExpanded,
       toggle,
       expand,

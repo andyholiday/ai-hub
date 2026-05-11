@@ -11,6 +11,9 @@ import { requireAuth } from "@/lib/api/require-auth";
 import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import type { AIProvider, ChatMessage } from "@/lib/ai/types";
 import { calculateCost } from "@/lib/ai/pricing";
+import { decideGate } from "@/lib/ai/gate/llm-gate";
+import { logGateDecision } from "@/lib/ai/gate/telemetry";
+import { buildManifest, persistManifest } from "@/lib/audit/c2pa-manifest";
 
 export const dynamic = 'force-dynamic';
 
@@ -187,6 +190,37 @@ export async function POST(req: NextRequest): Promise<Response> {
       }
     }
 
+    // --- LLM-Gate (opt-in via feature flag 'llm-gate') ---
+    const gateEnabled = process.env.FEATURE_LLM_GATE === 'true';
+    if (gateEnabled && userMessage) {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const supabaseForGate = createAdminClient();
+
+      // Lese User-Tier aus app_metadata (etabliertes Muster im Repo, siehe require-auth.ts).
+      // app_metadata.tier ist derzeit nicht befuellt — Default 'free'.
+      // TODO Wave 4 P2.2 (Settings/Subscription): tier hier durch echte Subscription-Logik ersetzen.
+      const userTier: 'free' | 'premium' =
+        auth.role === 'admin' || auth.role === 'super_admin' ? 'premium' : 'free';
+
+      const { decision, complexity } = await decideGate({ query: userMessage.content, userTier });
+      void logGateDecision(supabaseForGate, userId, decision, complexity, 'ai-mentor-chat');
+
+      if (decision.route === 'local') {
+        return NextResponse.json({
+          id: `gate-local-${Date.now()}`,
+          message: {
+            id: `gate-msg-${Date.now()}`,
+            role: 'assistant',
+            content: 'Diese Frage könnte ich auch ohne LLM beantworten — bitte konkretisiere oder umformuliere.',
+            timestamp: new Date(),
+          },
+          provider: 'local',
+          model: 'heuristic-gate',
+          usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        });
+      }
+    }
+
     const router = await getAIRouterWithDBKeys();
 
     // --- Streaming response ---
@@ -308,6 +342,38 @@ function handleStreamingResponse(
         // Persistiere Assistant-Antwort nach Stream-Ende (ADR-005, fire-and-forget)
         if (sessionId && assistantContent) {
           void persistMessage(sessionId, "assistant", assistantContent, totalTokens);
+        }
+
+        // C2PA Audit-Log nach Stream-Ende (ADR-012, Pattern P4.3, fire-and-forget)
+        // TODO(Wave-5): privacyMode aus user_feature_prefs server-side resolve
+        // und an chatStream weiterreichen. Aktuell: hardcoded false bis Wiring steht.
+        const PRIVACY_MODE_PLACEHOLDER_WAVE5 = false;
+        if (provider && model && assistantContent) {
+          void (async () => {
+            try {
+              const { createAdminClient } = await import("@/lib/supabase/admin");
+              const adminClient = createAdminClient();
+              const manifest = await buildManifest({
+                modelId: model,
+                provider,
+                region: process.env.AI_REGION ?? "eu-west-1",
+                privacyMode: PRIVACY_MODE_PLACEHOLDER_WAVE5,
+                content: assistantContent,
+                userId,
+              });
+              persistManifest(adminClient, {
+                userId,
+                modelId: model,
+                provider,
+                region: process.env.AI_REGION ?? "eu-west-1",
+                privacyMode: PRIVACY_MODE_PLACEHOLDER_WAVE5,
+                content: assistantContent,
+                manifest,
+              });
+            } catch (err) {
+              console.error("c2pa-manifest-error", err);
+            }
+          })();
         }
 
         // userMessageDbId ist fuer kuenftige Reply-Threading-Logik reserviert

@@ -22,6 +22,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **0.6 RLS Hardening** — `ai_cost_log` INSERT-policy tightened from
   `WITH CHECK (true)` to `WITH CHECK (auth.uid() = user_id)`.
 
+### Added (Wave 2A — P3.2 Bubble-Spike)
+
+- **P3.2 Proaktive Orb-Bubble** — Regelbasierte Rule-Engine (ts-pattern v5.9,
+  kein LLM-Call) mit 8 Trigger-Events (`SECTION_DWELL`, `CODE_BLOCK_VISIBLE`,
+  `SEARCH_NO_RESULT`, `INACTIVITY`, `XP_MILESTONE`, `FIRST_AI_CHAT`,
+  `DEEP_SCROLL`, `RETURN_VISIT`). Frequency-Cap 1/Session + 3/Woche + 24h
+  Cooldown nach Dismiss. BubbleSpeech-Komponente aria-live, ESC-dismissable,
+  Framer Motion Animation. Spike-Trigger (5s SECTION_DWELL) fuer
+  UX-Validierung mit 5 internen Test-Usern. Feature `proactive-orb-bubble`
+  in Registry (defaultEnabled:false, deps:['living-orb']).
+  Branch: `feature/v3-pillar3-bubble-spike`. ADR-008.
+
 ### Added
 
 - **0.3 GDPR Right-to-Erasure** — `DELETE /api/profile` with hard-delete via

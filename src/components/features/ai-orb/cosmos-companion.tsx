@@ -22,6 +22,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useOrb, type OrbState } from "./orb-provider";
 import { CelebrationFireworks } from "./celebration-fireworks";
+import { useOrbIdleState } from "./use-orb-idle-state";
+import { OrbAnimationLayer } from "./orb-animation-layer";
+import { getFeature } from "@/lib/features/feature-registry";
 
 // ---------------------------------------------------------------------------
 // Lazy-load the SplitView ChatPanel
@@ -86,6 +89,14 @@ export function CosmosCompanion() {
     const [dockPosition, setDockPosition] = useState<DockPosition>("bottom-right");
     const [isDragging, setIsDragging] = useState(false);
     const prevStateRef = useRef<OrbState>(orbState);
+
+    // XState idle machine (P3.3, ADR-009) — active when feature flag enabled.
+    // CosmosCompanion is the mounted orb; AiOrb is unused. The hook is always
+    // called (rules of hooks) but the resulting state is only applied when
+    // the feature is enabled.
+    const idleEnabled = getFeature("orb-idle-state").defaultEnabled;
+    const { state: idleState } = useOrbIdleState();
+    const effectiveIdleState = idleEnabled ? idleState : "active";
 
     // Track state changes for aria-live announcement
     const stateChanged = prevStateRef.current !== orbState;
@@ -155,6 +166,13 @@ export function CosmosCompanion() {
             {/* Cosmos Companion Orb */}
             <AnimatePresence>
                 {!isExpanded && (
+                    <OrbAnimationLayer
+                        idleState={effectiveIdleState}
+                        className={cn(
+                            DOCK_CLASSES[dockPosition],
+                            "z-[9999]",
+                        )}
+                    >
                     <motion.div
                         key="cosmos-companion"
                         drag
@@ -173,8 +191,7 @@ export function CosmosCompanion() {
                             damping: 25,
                         }}
                         className={cn(
-                            DOCK_CLASSES[dockPosition],
-                            "z-[9999] cursor-grab active:cursor-grabbing",
+                            "cursor-grab active:cursor-grabbing",
                         )}
                     >
                         {/* Ambient Page Glow */}
@@ -310,6 +327,7 @@ export function CosmosCompanion() {
                             />
                         </button>
                     </motion.div>
+                    </OrbAnimationLayer>
                 )}
             </AnimatePresence>
         </>

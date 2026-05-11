@@ -57,6 +57,8 @@ export interface ChatCompletionRequest {
   stream?: boolean;
   systemPrompt?: string;
   context?: Record<string, unknown>;
+  /** ADR-013: Leitet Anfrage an Mistral EU Privacy Provider (Experiment-Tier) */
+  privacyMode?: boolean;
 }
 
 export interface ChatCompletionResponse {

@@ -129,39 +129,66 @@ export function ChatSplitView() {
         return () => window.removeEventListener("keydown", handleEsc);
     }, [minimize]);
 
+    // POST /api/ai/chat — non-streaming. Returns the assistant text or throws.
+    const callChatApi = useCallback(
+        async (userText: string): Promise<string> => {
+            const apiMessages = [
+                ...messages.map((m) => ({
+                    role: m.role === "ai" ? ("assistant" as const) : ("user" as const),
+                    content: m.content,
+                })),
+                { role: "user" as const, content: userText },
+            ];
+            const res = await fetch("/api/ai/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ messages: apiMessages, stream: false }),
+            });
+            if (!res.ok) {
+                const errJson = (await res.json().catch(() => ({}))) as { error?: string };
+                throw new Error(errJson.error ?? `API-Fehler ${res.status}`);
+            }
+            const data = (await res.json()) as { message?: { content?: string } };
+            return data.message?.content ?? "(keine Antwort erhalten)";
+        },
+        [messages],
+    );
+
     // Handle send message
-    const handleSend = useCallback(() => {
+    const handleSend = useCallback(async () => {
         const trimmed = inputValue.trim();
         if (!trimmed) return;
 
         addMessage("user", trimmed);
         setInputValue("");
-
-        // Simulate AI response (will be replaced with real API call)
         setIsTyping(true);
-        setTimeout(() => {
+        try {
+            const reply = await callChatApi(trimmed);
+            addMessage("ai", reply);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Unbekannter Fehler";
+            addMessage("ai", `Fehler beim Abrufen der Antwort: ${msg}`);
+        } finally {
             setIsTyping(false);
-            addMessage(
-                "ai",
-                "Das ist eine tolle Frage! Lass mich dir dabei helfen. Basierend auf deinem aktuellen Lernfortschritt und dem Kontext der Seite habe ich ein paar Vorschläge für dich.",
-            );
-        }, 2000);
-    }, [inputValue, addMessage, setIsTyping]);
+        }
+    }, [inputValue, addMessage, setIsTyping, callChatApi]);
 
     // Handle quick action
     const handleQuickAction = useCallback(
-        (action: string) => {
+        async (action: string) => {
             addMessage("user", action);
             setIsTyping(true);
-            setTimeout(() => {
+            try {
+                const reply = await callChatApi(action);
+                addMessage("ai", reply);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : "Unbekannter Fehler";
+                addMessage("ai", `Fehler beim Abrufen der Antwort: ${msg}`);
+            } finally {
                 setIsTyping(false);
-                addMessage(
-                    "ai",
-                    `Gerne helfe ich dir mit "${action}". Was genau möchtest du wissen?`,
-                );
-            }, 1500);
+            }
         },
-        [addMessage, setIsTyping],
+        [addMessage, setIsTyping, callChatApi],
     );
 
     // Keyboard submit
