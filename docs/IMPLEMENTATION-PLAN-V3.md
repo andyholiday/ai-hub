@@ -119,7 +119,7 @@ Aus Explore-Agent-Scan (Mai 2026 Stand):
 - **P3.1 Wandernder Orb** — Motion v12 useScroll+useSpring + Intersection Observer · M–L
 
 ### Säule 4 — Privacy Mode (Light)
-- **P4.1 Local Embeddings** — `@xenova/transformers@4.x` + all-MiniLM-L6-v2 (22 MB) · M
+- **P4.1 Local Embeddings** — `@xenova/transformers@^2.17.2 (v3 latest; v4 API laeuft unter @huggingface/transformers, pending stabilization)` + all-MiniLM-L6-v2 (22 MB) · M
 - **P4.2 EU-Bedrock Provider** — `@aws-sdk/client-bedrock-runtime` eu-central-1 · S–M
 - **P4.3 C2PA Audit-Log** — fire-and-forget, Art. 50 Transparenz-Kennzeichnung · S
 
@@ -472,7 +472,7 @@ Transitions:
 - `src/lib/ai/local-embeddings.ts` — Client-API
 - `src/components/privacy/embedding-load-progress.tsx` — UI
 
-**Stack:** `@xenova/transformers@^4.x` (NICHT v3 — v4 hat ONNX-Runtime C++ Backend)
+**Stack:** `@xenova/transformers@^2.17.2` (v3 latest stable; v4 API laeuft unter `@huggingface/transformers`, war zum Implementierungszeitpunkt noch nicht stabil)
 
 **Steps:**
 1. Worker: `pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2')` (22 MB)
@@ -565,7 +565,7 @@ Cooldown nach Dismiss, kein Trigger während Chat geöffnet oder Formular aktiv.
 | State-Machine | `xstate` | `^5.18` | P3.3 Idle-Machine |
 | State-Machine React | `@xstate/react` | `^4.x` | P3.3 |
 | Pattern-Matching | `ts-pattern` | `^5.5` | P3.2 Rule-Engine |
-| Local Embeddings | `@xenova/transformers` | `^4.x` | P4.1 |
+| Local Embeddings | `@xenova/transformers` | `^2.17.2 (v3 latest; v4 API unter @huggingface/transformers, pending stabilization)` | P4.1 |
 | AWS Bedrock | `@aws-sdk/client-bedrock-runtime` | `^3.x` | P4.2 |
 | Search Engine | Typesense | `0.26+` | P1.1 |
 | Encoder Models | ONNX Runtime | `1.19+` | P1.3 (Microservice) |
