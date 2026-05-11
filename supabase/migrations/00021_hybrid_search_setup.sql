@@ -98,7 +98,11 @@ COMMENT ON FUNCTION hybrid_search_best_practices IS
   'Hybrid Search fuer best_practices: RRF-Fusion aus tsvector-Full-Text (GIN) '
   'und pgvector-Semantic-Search (HNSW). ADR-014.';
 
--- hybrid_search_community_posts: analog fuer community_posts
+-- hybrid_search_community_posts: full-text-only variant.
+-- community_posts has no embedding column yet; query_embedding and semantic_weight
+-- are accepted for signature compatibility with hybrid_search_best_practices but
+-- currently ignored. Re-enable the semantic CTE here once community_posts gains
+-- an embedding column + backfill (see ADR-014 future work).
 
 CREATE OR REPLACE FUNCTION hybrid_search_community_posts(
   query_text text,
@@ -120,37 +124,22 @@ AS $$
     FROM community_posts cp
     WHERE cp.search_vector @@ websearch_to_tsquery('german', query_text)
     LIMIT LEAST(match_count, 30) * 2
-  ),
-  semantic AS (
-    SELECT cp.id,
-           row_number() OVER (
-             ORDER BY cp.embedding <=> query_embedding
-           ) AS rank_ix
-    FROM community_posts cp
-    WHERE cp.embedding IS NOT NULL
-    LIMIT LEAST(match_count, 30) * 2
   )
   SELECT
     cp.id,
     cp.title,
     cp.content,
-    (
-      coalesce(1.0 / (rrf_k + ft.rank_ix), 0.0) * full_text_weight +
-      coalesce(1.0 / (rrf_k + s.rank_ix), 0.0) * semantic_weight
-    )::float AS score
+    (coalesce(1.0 / (rrf_k + ft.rank_ix), 0.0) * full_text_weight)::float AS score
   FROM community_posts cp
-  LEFT JOIN full_text ft ON ft.id = cp.id
-  LEFT JOIN semantic s ON s.id = cp.id
-  WHERE ft.id IS NOT NULL OR s.id IS NOT NULL
+  JOIN full_text ft ON ft.id = cp.id
   ORDER BY score DESC
   LIMIT LEAST(match_count, 30);
 $$;
 
 COMMENT ON FUNCTION hybrid_search_community_posts IS
-  'Hybrid Search fuer community_posts: RRF-Fusion aus tsvector-Full-Text (GIN) '
-  'und pgvector-Semantic-Search. ADR-014. '
-  'HINWEIS: community_posts.embedding-Spalte muss separat ergaenzt werden '
-  'falls noch nicht vorhanden — semantic_weight=0 als Fallback nutzbar.';
+  'Hybrid Search fuer community_posts: aktuell Full-Text-only (tsvector/GIN). '
+  'query_embedding + semantic_weight bleiben in der Signatur fuer API-Kompatibilitaet, '
+  'werden aber ignoriert bis community_posts eine embedding-Spalte erhaelt. ADR-014.';
 
 -- =============================================================================
 -- 3. ai_call_logs — Telemetrie-Tabelle (LLM-Reduktions-Tracking)
