@@ -13,6 +13,7 @@ import type { AIProvider, ChatMessage } from "@/lib/ai/types";
 import { calculateCost } from "@/lib/ai/pricing";
 import { decideGate } from "@/lib/ai/gate/llm-gate";
 import { logGateDecision } from "@/lib/ai/gate/telemetry";
+import { buildManifest, persistManifest } from "@/lib/audit/c2pa-manifest";
 
 export const dynamic = 'force-dynamic';
 
@@ -341,6 +342,38 @@ function handleStreamingResponse(
         // Persistiere Assistant-Antwort nach Stream-Ende (ADR-005, fire-and-forget)
         if (sessionId && assistantContent) {
           void persistMessage(sessionId, "assistant", assistantContent, totalTokens);
+        }
+
+        // C2PA Audit-Log nach Stream-Ende (ADR-012, Pattern P4.3, fire-and-forget)
+        // TODO(Wave-5): privacyMode aus user_feature_prefs server-side resolve
+        // und an chatStream weiterreichen. Aktuell: hardcoded false bis Wiring steht.
+        const PRIVACY_MODE_PLACEHOLDER_WAVE5 = false;
+        if (provider && model && assistantContent) {
+          void (async () => {
+            try {
+              const { createAdminClient } = await import("@/lib/supabase/admin");
+              const adminClient = createAdminClient();
+              const manifest = await buildManifest({
+                modelId: model,
+                provider,
+                region: process.env.AI_REGION ?? "eu-west-1",
+                privacyMode: PRIVACY_MODE_PLACEHOLDER_WAVE5,
+                content: assistantContent,
+                userId,
+              });
+              persistManifest(adminClient, {
+                userId,
+                modelId: model,
+                provider,
+                region: process.env.AI_REGION ?? "eu-west-1",
+                privacyMode: PRIVACY_MODE_PLACEHOLDER_WAVE5,
+                content: assistantContent,
+                manifest,
+              });
+            } catch (err) {
+              console.error("c2pa-manifest-error", err);
+            }
+          })();
         }
 
         // userMessageDbId ist fuer kuenftige Reply-Threading-Logik reserviert
