@@ -32,6 +32,12 @@ async function initClassifier(): Promise<void> {
     // Dynamic import to avoid SSR issues (this file is browser-only).
     const { pipeline, env } = await import('@xenova/transformers');
 
+    // Force remote (HuggingFace) — don't try to fetch from /models/... on origin.
+    env.allowLocalModels = false;
+    env.allowRemoteModels = true;
+    // Default: env.remoteHost = 'https://huggingface.co'
+    // Default: env.remotePathTemplate = '{model}/resolve/{revision}'
+
     // WebGPU when available, WASM fallback.
     const device = 'gpu' in navigator ? 'webgpu' : 'wasm';
 
