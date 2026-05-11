@@ -73,7 +73,7 @@ export const FEATURE_REGISTRY: readonly FeatureConfig[] = [
     userToggleable: true,
     orgToggleable: true,
     deps: ['ai-mentor'],
-    toggleStrategy: 'warn-and-allow',
+    toggleStrategy: 'cascade-off', // P2.3: cascadiert proactive-orb-bubble + orb-idle-state
   },
   {
     id: 'innovation-radar',

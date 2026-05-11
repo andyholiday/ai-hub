@@ -49,6 +49,7 @@ export async function FeatureSettingsPage({ userId }: FeatureSettingsPageProps) 
               key={feature.id}
               feature={feature}
               initialEnabled={prefs[feature.id]}
+              allPrefs={prefs}
             />
           ))}
         </div>
