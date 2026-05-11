@@ -147,6 +147,16 @@ export const FEATURE_REGISTRY: readonly FeatureConfig[] = [
     toggleStrategy: 'block',
   },
   {
+    id: 'orb-wander',
+    label: 'Living Orb — Wanderlust',
+    description: 'Orb driftet scroll-gekoppelt zu Section-Anchors (Pattern P3.1, ADR-007)',
+    defaultEnabled: false,
+    userToggleable: true,
+    orgToggleable: false,
+    deps: ['living-orb'],
+    toggleStrategy: 'cascade-off',
+  },
+  {
     id: 'privacy-local-embeddings',
     label: 'Privacy: Lokale Embeddings',
     description: 'Generiert Embeddings im Browser statt via OpenAI API (Pattern P4.1, ADR-010)',

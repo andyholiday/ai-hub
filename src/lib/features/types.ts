@@ -14,6 +14,7 @@ export type FeatureId =
   | 'living-orb'
   | 'proactive-orb-bubble'
   | 'orb-idle-state'
+  | 'orb-wander'
   | 'innovation-radar'
   | 'learn-hub'
   | 'privacy-mode'
