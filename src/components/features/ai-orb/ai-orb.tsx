@@ -79,6 +79,17 @@ const STATE_RING_CLASS: Record<OrbState, string> = {
   energized: "ai-orb-ring--energized",
 };
 
+// ADR-015 Schicht 1: Puls-CSS-Klasse pro State (ai-orb fallback variant)
+const STATE_PULSE_CLASS: Record<OrbState, string> = {
+  idle: "",
+  thinking: "ai-orb-core--thinking",
+  listening: "ai-orb-core--listening",
+  energized: "ai-orb-core--energized",
+  notification: "ai-orb-core--notification",
+  celebration: "ai-orb-core--celebration",
+  greeting: "ai-orb-core--greeting",
+};
+
 // -----------------------------------------------------------------------------
 // Feature flag — evaluated once at module load (opt-in, defaultEnabled: false)
 // -----------------------------------------------------------------------------
@@ -158,7 +169,8 @@ function OrbContent({
           "cursor-pointer outline-none transition-all duration-500 ease-out",
           "hover:scale-110",
           "focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2",
-          STATE_CORE_CLASS[orbState]
+          STATE_CORE_CLASS[orbState],
+          STATE_PULSE_CLASS[orbState],
         )}
         aria-label="AI Mentor oeffnen"
       >

@@ -145,8 +145,20 @@ export function ChatSplitView() {
                 body: JSON.stringify({ messages: apiMessages, stream: false }),
             });
             if (!res.ok) {
-                const errJson = (await res.json().catch(() => ({}))) as { error?: string };
-                throw new Error(errJson.error ?? `API-Fehler ${res.status}`);
+                // Parse both error shapes: legacy string and new { code, message }
+                const errJson = (await res.json().catch(() => ({}))) as {
+                    error?: string | { code?: string; message?: string };
+                };
+                const errField = errJson.error;
+                let userMessage: string;
+                if (typeof errField === "string") {
+                    userMessage = errField;
+                } else if (errField && typeof errField === "object" && errField.message) {
+                    userMessage = errField.message;
+                } else {
+                    userMessage = `Anfrage fehlgeschlagen (${res.status})`;
+                }
+                throw new Error(userMessage);
             }
             const data = (await res.json()) as { message?: { content?: string } };
             return data.message?.content ?? "(keine Antwort erhalten)";
@@ -167,7 +179,7 @@ export function ChatSplitView() {
             addMessage("ai", reply);
         } catch (err) {
             const msg = err instanceof Error ? err.message : "Unbekannter Fehler";
-            addMessage("ai", `Fehler beim Abrufen der Antwort: ${msg}`);
+            addMessage("ai", `Entschuldigung, die Antwort konnte nicht abgerufen werden: ${msg}`);
         } finally {
             setIsTyping(false);
         }
@@ -183,7 +195,7 @@ export function ChatSplitView() {
                 addMessage("ai", reply);
             } catch (err) {
                 const msg = err instanceof Error ? err.message : "Unbekannter Fehler";
-                addMessage("ai", `Fehler beim Abrufen der Antwort: ${msg}`);
+                addMessage("ai", `Entschuldigung, die Antwort konnte nicht abgerufen werden: ${msg}`);
             } finally {
                 setIsTyping(false);
             }

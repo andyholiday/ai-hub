@@ -73,6 +73,43 @@ const STATE_CORE_GRADIENT: Record<OrbState, string> = {
 };
 
 // ---------------------------------------------------------------------------
+// ADR-015 — Schicht 1: Puls-CSS-Klasse pro State
+// ---------------------------------------------------------------------------
+const STATE_PULSE_CLASS: Record<OrbState, string> = {
+    idle: "",
+    thinking: "cosmos-core--thinking",
+    listening: "cosmos-core--listening",
+    energized: "cosmos-core--energized",
+    notification: "cosmos-core--notification",
+    celebration: "cosmos-core--celebration",
+    greeting: "cosmos-core--greeting",
+};
+
+// ---------------------------------------------------------------------------
+// ADR-015 — Schicht 2: Ring-Modifier-Klasse pro State
+// ---------------------------------------------------------------------------
+const STATE_RING_MOD: Record<OrbState, string> = {
+    idle: "cosmos-ring--idle",
+    thinking: "cosmos-ring--thinking",
+    listening: "cosmos-ring--listening",
+    energized: "cosmos-ring--energized",
+    notification: "cosmos-ring--notification",
+    celebration: "cosmos-ring--celebration",
+    greeting: "cosmos-ring--greeting",
+};
+
+// ---------------------------------------------------------------------------
+// ADR-015 — Schicht 3: Badge-Text pro State (Deutsch, nur non-idle)
+// ---------------------------------------------------------------------------
+const STATE_BADGE_TEXT: Partial<Record<OrbState, string>> = {
+    thinking: "Denkt…",
+    listening: "Hört zu…",
+    energized: "Energized!",
+    celebration: "Gratulation!",
+    greeting: "Willkommen!",
+};
+
+// ---------------------------------------------------------------------------
 // Cosmos Companion Component
 // ---------------------------------------------------------------------------
 export function CosmosCompanion() {
@@ -88,7 +125,9 @@ export function CosmosCompanion() {
     const [isHovered, setIsHovered] = useState(false);
     const [dockPosition, setDockPosition] = useState<DockPosition>("bottom-right");
     const [isDragging, setIsDragging] = useState(false);
+    const [showBadge, setShowBadge] = useState(false);
     const prevStateRef = useRef<OrbState>(orbState);
+    const badgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // XState idle machine (P3.3, ADR-009) — active when feature flag enabled.
     // CosmosCompanion is the mounted orb; AiOrb is unused. The hook is always
@@ -98,11 +137,33 @@ export function CosmosCompanion() {
     const { state: idleState } = useOrbIdleState();
     const effectiveIdleState = idleEnabled ? idleState : "active";
 
-    // Track state changes for aria-live announcement
-    const stateChanged = prevStateRef.current !== orbState;
-    if (stateChanged) {
+    // Track state changes: show badge on non-idle state entry, auto-hide after 3 s
+    useEffect(() => {
+        if (prevStateRef.current === orbState) return;
         prevStateRef.current = orbState;
-    }
+
+        if (badgeTimerRef.current) {
+            clearTimeout(badgeTimerRef.current);
+            badgeTimerRef.current = null;
+        }
+
+        if (STATE_BADGE_TEXT[orbState]) {
+            setShowBadge(true);
+            badgeTimerRef.current = setTimeout(() => {
+                setShowBadge(false);
+                badgeTimerRef.current = null;
+            }, 3000);
+        } else {
+            setShowBadge(false);
+        }
+    }, [orbState]);
+
+    // Cleanup badge timer on unmount
+    useEffect(() => {
+        return () => {
+            if (badgeTimerRef.current) clearTimeout(badgeTimerRef.current);
+        };
+    }, []);
 
     const handleClick = useCallback(() => {
         if (!isDragging) {
@@ -227,14 +288,13 @@ export function CosmosCompanion() {
                         {/* Celebration Fireworks */}
                         <CelebrationFireworks active={orbState === "celebration"} />
 
-                        {/* Outer Rotating Ring */}
+                        {/* Outer Rotating Ring — ADR-015 Schicht 2: Ring-Breite + Opazität */}
                         <div
                             className={cn(
                                 "cosmos-ring pointer-events-none absolute inset-1/2",
                                 "h-[140px] w-[140px] -translate-x-1/2 -translate-y-1/2 rounded-full",
-                                "border border-brand-primary-500/10",
-                                orbState === "energized" && "cosmos-ring--fast",
-                                orbState === "listening" && "cosmos-ring--slow",
+                                "border border-brand-primary-500",
+                                STATE_RING_MOD[orbState],
                             )}
                             aria-hidden="true"
                         >
@@ -302,13 +362,14 @@ export function CosmosCompanion() {
                                 aria-hidden="true"
                             />
 
-                            {/* Glassmorphism Center Core */}
+                            {/* Glassmorphism Center Core — ADR-015 Schicht 1: Puls */}
                             <div
                                 className={cn(
                                     "cosmos-core relative z-10 flex h-14 w-14 items-center justify-center rounded-full",
                                     "bg-gradient-to-br",
                                     STATE_CORE_GRADIENT[orbState],
                                     "shadow-lg backdrop-blur-sm",
+                                    STATE_PULSE_CLASS[orbState],
                                 )}
                             >
                                 <Sparkles className="h-7 w-7 text-white drop-shadow-md" />
@@ -326,6 +387,21 @@ export function CosmosCompanion() {
                                 aria-hidden="true"
                             />
                         </button>
+                        {/* ADR-015 Schicht 3 — Mikro-Text-Badge */}
+                        {showBadge && STATE_BADGE_TEXT[orbState] && (
+                            <span
+                                className={cn(
+                                    "cosmos-status-badge-enter",
+                                    "absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap",
+                                    "rounded-full bg-surface-900/80 px-3 py-1",
+                                    "text-[10px] font-medium text-white",
+                                    "pointer-events-none",
+                                )}
+                                aria-hidden="true"
+                            >
+                                {STATE_BADGE_TEXT[orbState]}
+                            </span>
+                        )}
                     </motion.div>
                     </OrbAnimationLayer>
                 )}
