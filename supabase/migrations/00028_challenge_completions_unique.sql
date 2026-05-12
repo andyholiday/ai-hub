@@ -18,7 +18,9 @@ CREATE TABLE IF NOT EXISTS public.challenge_completions (
 
 ALTER TABLE public.challenge_completions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "own_completions"
+DROP POLICY IF EXISTS "own_completions" ON public.challenge_completions;
+
+CREATE POLICY "own_completions"
   ON public.challenge_completions
   FOR SELECT
   TO authenticated
