@@ -78,8 +78,13 @@ export async function getProviderApiKeysFromDB(): Promise<ProviderKeyMap> {
   const keyMap: ProviderKeyMap = {};
 
   for (const row of rows ?? []) {
-    if (row.provider_key && row.api_key) {
-      keyMap[row.provider_key] = row.api_key;
+    // Defensive mapping: legacy DB rows may still carry "chatgpt" as provider_key.
+    // Normalise to "openai" so the router resolves correctly during rollout.
+    // The DB-level migration (00025+) is intentionally skipped — DB state is unknown.
+    const providerKey =
+      row.provider_key === "chatgpt" ? "openai" : row.provider_key;
+    if (providerKey && row.api_key) {
+      keyMap[providerKey] = row.api_key;
     }
   }
 

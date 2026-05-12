@@ -154,7 +154,19 @@ export async function POST(req: NextRequest): Promise<Response> {
           { status: 400 }
         );
       }
-      if (!["system", "user", "assistant"].includes(msg.role)) {
+      if (msg.role === "system") {
+        return NextResponse.json(
+          {
+            data: null,
+            error: {
+              code: "INVALID_MESSAGE_ROLE",
+              message: "Client-supplied system messages are not allowed.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+      if (!["user", "assistant"].includes(msg.role)) {
         return NextResponse.json(
           { error: `Invalid message role: "${msg.role}"` },
           { status: 400 }
@@ -256,11 +268,25 @@ export async function POST(req: NextRequest): Promise<Response> {
   } catch (error) {
     console.error("[/api/ai/chat] Error:", error);
 
-    const message =
+    const rawMessage =
       error instanceof Error ? error.message : "Internal server error";
-    const status = isRateLimitError(message) ? 429 : 500;
+    const status = isRateLimitError(rawMessage) ? 429 : 500;
 
-    return NextResponse.json({ error: message }, { status });
+    // Sanitize: never expose raw provider error text to the client.
+    const publicMessage = isRateLimitError(rawMessage)
+      ? "Der KI-Dienst ist gerade ausgelastet. Bitte versuche es gleich erneut."
+      : "Die KI-Antwort konnte nicht erzeugt werden.";
+
+    return NextResponse.json(
+      {
+        data: null,
+        error: {
+          code: isRateLimitError(rawMessage) ? "AI_PROVIDER_RATE_LIMITED" : "AI_PROVIDER_FAILED",
+          message: publicMessage,
+        },
+      },
+      { status },
+    );
   }
 }
 
@@ -382,12 +408,22 @@ function handleStreamingResponse(
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
       } catch (error) {
-        const message =
+        const rawMessage =
           error instanceof Error ? error.message : "Stream error";
-        const errorData = JSON.stringify({ error: message });
-        controller.enqueue(
-          encoder.encode(`data: ${errorData}\n\n`)
-        );
+        // Log raw error server-side; never forward provider internals to client.
+        console.error("[/api/ai/chat] Stream error:", error);
+        const publicMessage = isRateLimitError(rawMessage)
+          ? "Der KI-Dienst ist gerade ausgelastet. Bitte versuche es gleich erneut."
+          : "Die KI-Antwort konnte nicht erzeugt werden.";
+        const errorData = JSON.stringify({
+          error: {
+            code: isRateLimitError(rawMessage)
+              ? "AI_PROVIDER_RATE_LIMITED"
+              : "AI_PROVIDER_FAILED",
+            message: publicMessage,
+          },
+        });
+        controller.enqueue(encoder.encode(`data: ${errorData}\n\n`));
         controller.close();
       }
     },
