@@ -10,7 +10,7 @@
 --              1. Drop the old broad policy.
 --              2. Add column-level UPDATE grant — authenticated can only write
 --                 safe profile fields (full_name, username, avatar_url, department,
---                 bio, preferences, onboarding_completed).
+--                 position, bio, onboarding_completed).
 --              3. Add two targeted policies:
 --                 - profiles_update_safe_own  (user updates own safe fields only)
 --                 - profiles_update_admin     (admin can update anything)
@@ -25,7 +25,7 @@ BEGIN;
 DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
 
 -- 2. Column-level UPDATE grant: authenticated users may only write these fields.
---    role, xp, level, streak_days, etc. are intentionally excluded.
+--    role, xp, level, streak_days, is_approved, last_login_at are intentionally excluded.
 REVOKE UPDATE ON public.profiles FROM authenticated;
 
 GRANT UPDATE (
@@ -33,8 +33,8 @@ GRANT UPDATE (
   username,
   avatar_url,
   department,
+  position,
   bio,
-  preferences,
   onboarding_completed
 ) ON public.profiles TO authenticated;
 
