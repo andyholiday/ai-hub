@@ -5,7 +5,8 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ChevronRight,
@@ -17,210 +18,62 @@ import {
   Sparkles,
   Bot,
   ArrowLeft,
+  Loader2,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { sanitizeHtml } from "@/lib/utils/sanitize";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   CommentSection,
   categoryConfig,
   type BestPracticeCategory,
   type CommentData,
 } from "@/components/features/best-practices";
+import { useAuth } from "@/hooks/use-auth";
 
 // -----------------------------------------------------------------------------
-// Demo Data for the Detail Page
+// Category Slug Mapping: DB -> UI
 // -----------------------------------------------------------------------------
 
-interface DetailBestPractice {
-  id: string;
-  title: string;
-  category: BestPracticeCategory;
-  author: {
-    name: string;
-    avatarUrl?: string | null;
-    department: string;
-    level: number;
-  };
-  createdAt: string;
-  readTime: string;
-  views: number;
-  upvotes: number;
-  downvotes: number;
-  tags: string[];
-  content: string;
-  aiSummary: string;
-  xpReward: number;
-  isFeatured: boolean;
-}
-
-interface SimilarBP {
-  id: string;
-  title: string;
-  category: BestPracticeCategory;
-  upvotes: number;
-}
-
-const demoDetail: DetailBestPractice = {
-  id: "1",
-  title: "ChatGPT-Prompts fuer Social Media Content",
-  category: "prompt-engineering",
-  author: {
-    name: "Markus Koenig",
-    department: "Marketing",
-    level: 5,
-  },
-  createdAt: "15. Februar 2026",
-  readTime: "8 Min.",
-  views: 312,
-  upvotes: 24,
-  downvotes: 2,
-  tags: ["ChatGPT", "Social Media", "Content", "Prompts", "Marketing"],
-  xpReward: 50,
-  isFeatured: true,
-  aiSummary:
-    "Diese Best Practice beschreibt 5 bewaehrte Prompt-Strukturen fuer Social Media Content: die AIDA-Methode, Storytelling-Prompts, Engagement-Booster, Brand-Voice-Anpassung und Content-Recycling. Jede Methode wird mit konkreten ChatGPT-Prompts und Beispielergebnissen dokumentiert. Kernaussage: Strukturierte Prompts erzeugen konsistent hochwertigeren Content als freie Eingaben.",
-  content: `## Warum gute Prompts den Unterschied machen
-
-In der taeglichen Arbeit mit ChatGPT fuer Social Media Content ist die Qualitaet der Prompts entscheidend fuer die Qualitaet der Ergebnisse. Diese Best Practice fasst die Erkenntnisse aus 6 Monaten intensiver Nutzung im Marketing-Team zusammen.
-
-## 1. Die AIDA-Methode als Prompt-Struktur
-
-Die bewaehrte AIDA-Formel (Attention, Interest, Desire, Action) laesst sich hervorragend als Prompt-Struktur nutzen:
-
-\`\`\`
-Erstelle einen Instagram-Post fuer [Produkt].
-- Attention: Starte mit einer ueberraschenden Statistik oder Frage
-- Interest: Beschreibe das Problem, das das Produkt loest
-- Desire: Zeige den emotionalen Nutzen
-- Action: Schliesse mit einem klaren Call-to-Action
-Tonalitaet: Freundlich, motivierend, authentische Markenstimme
-Laenge: Max. 150 Woerter
-\`\`\`
-
-**Ergebnis**: Posts mit dieser Struktur erzielten im Schnitt 34% mehr Engagement als unstrukturierte Prompts.
-
-## 2. Storytelling-Prompts
-
-Geschichten erzeugen Emotionen und bleiben im Gedaechtnis. Nutze diesen Prompt-Baukasten:
-
-\`\`\`
-Erzaehle die Geschichte von [Persona], die [Problem] hatte.
-Beschreibe den Wendepunkt durch [Produkt/Loesung].
-Verwende eine persoenliche, authentische Sprache.
-Integriere 2-3 Emojis natuerlich in den Text.
-Format: LinkedIn-Post, max. 200 Woerter
-\`\`\`
-
-## 3. Engagement-Booster Prompts
-
-Fuer maximale Interaktion empfehlen wir folgende Prompt-Elemente:
-
-- **Fragen am Ende**: "Was ist dein liebstes KI-Tool fuer Content?"
-- **Meinungsabfragen**: "Stimmt ihr zu? Ja oder Nein?"
-- **Erfahrungsaustausch**: "Teilt eure besten Tipps in den Kommentaren"
-
-## 4. Brand Voice Anpassung
-
-Damit ChatGPT die Markenstimme trifft, nutzen wir einen vordefinierten System-Kontext:
-
-\`\`\`
-Du schreibst als Content Creator fuer die Community-Plattform.
-Markenstimme: Positiv, motivierend, gesundheitsbewusst
-Werte: Qualitaet, Gemeinschaft, persoenliches Wachstum
-Vermeide: Uebertreibungen, medizinische Versprechen, Negativitaet
-Zielgruppe: Health-bewusste Menschen, 25-45 Jahre
-\`\`\`
-
-## 5. Content-Recycling
-
-Bestehende Inhalte lassen sich mit KI effizient fuer verschiedene Plattformen umformatieren:
-
-| Quellformat | Zielformat | Prompt-Ansatz |
-|------------|-----------|--------------|
-| Blog-Artikel | Twitter-Thread | "Fasse in 5 Tweets zusammen" |
-| Webinar | LinkedIn-Post | "Extrahiere die 3 Kern-Learnings" |
-| Kundenfeedback | Instagram Story | "Erstelle ein Testimonial-Visual-Script" |
-
-## Fazit
-
-Investiert Zeit in die Entwicklung eurer Prompt-Bibliothek. Die initialen 2-3 Stunden sparen euch langfristig dutzende Stunden an Content-Erstellung und steigern gleichzeitig die Qualitaet.
-
-> **Pro-Tipp**: Speichert eure besten Prompts in einem geteilten Dokument, damit das gesamte Team davon profitiert.`,
+const DB_TO_UI_CATEGORY: Record<string, BestPracticeCategory> = {
+  prompt_engineering: "prompt-engineering",
+  ai_tools: "ki-tools",
+  automation: "automatisierung",
+  data_analysis: "datenanalyse",
+  ai_ethics: "ki-ethik",
 };
 
-const demoSimilar: SimilarBP[] = [
-  {
-    id: "6",
-    title: "Midjourney-Prompts fuer Produktbilder",
-    category: "ki-tools",
-    upvotes: 28,
-  },
-  {
-    id: "3",
-    title: "Datenanalyse mit Claude fuer Vertriebsberichte",
-    category: "datenanalyse",
-    upvotes: 18,
-  },
-  {
-    id: "5",
-    title: "Top 10 KI-Tools fuer Marketer 2026",
-    category: "ki-tools",
-    upvotes: 35,
-  },
-];
+// -----------------------------------------------------------------------------
+// API Response Types
+// -----------------------------------------------------------------------------
 
-const demoComments: CommentData[] = [
-  {
-    id: "c1",
-    author: { name: "Sarah Hoffmann" },
-    text: "Super hilfreiche Zusammenstellung! Die AIDA-Methode funktioniert bei uns im Team wirklich hervorragend. Wir haben damit die Engagement-Rate auf Instagram um fast 40% gesteigert.",
-    createdAt: "vor 2 Tagen",
-    upvotes: 7,
-    replies: [
-      {
-        id: "c1-r1",
-        author: { name: "Markus Koenig" },
-        text: "Danke Sarah! Freut mich sehr. Die 40% sind beeindruckend -- koenntet ihr die Daten mal im naechsten Team-Meeting vorstellen?",
-        createdAt: "vor 1 Tag",
-        upvotes: 3,
-      },
-    ],
-  },
-  {
-    id: "c2",
-    author: { name: "Thomas Wagner" },
-    text: "Fuer den Vertrieb nutzen wir aehnliche Strukturen. Besonders der Brand Voice Teil ist Gold wert. Koennte man das vielleicht als Template in einem gemeinsamen Tool hinterlegen?",
-    createdAt: "vor 3 Tagen",
-    upvotes: 5,
-    replies: [],
-  },
-  {
-    id: "c3",
-    author: { name: "Lisa Peters" },
-    text: "Hat jemand Erfahrung mit den Engagement-Booster Prompts fuer LinkedIn im B2B-Bereich? Bei uns im Kundenservice sind die Anforderungen etwas anders.",
-    createdAt: "vor 5 Tagen",
-    upvotes: 2,
-    replies: [
-      {
-        id: "c3-r1",
-        author: { name: "Julia Richter" },
-        text: "Wir haben im B2B-Bereich gute Erfahrungen mit Thought-Leadership Prompts gemacht. Soll ich dazu eine separate Best Practice schreiben?",
-        createdAt: "vor 4 Tagen",
-        upvotes: 4,
-      },
-      {
-        id: "c3-r2",
-        author: { name: "Lisa Peters" },
-        text: "Ja bitte, das waere super! Gerne auch mit konkreten Beispielen aus dem Kundenservice-Umfeld.",
-        createdAt: "vor 4 Tagen",
-        upvotes: 1,
-      },
-    ],
-  },
-];
+interface ApiAuthor {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  level: number;
+}
+
+interface ApiBestPracticeDetail {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  tags: string[];
+  status: string;
+  upvotes_count: number;
+  views_count: number;
+  comments_count: number;
+  created_at: string;
+  author_id: string;
+  author: ApiAuthor;
+}
 
 // -----------------------------------------------------------------------------
 // Star Rating Sub-component
@@ -265,22 +118,146 @@ function StarRating() {
 // -----------------------------------------------------------------------------
 
 export default function BestPracticeDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const id = typeof params.id === "string" ? params.id : (params.id?.[0] ?? "");
+
+  const [data, setData] = useState<ApiBestPracticeDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const [isUpvoted, setIsUpvoted] = useState(false);
   const [isDownvoted, setIsDownvoted] = useState(false);
-  const data = demoDetail;
-  const catConfig = categoryConfig[data.category];
 
-  const handleUpvote = () => {
-    setIsUpvoted(!isUpvoted);
-    if (isDownvoted) setIsDownvoted(false);
+  useEffect(() => {
+    if (!id) return;
+
+    setIsLoading(true);
+    setError(null);
+    setNotFound(false);
+
+    fetch(`/api/best-practices/${id}`)
+      .then(async (res) => {
+        if (res.status === 404) {
+          setNotFound(true);
+          return;
+        }
+        if (res.status === 401 || res.status === 403) {
+          window.location.href = "/login?redirectTo=/best-practices";
+          return;
+        }
+
+        const json = await res.json();
+        if (json.error) {
+          setError(json.error.message ?? "Fehler beim Laden");
+          return;
+        }
+        setData(json.data);
+      })
+      .catch(() => {
+        setError("Best Practice konnte nicht geladen werden.");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (!data) return;
+    if (!confirm("Best Practice wirklich loeschen?")) return;
+
+    try {
+      const res = await fetch(`/api/best-practices/${data.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        router.push("/best-practices");
+      } else {
+        const json = await res.json();
+        alert(json.error?.message ?? "Loeschen fehlgeschlagen.");
+      }
+    } catch {
+      alert("Loeschen fehlgeschlagen.");
+    }
   };
 
-  const handleDownvote = () => {
-    setIsDownvoted(!isDownvoted);
-    if (isUpvoted) setIsUpvoted(false);
-  };
+  // --- Loading ---
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
+      </div>
+    );
+  }
 
-  const currentUpvotes = data.upvotes + (isUpvoted ? 1 : 0) - (isDownvoted ? 1 : 0);
+  // --- Not Found ---
+  if (notFound) {
+    return (
+      <div className="py-20 text-center">
+        <h2 className="font-heading text-headline-sm font-bold text-surface-900">
+          Best Practice nicht gefunden
+        </h2>
+        <p className="mt-2 text-body text-surface-500">
+          Der Eintrag existiert nicht oder ist nicht oeffentlich.
+        </p>
+        <Link href="/best-practices" className="mt-6 inline-block">
+          <Button iconLeft={<ArrowLeft />}>Zur Uebersicht</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  // --- Error ---
+  if (error) {
+    return (
+      <div className="py-20 text-center">
+        <h2 className="font-heading text-headline-sm font-bold text-surface-900">
+          Fehler beim Laden
+        </h2>
+        <p className="mt-2 text-body text-surface-500">{error}</p>
+        <Button
+          className="mt-6"
+          onClick={() => {
+            setError(null);
+            setIsLoading(true);
+            fetch(`/api/best-practices/${id}`)
+              .then(async (res) => {
+                const json = await res.json();
+                setData(json.data);
+              })
+              .catch(() => setError("Best Practice konnte nicht geladen werden."))
+              .finally(() => setIsLoading(false));
+          }}
+        >
+          Erneut versuchen
+        </Button>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const uiCategory: BestPracticeCategory =
+    DB_TO_UI_CATEGORY[data.category] ?? "prompt-engineering";
+  const catConfig = categoryConfig[uiCategory];
+
+  const isOwner = user?.id === data.author_id;
+  const isAdmin = user?.role === "admin" || user?.role === "super_admin";
+  const canEdit = isOwner || isAdmin;
+
+  const currentUpvotes = data.upvotes_count + (isUpvoted ? 1 : 0) - (isDownvoted ? 1 : 0);
+
+  const createdAt = new Date(data.created_at).toLocaleDateString("de-DE", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  // Demo comments — comment system nicht Teil dieser Wave
+  const comments: CommentData[] = [];
 
   return (
     <div className="animate-fade-in">
@@ -324,16 +301,37 @@ export default function BestPracticeDetailPage() {
           {/* Header Card */}
           <Card noPadding>
             <div className="p-6 sm:p-8">
-              {/* Category + Featured Badge */}
-              <div className="flex items-center gap-3 mb-4">
-                <Badge variant={catConfig.variant} size="md" dot>
-                  {catConfig.label}
-                </Badge>
-                {data.isFeatured && (
-                  <Badge variant="gold" size="sm">
-                    <Star className="mr-1 h-3 w-3 fill-current" />
-                    Featured
+              {/* Category Badge + Owner Actions */}
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-3">
+                  <Badge variant={catConfig.variant} size="md" dot>
+                    {catConfig.label}
                   </Badge>
+                  {data.status === "draft" && (
+                    <Badge variant="gray" size="sm">
+                      Entwurf
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Edit / Delete — nur fuer Owner/Admin */}
+                {canEdit && (
+                  <div className="flex items-center gap-2">
+                    <Link href={`/best-practices/${data.id}/edit`}>
+                      <Button variant="ghost" size="sm" iconLeft={<Pencil />}>
+                        Bearbeiten
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      iconLeft={<Trash2 />}
+                      onClick={handleDelete}
+                      className="text-error hover:bg-error-light hover:text-error-dark"
+                    >
+                      Loeschen
+                    </Button>
+                  </div>
                 )}
               </div>
 
@@ -345,30 +343,30 @@ export default function BestPracticeDetailPage() {
               {/* Author Info */}
               <div className="mt-5 flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-3">
-                  <Avatar name={data.author.name} size="md" />
+                  <Avatar
+                    name={data.author?.full_name ?? ""}
+                    src={data.author?.avatar_url}
+                    size="md"
+                  />
                   <div>
                     <p className="text-body font-semibold text-surface-800">
-                      {data.author.name}
+                      {data.author?.full_name ?? "Unbekannt"}
                     </p>
                     <p className="text-body-sm text-surface-500">
-                      {data.author.department} &middot; Level {data.author.level}
+                      Level {data.author?.level ?? 1}
                     </p>
                   </div>
                 </div>
 
-                {/* Meta: Date, Read Time, Views */}
+                {/* Meta: Date, Views */}
                 <div className="flex items-center gap-4 text-body-sm text-surface-400">
                   <span className="flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
-                    {data.createdAt}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    {data.readTime} Lesezeit
+                    {createdAt}
                   </span>
                   <span className="flex items-center gap-1">
                     <Eye className="h-3.5 w-3.5" />
-                    {data.views} Views
+                    {data.views_count} Views
                   </span>
                 </div>
               </div>
@@ -377,7 +375,7 @@ export default function BestPracticeDetailPage() {
             {/* Content Area with Prose Styling */}
             <div className="border-t border-surface-200 p-6 sm:p-8">
               <div className="prose prose-surface max-w-none prose-headings:font-heading prose-headings:text-surface-900 prose-h2:text-title-lg prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-title prose-h3:font-semibold prose-p:text-body-lg prose-p:text-surface-700 prose-p:leading-relaxed prose-strong:text-surface-800 prose-code:rounded prose-code:bg-surface-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-body-sm prose-code:text-brand-primary-700 prose-code:before:content-none prose-code:after:content-none prose-pre:rounded-xl prose-pre:bg-surface-900 prose-pre:p-4 prose-table:border-collapse prose-th:bg-surface-50 prose-th:p-3 prose-th:text-left prose-th:text-body-sm prose-th:font-semibold prose-td:border-t prose-td:border-surface-200 prose-td:p-3 prose-td:text-body-sm prose-blockquote:border-l-brand-primary-500 prose-blockquote:bg-brand-primary-50/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:px-4 prose-blockquote:not-italic prose-a:text-brand-primary-600 prose-a:no-underline hover:prose-a:underline prose-li:text-body-lg prose-li:text-surface-700">
-                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(markdownToHtml(data.content)) }} />
+                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(data.content ?? "") }} />
               </div>
             </div>
           </Card>
@@ -389,7 +387,7 @@ export default function BestPracticeDetailPage() {
             </div>
             <div>
               <p className="text-body font-semibold text-brand-primary-800">
-                +{data.xpReward} XP fuer das Lesen dieser Best Practice
+                +50 XP fuer das Lesen dieser Best Practice
               </p>
               <p className="text-body-sm text-brand-primary-600">
                 Lese weitere Best Practices, um dein Level zu steigern.
@@ -399,34 +397,33 @@ export default function BestPracticeDetailPage() {
 
           {/* Comment Section */}
           <div className="mt-8">
-            <CommentSection comments={demoComments} />
+            <CommentSection comments={comments} />
           </div>
         </div>
 
         {/* Right: Sidebar */}
         <aside className="w-full shrink-0 lg:w-[360px]">
           <div className="sticky top-6 space-y-5">
-            {/* AI Summary Card */}
-            <Card accent="green" noPadding>
-              <div className="p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary-50">
-                    <Bot className="h-4 w-4 text-brand-primary-600" />
+            {/* Summary Card (excerpt als Zusammenfassung) */}
+            {data.excerpt && (
+              <Card accent="green" noPadding>
+                <div className="p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary-50">
+                      <Bot className="h-4 w-4 text-brand-primary-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-body font-semibold text-surface-900">
+                        Zusammenfassung
+                      </h3>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-body font-semibold text-surface-900">
-                      AI Zusammenfassung
-                    </h3>
-                    <p className="text-caption text-surface-400">
-                      Generiert von AI Mentor
-                    </p>
-                  </div>
+                  <p className="text-body-sm leading-relaxed text-surface-600">
+                    {data.excerpt}
+                  </p>
                 </div>
-                <p className="text-body-sm leading-relaxed text-surface-600">
-                  {data.aiSummary}
-                </p>
-              </div>
-            </Card>
+              </Card>
+            )}
 
             {/* Voting Card */}
             <Card noPadding>
@@ -438,7 +435,10 @@ export default function BestPracticeDetailPage() {
                 {/* Upvote / Downvote */}
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={handleUpvote}
+                    onClick={() => {
+                      setIsUpvoted(!isUpvoted);
+                      if (isDownvoted) setIsDownvoted(false);
+                    }}
                     className={cn(
                       "flex items-center gap-2 rounded-xl border px-4 py-2.5 transition-all duration-200",
                       isUpvoted
@@ -456,7 +456,10 @@ export default function BestPracticeDetailPage() {
                   </button>
 
                   <button
-                    onClick={handleDownvote}
+                    onClick={() => {
+                      setIsDownvoted(!isDownvoted);
+                      if (isUpvoted) setIsUpvoted(false);
+                    }}
                     className={cn(
                       "flex items-center gap-2 rounded-xl border px-4 py-2.5 transition-all duration-200",
                       isDownvoted
@@ -482,160 +485,28 @@ export default function BestPracticeDetailPage() {
             </Card>
 
             {/* Tags Card */}
-            <Card noPadding>
-              <div className="p-5">
-                <h3 className="text-body font-semibold text-surface-900 mb-3">
-                  Tags
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {data.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-block rounded-lg bg-surface-100 px-3 py-1.5 text-body-sm font-medium text-surface-600 transition-colors hover:bg-surface-200 cursor-pointer"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </Card>
-
-            {/* Similar Best Practices */}
-            <Card noPadding>
-              <div className="p-5">
-                <h3 className="text-body font-semibold text-surface-900 mb-4">
-                  Aehnliche Best Practices
-                </h3>
-                <div className="space-y-3">
-                  {demoSimilar.map((item) => {
-                    const simCatConfig = categoryConfig[item.category];
-                    return (
-                      <Link
-                        key={item.id}
-                        href={`/best-practices/${item.id}`}
-                        className="group/similar block rounded-xl border border-surface-200 p-3 transition-all duration-200 hover:border-surface-300 hover:shadow-card"
+            {data.tags && data.tags.length > 0 && (
+              <Card noPadding>
+                <div className="p-5">
+                  <h3 className="text-body font-semibold text-surface-900 mb-3">
+                    Tags
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {data.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-block rounded-lg bg-surface-100 px-3 py-1.5 text-body-sm font-medium text-surface-600 transition-colors hover:bg-surface-200 cursor-pointer"
                       >
-                        <Badge variant={simCatConfig.variant} size="sm">
-                          {simCatConfig.label}
-                        </Badge>
-                        <p className="mt-2 text-body-sm font-medium text-surface-800 group-hover/similar:text-brand-primary-600 transition-colors">
-                          {item.title}
-                        </p>
-                        <div className="mt-1.5 flex items-center gap-1 text-caption text-surface-400">
-                          <ThumbsUp className="h-3 w-3" />
-                          <span>{item.upvotes} Upvotes</span>
-                        </div>
-                      </Link>
-                    );
-                  })}
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            )}
           </div>
         </aside>
       </div>
     </div>
   );
-}
-
-// -----------------------------------------------------------------------------
-// Simple Markdown to HTML converter (basic, for demo purposes)
-// In production this would use remark/rehype or a proper Markdown library
-// -----------------------------------------------------------------------------
-
-function markdownToHtml(md: string): string {
-  let html = md;
-
-  // Code blocks (``` ... ```)
-  html = html.replace(
-    /```(\w*)\n([\s\S]*?)```/g,
-    (_match, _lang, code) =>
-      `<pre><code>${escapeHtml(code.trim())}</code></pre>`
-  );
-
-  // Inline code
-  html = html.replace(
-    /`([^`]+)`/g,
-    "<code>$1</code>"
-  );
-
-  // Tables
-  html = html.replace(
-    /\n(\|.+\|\n)+/g,
-    (tableBlock) => {
-      const rows = tableBlock.trim().split("\n").filter((r) => !r.match(/^\|[\s-|]+\|$/));
-      if (rows.length === 0) return tableBlock;
-
-      const headerCells = rows[0]!.split("|").filter(Boolean).map((c) => c.trim());
-      const bodyRows = rows.slice(1);
-
-      let tableHtml = "<table><thead><tr>";
-      headerCells.forEach((cell) => {
-        tableHtml += `<th>${cell}</th>`;
-      });
-      tableHtml += "</tr></thead><tbody>";
-      bodyRows.forEach((row) => {
-        const cells = row.split("|").filter(Boolean).map((c) => c.trim());
-        tableHtml += "<tr>";
-        cells.forEach((cell) => {
-          tableHtml += `<td>${cell}</td>`;
-        });
-        tableHtml += "</tr>";
-      });
-      tableHtml += "</tbody></table>";
-      return "\n" + tableHtml + "\n";
-    }
-  );
-
-  // Headings
-  html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
-  html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
-  html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
-
-  // Bold
-  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-
-  // Italic
-  html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
-
-  // Blockquotes
-  html = html.replace(/^> (.+)$/gm, "<blockquote><p>$1</p></blockquote>");
-
-  // Unordered lists
-  html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
-  html = html.replace(
-    /(<li>.*<\/li>\n?)+/g,
-    (match) => `<ul>${match}</ul>`
-  );
-
-  // Paragraphs - wrap lines that aren't already wrapped in tags
-  html = html
-    .split("\n\n")
-    .map((block) => {
-      const trimmed = block.trim();
-      if (!trimmed) return "";
-      if (
-        trimmed.startsWith("<h") ||
-        trimmed.startsWith("<pre") ||
-        trimmed.startsWith("<ul") ||
-        trimmed.startsWith("<ol") ||
-        trimmed.startsWith("<table") ||
-        trimmed.startsWith("<blockquote")
-      ) {
-        return trimmed;
-      }
-      return `<p>${trimmed.replace(/\n/g, "<br />")}</p>`;
-    })
-    .join("\n");
-
-  return html;
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
 }
