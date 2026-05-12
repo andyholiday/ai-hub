@@ -23,14 +23,13 @@ export type ListChallengesQuery = z.infer<typeof listChallengesQuerySchema>;
 // ---------------------------------------------------------------------------
 
 /**
- * PATCH /api/challenges/[challengeId]/progress - Update user progress
+ * PATCH /api/challenges/[challengeId]/progress - Report a server-known event
+ * Server maps event → progress increment; client cannot self-award progress values.
  */
 export const updateProgressSchema = z.object({
-  progress: z
-    .number()
-    .int("Fortschritt muss eine ganze Zahl sein")
-    .min(0, "Fortschritt muss mindestens 0 sein")
-    .max(100, "Fortschritt darf maximal 100 sein"),
+  eventType: z.enum(["lesson_completed", "step_done", "quiz_passed"], {
+    errorMap: () => ({ message: "Unbekannter Event-Typ" }),
+  }),
 });
 
 export type UpdateProgressInput = z.infer<typeof updateProgressSchema>;
