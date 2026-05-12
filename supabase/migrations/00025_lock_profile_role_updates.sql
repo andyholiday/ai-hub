@@ -54,6 +54,11 @@ CREATE POLICY "profiles_update_safe_own"
     AND role  = (SELECT role  FROM public.profiles WHERE id = auth.uid())
     AND xp    = (SELECT xp    FROM public.profiles WHERE id = auth.uid())
     AND level = (SELECT level FROM public.profiles WHERE id = auth.uid())
+    -- TOCTOU note: the three sub-queries above run as separate SELECTs within
+    -- the same statement under Snapshot Isolation, so they see a consistent
+    -- snapshot. If profile-updates become a hot path consider a SECURITY DEFINER
+    -- helper function that fetches all three values in a single SELECT.
+    -- See: docs/AUDIT-FOLLOWUP-2026-05-12.md — "If Profile-Updates become hot path"
   );
 
 -- 3b. Policy: admins may update any profile row without the field restrictions.

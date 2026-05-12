@@ -23,9 +23,31 @@ vi.mock("next/navigation", () => ({
 vi.mock("framer-motion", () => {
   const MotionDiv = React.forwardRef<
     HTMLDivElement,
-    React.HTMLAttributes<HTMLDivElement> & { drag?: unknown; dragMomentum?: unknown; dragElastic?: unknown; onDragEnd?: unknown; initial?: unknown; animate?: unknown; exit?: unknown; transition?: unknown }
-  >(({ children, ...rest }, ref) => (
-    <div ref={ref} {...(rest as React.HTMLAttributes<HTMLDivElement>)}>
+    React.HTMLAttributes<HTMLDivElement> & {
+      drag?: unknown; dragMomentum?: unknown; dragElastic?: unknown;
+      onDragEnd?: unknown; initial?: unknown; animate?: unknown;
+      exit?: unknown; transition?: unknown; whileHover?: unknown;
+      whileTap?: unknown; whileFocus?: unknown; whileInView?: unknown;
+      viewport?: unknown;
+    }
+  >(({
+    children,
+    drag: _drag,
+    dragMomentum: _dragMomentum,
+    dragElastic: _dragElastic,
+    onDragEnd: _onDragEnd,
+    initial: _initial,
+    animate: _animate,
+    exit: _exit,
+    transition: _transition,
+    whileHover: _whileHover,
+    whileTap: _whileTap,
+    whileFocus: _whileFocus,
+    whileInView: _whileInView,
+    viewport: _viewport,
+    ...rest
+  }, ref) => (
+    <div ref={ref} {...rest}>
       {children}
     </div>
   ));

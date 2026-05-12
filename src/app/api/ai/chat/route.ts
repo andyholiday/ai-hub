@@ -375,9 +375,11 @@ function handleStreamingResponse(
         // und an chatStream weiterreichen. Aktuell: hardcoded false bis Wiring steht.
         const PRIVACY_MODE_PLACEHOLDER_WAVE5 = false;
         if (provider && model && assistantContent) {
+          // Resolve the admin module once before entering the IIFE to avoid
+          // a redundant dynamic-import call inside the async block (F06 fix).
+          const { createAdminClient } = await import("@/lib/supabase/admin");
           void (async () => {
             try {
-              const { createAdminClient } = await import("@/lib/supabase/admin");
               const adminClient = createAdminClient();
               const manifest = await buildManifest({
                 modelId: model,

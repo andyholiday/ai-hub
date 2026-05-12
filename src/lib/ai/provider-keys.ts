@@ -81,6 +81,7 @@ export async function getProviderApiKeysFromDB(): Promise<ProviderKeyMap> {
     // Defensive mapping: legacy DB rows may still carry "chatgpt" as provider_key.
     // Normalise to "openai" so the router resolves correctly during rollout.
     // The DB-level migration (00025+) is intentionally skipped — DB state is unknown.
+    // TODO(audit-task-1): remove after migration 0xxxx normalizes legacy chatgpt rows. See docs/AUDIT-FOLLOWUP-2026-05-12.md
     const providerKey =
       row.provider_key === "chatgpt" ? "openai" : row.provider_key;
     if (providerKey && row.api_key) {
