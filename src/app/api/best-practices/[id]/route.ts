@@ -115,6 +115,30 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       return apiValidationError(parsed.error);
     }
 
+    // F03 Fix: archived status is Admin-only — both setting AND leaving archived
+    if (parsed.data.status === "archived" && !isAdmin) {
+      return apiError(
+        "FORBIDDEN",
+        "Nur Admins koennen Best Practices archivieren.",
+        403,
+      );
+    }
+
+    // Also fetch the current status to block un-archiving by non-admins
+    const { data: existingWithStatus } = await supabase
+      .from("best_practices")
+      .select("status")
+      .eq("id", id)
+      .single();
+
+    if (existingWithStatus?.status === "archived" && !isAdmin) {
+      return apiError(
+        "FORBIDDEN",
+        "Nur Admins koennen archivierte Best Practices wieder aktivieren.",
+        403,
+      );
+    }
+
     // Mapping: summary -> excerpt (DB-Spaltenname)
     const { summary, ...rest } = parsed.data;
     const updatePayload = {

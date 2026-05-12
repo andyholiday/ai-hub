@@ -49,6 +49,7 @@ export async function GET(req: NextRequest) {
     // Optionale Auth — fuer "mine"-Filter und Draft-Sichtbarkeit
     const auth = await requireAuth(req);
     const userId = !("response" in auth) ? auth.userId : null;
+    const isAdmin = !("response" in auth) && (auth.role === "admin" || auth.role === "super_admin");
 
     const supabase = createAdminClient();
 
@@ -62,8 +63,18 @@ export async function GET(req: NextRequest) {
     // RLS: nicht-authentifizierte Nutzer sehen nur published
     // authentifizierte Nutzer sehen published + eigene drafts (via RLS)
     // Expliziter Status-Filter falls angegeben
+    // F04 Fix: non-admin darf nur eigene non-published Eintraege sehen
     if (status) {
       query = query.eq("status", status);
+      if (status !== "published" && !isAdmin) {
+        // Restrict to own entries — prevents service-role draft leak
+        if (userId) {
+          query = query.eq("author_id", userId);
+        } else {
+          // Unauthenticated + non-published filter → return empty (no user to scope to)
+          query = query.eq("author_id", "00000000-0000-0000-0000-000000000000");
+        }
+      }
     } else if (!userId) {
       query = query.eq("status", "published");
     }

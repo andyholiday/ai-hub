@@ -596,6 +596,73 @@ describe("PATCH /api/best-practices/[id] — Update (Owner-only / Admin)", () =>
 
     expect(res.status).toBe(400);
   });
+
+  // F05: archived status is Admin-only
+  it("PATCH status=archived as owner returns 403", async () => {
+    vi.mocked(requireAuth).mockResolvedValue(MOCK_USER); // role: "user"
+    vi.mocked(createAdminClient).mockReturnValue(
+      makeSupabaseMock({
+        selectData: { author_id: MOCK_USER.userId },
+      }) as unknown as ReturnType<typeof createAdminClient>,
+    );
+
+    const res = await PATCH(
+      makeJsonRequest("http://localhost/api/best-practices/bp-001", "PATCH", {
+        status: "archived",
+      }),
+      { params: { id: "bp-001" } },
+    );
+
+    expect(res.status).toBe(403);
+    const json = await res.json() as { error: { code: string } };
+    expect(json.error.code).toBe("FORBIDDEN");
+  });
+
+  it("PATCH status=published on archived entry as owner returns 403", async () => {
+    vi.mocked(requireAuth).mockResolvedValue(MOCK_USER); // role: "user"
+
+    // Two sequential select calls: first returns owner check, second returns existing status
+    let selectCallCount = 0;
+    const supabaseMock = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            single: () => {
+              selectCallCount++;
+              if (selectCallCount === 1) {
+                // owner check
+                return Promise.resolve({ data: { author_id: MOCK_USER.userId }, error: null });
+              }
+              // existing status check
+              return Promise.resolve({ data: { status: "archived" }, error: null });
+            },
+          }),
+        }),
+        update: (_data: unknown) => ({
+          eq: () => ({
+            select: () => ({
+              single: () => Promise.resolve({ data: SAMPLE_BP, error: null }),
+            }),
+          }),
+        }),
+      }),
+    };
+
+    vi.mocked(createAdminClient).mockReturnValue(
+      supabaseMock as unknown as ReturnType<typeof createAdminClient>,
+    );
+
+    const res = await PATCH(
+      makeJsonRequest("http://localhost/api/best-practices/bp-001", "PATCH", {
+        status: "published",
+      }),
+      { params: { id: "bp-001" } },
+    );
+
+    expect(res.status).toBe(403);
+    const json = await res.json() as { error: { code: string } };
+    expect(json.error.code).toBe("FORBIDDEN");
+  });
 });
 
 // ===========================================================================
