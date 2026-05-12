@@ -12,7 +12,8 @@
 //   - 00027: get_mentor_signals + generate_page_briefing reject cross-user p_user_id
 // =============================================================================
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
+import { createClient } from "@supabase/supabase-js";
 
 const HAS_DB =
   Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
@@ -27,21 +28,58 @@ const HAS_DB =
 describe.skipIf(!HAS_DB)(
   "00025 — profiles: authenticated cannot self-escalate role/xp/level",
   () => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const anonKey = process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    let userId: string;
+
+    beforeAll(async () => {
+      const supabase = createClient(url, anonKey);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: process.env.TEST_USER_EMAIL!,
+        password: process.env.TEST_USER_PASSWORD!,
+      });
+      if (error || !data.user) throw new Error(`signIn failed: ${error?.message}`);
+      userId = data.user.id;
+    });
+
     it.skip(
       "authenticated user cannot UPDATE own role via Supabase client",
       async () => {
-        // Requires: createClient(url, anonKey) + signInWithPassword
-        // Then: supabase.from('profiles').update({ role: 'admin' }).eq('id', userId)
-        // Expected: error — column 'role' not in allowed grant list OR RLS WITH CHECK fails
+        const supabase = createClient(url, anonKey);
+        await supabase.auth.signInWithPassword({
+          email: process.env.TEST_USER_EMAIL!,
+          password: process.env.TEST_USER_PASSWORD!,
+        });
+
+        const { error, data } = await supabase
+          .from("profiles")
+          .update({ role: "admin" })
+          .eq("id", userId)
+          .select("id");
+
+        // Migration 00025 either rejects with a column-grant error or 0 rows are affected.
+        // Both outcomes are acceptable (defense-in-depth: column grant + WITH CHECK policy).
+        const blocked = error !== null || (data ?? []).length === 0;
+        expect(blocked).toBe(true);
       },
     );
 
     it.skip(
       "authenticated user can UPDATE own safe fields (full_name)",
       async () => {
-        // Requires: createClient + signIn
-        // Then: supabase.from('profiles').update({ full_name: 'Test' }).eq('id', userId)
-        // Expected: no error
+        const supabase = createClient(url, anonKey);
+        await supabase.auth.signInWithPassword({
+          email: process.env.TEST_USER_EMAIL!,
+          password: process.env.TEST_USER_PASSWORD!,
+        });
+
+        const { error } = await supabase
+          .from("profiles")
+          .update({ full_name: "IntegrationTest" })
+          .eq("id", userId);
+
+        // Safe field update must succeed
+        expect(error).toBeNull();
       },
     );
   },
@@ -54,30 +92,76 @@ describe.skipIf(!HAS_DB)(
 describe.skipIf(!HAS_DB)(
   "00026 — gamification RPCs: authenticated cannot EXECUTE directly",
   () => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const anonKey = process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    let userId: string;
+
+    beforeAll(async () => {
+      const supabase = createClient(url, anonKey);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: process.env.TEST_USER_EMAIL!,
+        password: process.env.TEST_USER_PASSWORD!,
+      });
+      if (error || !data.user) throw new Error(`signIn failed: ${error?.message}`);
+      userId = data.user.id;
+    });
+
     it.skip(
       "authenticated cannot call award_xp directly",
       async () => {
-        // Requires: createClient(url, anonKey) + signIn
-        // Then: supabase.rpc('award_xp', { p_user_id: userId, p_xp: 9999 })
-        // Expected: error (permission denied for function award_xp)
+        const supabase = createClient(url, anonKey);
+        await supabase.auth.signInWithPassword({
+          email: process.env.TEST_USER_EMAIL!,
+          password: process.env.TEST_USER_PASSWORD!,
+        });
+
+        const { error } = await supabase.rpc("award_xp", {
+          p_user_id: userId,
+          p_xp: 9999,
+        });
+
+        // REVOKE EXECUTE means permission denied for function award_xp
+        expect(error).not.toBeNull();
+        expect(error?.message.toLowerCase()).toMatch(/permission denied|insufficient_privilege/);
       },
     );
 
     it.skip(
       "authenticated cannot call increment_field directly",
       async () => {
-        // Requires: createClient(url, anonKey) + signIn
-        // Then: supabase.rpc('increment_field', { ... })
-        // Expected: error (permission denied)
+        const supabase = createClient(url, anonKey);
+        await supabase.auth.signInWithPassword({
+          email: process.env.TEST_USER_EMAIL!,
+          password: process.env.TEST_USER_PASSWORD!,
+        });
+
+        const { error } = await supabase.rpc("increment_field", {
+          p_table: "profiles",
+          p_user_id: userId,
+          p_field: "xp",
+          p_amount: 1,
+        });
+
+        expect(error).not.toBeNull();
+        expect(error?.message.toLowerCase()).toMatch(/permission denied|insufficient_privilege/);
       },
     );
 
     it.skip(
       "authenticated cannot call update_login_streak directly",
       async () => {
-        // Requires: createClient(url, anonKey) + signIn
-        // Then: supabase.rpc('update_login_streak', { p_user_id: userId })
-        // Expected: error (permission denied)
+        const supabase = createClient(url, anonKey);
+        await supabase.auth.signInWithPassword({
+          email: process.env.TEST_USER_EMAIL!,
+          password: process.env.TEST_USER_PASSWORD!,
+        });
+
+        const { error } = await supabase.rpc("update_login_streak", {
+          p_user_id: userId,
+        });
+
+        expect(error).not.toBeNull();
+        expect(error?.message.toLowerCase()).toMatch(/permission denied|insufficient_privilege/);
       },
     );
   },
@@ -90,21 +174,56 @@ describe.skipIf(!HAS_DB)(
 describe.skipIf(!HAS_DB)(
   "00027 — mentor RPCs: cross-user p_user_id is rejected",
   () => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const anonKey = process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+    // TEST_USER_B_* must be a second test user configured in the local Supabase instance.
+    // Falls back to a random UUID that will never match auth.uid() to simulate cross-user access.
+    const foreignUserId =
+      process.env.TEST_USER_B_ID ?? "00000000-0000-0000-0000-000000000002";
+
     it.skip(
       "get_mentor_signals with foreign user_id returns 0 rows",
       async () => {
-        // Requires: two test users (A and B)
-        // User A calls: supabase.rpc('get_mentor_signals', { p_user_id: userBId })
-        // Expected: empty result set (auth.uid() != p_user_id guard filters out all rows)
+        const supabase = createClient(url, anonKey);
+        await supabase.auth.signInWithPassword({
+          email: process.env.TEST_USER_EMAIL!,
+          password: process.env.TEST_USER_PASSWORD!,
+        });
+
+        // User A calls get_mentor_signals with user B's UUID.
+        // Migration 00027 adds: AND p_user_id = auth.uid() — mismatch filters everything out.
+        const { data, error } = await supabase.rpc("get_mentor_signals", {
+          p_user_id: foreignUserId,
+        });
+
+        expect(error).toBeNull();
+        // No rows must be returned because p_user_id != auth.uid()
+        expect(Array.isArray(data)).toBe(true);
+        expect((data as unknown[]).length).toBe(0);
       },
     );
 
     it.skip(
       "generate_page_briefing with foreign user_id raises exception",
       async () => {
-        // Requires: two test users (A and B)
-        // User A calls: supabase.rpc('generate_page_briefing', { p_user_id: userBId, p_page_context: 'dashboard' })
-        // Expected: error with code 'insufficient_privilege'
+        const supabase = createClient(url, anonKey);
+        await supabase.auth.signInWithPassword({
+          email: process.env.TEST_USER_EMAIL!,
+          password: process.env.TEST_USER_PASSWORD!,
+        });
+
+        // User A calls generate_page_briefing with user B's UUID.
+        // Migration 00027 raises EXCEPTION with ERRCODE = 'insufficient_privilege'.
+        const { error } = await supabase.rpc("generate_page_briefing", {
+          p_user_id: foreignUserId,
+          p_page_context: "dashboard",
+        });
+
+        expect(error).not.toBeNull();
+        // Supabase surfaces the ERRCODE as error.code or error.details
+        const errStr = JSON.stringify(error).toLowerCase();
+        expect(errStr).toMatch(/insufficient_privilege|permission denied/);
       },
     );
   },

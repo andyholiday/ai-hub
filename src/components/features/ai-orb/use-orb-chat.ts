@@ -45,6 +45,8 @@ export interface UseOrbChatReturn {
   startNewSession: () => void;
   isStreaming: boolean;
   error: string | null;
+  /** true wenn der Server sessionId: null gesendet hat — Persistenz nicht verfuegbar */
+  persistenceDegraded: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -69,6 +71,7 @@ export function useOrbChat(options?: UseOrbChatOptions): UseOrbChatReturn {
   const hasMore = false;
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [persistenceDegraded, setPersistenceDegraded] = useState(false);
 
   // ---------------------------------------------------------------------------
   // loadMore — laedt aeltere Nachrichten (Seite 2+)
@@ -184,9 +187,15 @@ export function useOrbChat(options?: UseOrbChatOptions): UseOrbChatReturn {
                 };
               };
 
-              if (chunk.metadata?.sessionId && !newSessionId) {
-                newSessionId = chunk.metadata.sessionId;
-                setSessionId(newSessionId);
+              if (chunk.metadata && "sessionId" in chunk.metadata && !newSessionId) {
+                if (chunk.metadata.sessionId) {
+                  newSessionId = chunk.metadata.sessionId;
+                  setSessionId(newSessionId);
+                  setPersistenceDegraded(false);
+                } else {
+                  // Server signalisiert: sessionId = null → Persistenz nicht verfuegbar
+                  setPersistenceDegraded(true);
+                }
               }
               if (chunk.metadata?.userMessageId && !userDbId) {
                 userDbId = chunk.metadata.userMessageId;
@@ -246,5 +255,6 @@ export function useOrbChat(options?: UseOrbChatOptions): UseOrbChatReturn {
     startNewSession,
     isStreaming,
     error,
+    persistenceDegraded,
   };
 }

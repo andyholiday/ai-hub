@@ -311,18 +311,18 @@ function handleStreamingResponse(
         let model: string | undefined;
         let assistantContent = "";
 
-        // Erstes Chunk-Event: sessionId + userMessageDbId mitschicken (ADR-005)
-        if (sessionId) {
-          const metaEvent = JSON.stringify({
-            content: "",
-            isComplete: false,
-            metadata: {
-              sessionId,
-              userMessageId: userMessageDbId ?? "",
-            },
-          });
-          controller.enqueue(encoder.encode(`data: ${metaEvent}\n\n`));
-        }
+        // Erstes Chunk-Event: sessionId + userMessageDbId mitschicken (ADR-005).
+        // sessionId wird IMMER gesendet — entweder echte UUID oder null, damit der
+        // Client (use-orb-chat.ts) weiss, ob Persistenz verfuegbar ist.
+        const metaEvent = JSON.stringify({
+          content: "",
+          isComplete: false,
+          metadata: {
+            sessionId: sessionId ?? null,
+            userMessageId: userMessageDbId ?? "",
+          },
+        });
+        controller.enqueue(encoder.encode(`data: ${metaEvent}\n\n`));
 
         for await (const chunk of router.chatStream(request)) {
           // Akkumuliere Text-Content fuer Persistenz (ADR-005)
