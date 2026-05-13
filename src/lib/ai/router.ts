@@ -13,6 +13,10 @@ import type {
 } from "./types";
 import { getRouterConfig, getRouterConfigWithDBKeys } from "./config";
 import { createAllProviders } from "./providers";
+import {
+  MistralEuProvider,
+  createMistralEuConfig,
+} from "./providers/mistral-eu";
 
 // ---------------------------------------------------------------------------
 // AI Router Class
@@ -52,9 +56,19 @@ export class AIRouter {
   /**
    * Route a chat request to the appropriate provider.
    * On failure, walks the fallback chain until a provider succeeds.
+   *
+   * LLM-Gate (Pattern P1.2): Pre-call gate is applied at the API route layer
+   * (/api/ai/chat) where user context (tier, supabase) is available.
+   * This method receives only requests that passed the gate.
    */
   async chat(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
     this.ensureInitialised();
+
+    // ADR-013: Privacy-Mode leitet zwingend auf Mistral EU Experiment-Tier um
+    if (request.privacyMode) {
+      const euProvider = new MistralEuProvider(createMistralEuConfig());
+      return euProvider.chat(request);
+    }
 
     const errors: Array<{ provider: string; error: Error }> = [];
 
@@ -97,6 +111,13 @@ export class AIRouter {
     request: ChatCompletionRequest
   ): AsyncGenerator<StreamChunk> {
     this.ensureInitialised();
+
+    // ADR-013: Privacy-Mode leitet zwingend auf Mistral EU Experiment-Tier um
+    if (request.privacyMode) {
+      const euProvider = new MistralEuProvider(createMistralEuConfig());
+      yield* euProvider.chatStream(request);
+      return;
+    }
 
     const errors: Array<{ provider: string; error: Error }> = [];
     const chain = this.buildProviderChain(request.provider);

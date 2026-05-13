@@ -355,6 +355,78 @@ describe("useOrbChat", () => {
   });
 
   // -------------------------------------------------------------------------
+  // Error-shape parsing (Task 5b — ADR-015)
+  // -------------------------------------------------------------------------
+
+  it("parses legacy error shape { error: string } and sets error state", async () => {
+    mockFetch(422, null, { error: "Modell nicht verfügbar" });
+
+    const { result } = renderHook(() => useOrbChat());
+
+    await act(async () => {
+      await result.current.sendMessage("test legacy error");
+    });
+
+    expect(result.current.error).toBe("Modell nicht verfügbar");
+    expect(result.current.messages).toHaveLength(0);
+  });
+
+  it("parses new error shape { error: { code, message } } and sets error state", async () => {
+    mockFetch(503, null, {
+      error: { code: "PROVIDER_UNAVAILABLE", message: "Anbieter nicht erreichbar" },
+    });
+
+    const { result } = renderHook(() => useOrbChat());
+
+    await act(async () => {
+      await result.current.sendMessage("test new error shape");
+    });
+
+    expect(result.current.error).toBe("Anbieter nicht erreichbar");
+    expect(result.current.messages).toHaveLength(0);
+  });
+
+  it("falls back to status code message when error shape is unknown", async () => {
+    mockFetch(500, null, {});
+
+    const { result } = renderHook(() => useOrbChat());
+
+    await act(async () => {
+      await result.current.sendMessage("test unknown error shape");
+    });
+
+    expect(result.current.error).toContain("500");
+    expect(result.current.messages).toHaveLength(0);
+  });
+
+  it("SSE stream error removes empty assistant bubble and sets error state", async () => {
+    // Simulate a fetch that succeeds (ok: true) but has no readable body,
+    // causing the stream reader to throw
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          body: null, // no readable stream — triggers throw inside sendMessage
+          json: () => Promise.resolve({}),
+        }),
+      ),
+    );
+
+    const { result } = renderHook(() => useOrbChat());
+
+    await act(async () => {
+      await result.current.sendMessage("stream error test");
+    });
+
+    // No messages must remain (both optimistic user msg and streaming placeholder rolled back)
+    expect(result.current.messages).toHaveLength(0);
+    expect(result.current.error).toBeTruthy();
+    expect(result.current.isStreaming).toBe(false);
+  });
+
+  // -------------------------------------------------------------------------
   // loadMore — no-op (Phase 3 stub, F01 fix)
   // -------------------------------------------------------------------------
 

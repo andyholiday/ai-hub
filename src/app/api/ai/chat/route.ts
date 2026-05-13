@@ -11,6 +11,9 @@ import { requireAuth } from "@/lib/api/require-auth";
 import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import type { AIProvider, ChatMessage } from "@/lib/ai/types";
 import { calculateCost } from "@/lib/ai/pricing";
+import { decideGate } from "@/lib/ai/gate/llm-gate";
+import { logGateDecision } from "@/lib/ai/gate/telemetry";
+import { buildManifest, persistManifest } from "@/lib/audit/c2pa-manifest";
 
 export const dynamic = 'force-dynamic';
 
@@ -151,7 +154,19 @@ export async function POST(req: NextRequest): Promise<Response> {
           { status: 400 }
         );
       }
-      if (!["system", "user", "assistant"].includes(msg.role)) {
+      if (msg.role === "system") {
+        return NextResponse.json(
+          {
+            data: null,
+            error: {
+              code: "INVALID_MESSAGE_ROLE",
+              message: "Client-supplied system messages are not allowed.",
+            },
+          },
+          { status: 400 },
+        );
+      }
+      if (!["user", "assistant"].includes(msg.role)) {
         return NextResponse.json(
           { error: `Invalid message role: "${msg.role}"` },
           { status: 400 }
@@ -184,6 +199,37 @@ export async function POST(req: NextRequest): Promise<Response> {
         );
       } catch (err) {
         console.error("[/api/ai/chat] Session-Persistenz fehlgeschlagen:", err instanceof Error ? err.stack : err);
+      }
+    }
+
+    // --- LLM-Gate (opt-in via feature flag 'llm-gate') ---
+    const gateEnabled = process.env.FEATURE_LLM_GATE === 'true';
+    if (gateEnabled && userMessage) {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const supabaseForGate = createAdminClient();
+
+      // Lese User-Tier aus app_metadata (etabliertes Muster im Repo, siehe require-auth.ts).
+      // app_metadata.tier ist derzeit nicht befuellt — Default 'free'.
+      // TODO Wave 4 P2.2 (Settings/Subscription): tier hier durch echte Subscription-Logik ersetzen.
+      const userTier: 'free' | 'premium' =
+        auth.role === 'admin' || auth.role === 'super_admin' ? 'premium' : 'free';
+
+      const { decision, complexity } = await decideGate({ query: userMessage.content, userTier });
+      void logGateDecision(supabaseForGate, userId, decision, complexity, 'ai-mentor-chat');
+
+      if (decision.route === 'local') {
+        return NextResponse.json({
+          id: `gate-local-${Date.now()}`,
+          message: {
+            id: `gate-msg-${Date.now()}`,
+            role: 'assistant',
+            content: 'Diese Frage könnte ich auch ohne LLM beantworten — bitte konkretisiere oder umformuliere.',
+            timestamp: new Date(),
+          },
+          provider: 'local',
+          model: 'heuristic-gate',
+          usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        });
       }
     }
 
@@ -222,11 +268,25 @@ export async function POST(req: NextRequest): Promise<Response> {
   } catch (error) {
     console.error("[/api/ai/chat] Error:", error);
 
-    const message =
+    const rawMessage =
       error instanceof Error ? error.message : "Internal server error";
-    const status = isRateLimitError(message) ? 429 : 500;
+    const status = isRateLimitError(rawMessage) ? 429 : 500;
 
-    return NextResponse.json({ error: message }, { status });
+    // Sanitize: never expose raw provider error text to the client.
+    const publicMessage = isRateLimitError(rawMessage)
+      ? "Der KI-Dienst ist gerade ausgelastet. Bitte versuche es gleich erneut."
+      : "Die KI-Antwort konnte nicht erzeugt werden.";
+
+    return NextResponse.json(
+      {
+        data: null,
+        error: {
+          code: isRateLimitError(rawMessage) ? "AI_PROVIDER_RATE_LIMITED" : "AI_PROVIDER_FAILED",
+          message: publicMessage,
+        },
+      },
+      { status },
+    );
   }
 }
 
@@ -251,18 +311,18 @@ function handleStreamingResponse(
         let model: string | undefined;
         let assistantContent = "";
 
-        // Erstes Chunk-Event: sessionId + userMessageDbId mitschicken (ADR-005)
-        if (sessionId) {
-          const metaEvent = JSON.stringify({
-            content: "",
-            isComplete: false,
-            metadata: {
-              sessionId,
-              userMessageId: userMessageDbId ?? "",
-            },
-          });
-          controller.enqueue(encoder.encode(`data: ${metaEvent}\n\n`));
-        }
+        // Erstes Chunk-Event: sessionId + userMessageDbId mitschicken (ADR-005).
+        // sessionId wird IMMER gesendet — entweder echte UUID oder null, damit der
+        // Client (use-orb-chat.ts) weiss, ob Persistenz verfuegbar ist.
+        const metaEvent = JSON.stringify({
+          content: "",
+          isComplete: false,
+          metadata: {
+            sessionId: sessionId ?? null,
+            userMessageId: userMessageDbId ?? "",
+          },
+        });
+        controller.enqueue(encoder.encode(`data: ${metaEvent}\n\n`));
 
         for await (const chunk of router.chatStream(request)) {
           // Akkumuliere Text-Content fuer Persistenz (ADR-005)
@@ -310,18 +370,62 @@ function handleStreamingResponse(
           void persistMessage(sessionId, "assistant", assistantContent, totalTokens);
         }
 
+        // C2PA Audit-Log nach Stream-Ende (ADR-012, Pattern P4.3, fire-and-forget)
+        // TODO(Wave-5): privacyMode aus user_feature_prefs server-side resolve
+        // und an chatStream weiterreichen. Aktuell: hardcoded false bis Wiring steht.
+        const PRIVACY_MODE_PLACEHOLDER_WAVE5 = false;
+        if (provider && model && assistantContent) {
+          // Resolve the admin module once before entering the IIFE to avoid
+          // a redundant dynamic-import call inside the async block (F06 fix).
+          const { createAdminClient } = await import("@/lib/supabase/admin");
+          void (async () => {
+            try {
+              const adminClient = createAdminClient();
+              const manifest = await buildManifest({
+                modelId: model,
+                provider,
+                region: process.env.AI_REGION ?? "eu-west-1",
+                privacyMode: PRIVACY_MODE_PLACEHOLDER_WAVE5,
+                content: assistantContent,
+                userId,
+              });
+              persistManifest(adminClient, {
+                userId,
+                modelId: model,
+                provider,
+                region: process.env.AI_REGION ?? "eu-west-1",
+                privacyMode: PRIVACY_MODE_PLACEHOLDER_WAVE5,
+                content: assistantContent,
+                manifest,
+              });
+            } catch (err) {
+              console.error("c2pa-manifest-error", err);
+            }
+          })();
+        }
+
         // userMessageDbId ist fuer kuenftige Reply-Threading-Logik reserviert
         void userMessageDbId;
 
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
       } catch (error) {
-        const message =
+        const rawMessage =
           error instanceof Error ? error.message : "Stream error";
-        const errorData = JSON.stringify({ error: message });
-        controller.enqueue(
-          encoder.encode(`data: ${errorData}\n\n`)
-        );
+        // Log raw error server-side; never forward provider internals to client.
+        console.error("[/api/ai/chat] Stream error:", error);
+        const publicMessage = isRateLimitError(rawMessage)
+          ? "Der KI-Dienst ist gerade ausgelastet. Bitte versuche es gleich erneut."
+          : "Die KI-Antwort konnte nicht erzeugt werden.";
+        const errorData = JSON.stringify({
+          error: {
+            code: isRateLimitError(rawMessage)
+              ? "AI_PROVIDER_RATE_LIMITED"
+              : "AI_PROVIDER_FAILED",
+            message: publicMessage,
+          },
+        });
+        controller.enqueue(encoder.encode(`data: ${errorData}\n\n`));
         controller.close();
       }
     },

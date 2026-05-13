@@ -1355,6 +1355,38 @@ export type Database = {
           },
         ]
       }
+      user_feature_prefs: {
+        Row: {
+          id: string
+          user_id: string
+          feature_id: string
+          is_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          feature_id: string
+          is_enabled: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          feature_id?: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_feature_prefs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       active_challenges_view: {

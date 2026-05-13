@@ -16,7 +16,7 @@ export default defineConfig({
     exclude: ["node_modules", ".next", "out", "dist"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "html", "lcov"],
+      reporter: ["text", "html", "json-summary"],
       include: ["src/**/*.ts", "src/**/*.tsx"],
       exclude: [
         "src/**/*.d.ts",
