@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Phase 1/2 — Audit Follow-up (Waves A/B1/B2/C, 2026-05-12)
+
+#### Added
+
+- **ADR-016** — Admin-Role-Source-of-Truth: JWT `app_metadata.role` als
+  Fast-Path-Cache in Middleware; `profiles.role` (DB) als autoritaetive Quelle
+  fuer Admin-API-Mutations. Mismatch-Guard in `requireAdmin()`.
+  Siehe [docs/architecture/adr/ADR-016-admin-role-source-of-truth.md](docs/architecture/adr/ADR-016-admin-role-source-of-truth.md).
+- **Best Practices CRUD-API** — 5 Endpunkte (`GET /`, `POST /`,
+  `GET /[id]`, `PATCH /[id]`, `DELETE /[id]`) in
+  `src/app/api/best-practices/`. Zod-Validierung, RLS-geschuetzt,
+  archived-Transition Admin-only.
+- **Best Practices UI** — Listen-, Detail- und Create-Seiten nutzen die
+  echte API; Demo-Daten entfernt.
+- **`challenge_completions`-Tabelle + RLS** — Migration 00028 sichert
+  One-Time-XP-Award per `PRIMARY KEY (user_id, challenge_id)`. Route-Handler
+  nutzt Upsert mit `ignoreDuplicates: true`.
+
+#### Security
+
+- **JWT/DB-Role-Mismatch-Guard** — `requireAdmin()` vergleicht JWT-Rolle mit
+  `profiles.role`; bei Abweichung wird `403 ROLE_SYNC_REQUIRED` zurueckgegeben
+  und ein Warning geloggt.
+- **`X-Role-Changed`-Header** — `PATCH /api/admin/users` setzt
+  `X-Role-Changed: true` nach erfolgreichem Role-Update als Token-Refresh-Signal
+  fuer den Admin-UI-Client.
+- **PATCH `/api/admin/users` Zod-Validierung** — Verhindert leeren-Role-Bypass;
+  `role` muss einem erlaubten Enum-Wert entsprechen.
+- **Challenge-Progress server-known events** — Body-Schema von
+  `{ progress: number }` auf `{ eventType, entityId }` umgestellt; Client
+  kann keinen beliebigen Fortschrittswert mehr senden.
+- **Best Practices Zugriffschutz** — `archived`-Transition nur fuer Admins;
+  Draft-Visibility nur fuer Eigentuemerins.
+
+#### Changed
+
+- **Challenge-Progress-Body-Schema**: `{ progress: number }` ersetzt durch
+  `{ eventType: string, entityId: string }` — server-seitige Ereigniserkennung
+  statt client-kontrolliertem Fortschrittswert.
+
+#### Fixed
+
+- **Migration 00025** — `preferences`-Spalte existiert nicht in Production;
+  durch `position` ersetzt.
+- **Migration 00028** — `CREATE POLICY IF NOT EXISTS` ist kein gueltiges
+  Postgres-Syntax; ersetzt durch `DROP POLICY IF EXISTS` + `CREATE POLICY`.
+- **19 localStorage-Test-Failures** — `tests/setup.ts`-Polyfill behebt
+  fehlende State-Isolation in Playwright-Tests (`T01`).
+- **`chat/route.ts`** — Doppelter dynamischer Import von `@/lib/supabase/admin`
+  dedupliziert.
+- **`provider-keys.ts`** — `TODO(audit-task-1)`-Marker gesetzt fuer
+  ausstehende Provider-Key-Normalisierung.
+- **Orb-Status-Indicator-Test** — framer-motion-Mock leakt keine
+  `drag`-Props mehr auf DOM-Elemente.
+
+---
+
 ### Security (Phase 0 — Hardening, Merge-Blocker)
 
 - **0.1 Auth-Hardening** — Server-side JWT validation via `getUser()` instead of
