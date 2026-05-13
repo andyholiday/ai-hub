@@ -14,6 +14,7 @@ import { calculateCost } from "@/lib/ai/pricing";
 import { decideGate } from "@/lib/ai/gate/llm-gate";
 import { logGateDecision } from "@/lib/ai/gate/telemetry";
 import { buildManifest, persistManifest } from "@/lib/audit/c2pa-manifest";
+import { AI_HUB_SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
 
 export const dynamic = 'force-dynamic';
 
@@ -239,7 +240,9 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (body.stream !== false) {
       return handleStreamingResponse(router, {
         messages,
-        // systemPrompt not forwarded: server-side only, never from client input
+        // Server-injected Mentor-Persona (NOP-07). Client-supplied system
+        // prompts are rejected earlier in the request-validation step.
+        systemPrompt: AI_HUB_SYSTEM_PROMPT,
         context: body.context,
         provider: body.provider,
         model: body.model,
@@ -252,7 +255,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     // --- Non-streaming response ---
     const result = await router.chat({
       messages,
-      // systemPrompt not forwarded: server-side only, never from client input
+      systemPrompt: AI_HUB_SYSTEM_PROMPT,
       context: body.context,
       provider: body.provider,
       model: body.model,
