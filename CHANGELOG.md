@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Phase 1/2 — Audit Follow-up Wave 2026-05-13
+
+#### Added
+
+- Migration 00029 + CHECK constraint `ai_providers_provider_key_known` normalisiert
+  `chatgpt`-Row auf `openai` und schuetzt vor erneutem Provider-Key-Drift.
+- `src/lib/api/handle-role-change-response.ts` — client-seitiger Handler fuer
+  `X-Role-Changed: true`-Header; ruft `supabase.auth.refreshSession()` auf
+  (schliesst ADR-016 NOP-01).
+- `scripts/seed-test-users.mjs` — idempotentes Test-User-Seed-Script mit
+  Pagination-Loop, upsert-Logik und Production-Guard.
+- `tests/e2e/auth.setup.ts` — Playwright storageState fuer `user.json` und
+  `admin.json`.
+- `chromium-admin` Playwright-Project mit `storageState: admin.json` und
+  `dependencies: [setup]`.
+- `AdminUsersTab` gemountet in `/admin/users`.
+- Backlog-Link-Stubs fuer `/admin/analytics`, `/admin/content`,
+  `/admin/settings`.
+
+#### Changed
+
+- `ChatSplitView` nutzt `useOrbChat`-Hook fuer Chat-State. `setTimeout`-Mock
+  entfernt; echter SSE-Streaming-Call an `POST /api/ai/chat`.
+
+#### Fixed
+
+- Live-DB-Konsistenz: `chatgpt`-Row in `ai_providers` auf `openai` normalisiert.
+  CHECK-Constraint schuetzt vor weiterem Drift.
+- Defensiver Workaround in `src/lib/ai/provider-keys.ts`:
+  `TODO(audit-task-1)` bleibt offen bis `feature/phase-1-admin-auth-and-challenges`
+  in `main` gemerged ist.
+- Playwright-Seed-Script `retries: 2` in CI (war 1) und
+  `video: 'retain-on-failure'` (fehlte).
+
+#### Security
+
+- `X-Role-Changed`-Client-Refresh schliesst Mismatch-Fenster bei Admin-Role-Change
+  (ADR-016 NOP-01). Siehe
+  [docs/quality/REVIEW-2026-05-13-wave-2.md](docs/quality/REVIEW-2026-05-13-wave-2.md).
+- Playwright-Seed-Script verweigert Ausfuehrung gegen Prod-DB ohne explizites
+  `--allow-production`-Flag oder `SEED_ALLOW_PRODUCTION=1`.
+
+---
+
 ### Security (Phase 0 — Hardening, Merge-Blocker)
 
 - **0.1 Auth-Hardening** — Server-side JWT validation via `getUser()` instead of
