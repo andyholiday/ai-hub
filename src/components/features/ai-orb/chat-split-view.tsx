@@ -33,6 +33,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatMessage, TypingIndicator } from "./chat-message";
 import { useOrb, type OrbState } from "./orb-provider";
+import { useOrbChat } from "./use-orb-chat";
 
 // ---------------------------------------------------------------------------
 // Status labels
@@ -94,25 +95,25 @@ const panelVariants = {
 // Component
 // ---------------------------------------------------------------------------
 export function ChatSplitView() {
-    const {
-        minimize,
-        messages,
-        addMessage,
-        isTyping,
-        setIsTyping,
-        pageContext,
-        orbState,
-    } = useOrb();
+    const { minimize, pageContext, orbState, setOrbState } = useOrb();
+
+    // useOrbChat owns all chat state (ADR-005 consolidation)
+    const { messages, sendMessage, isStreaming, error } = useOrbChat();
 
     const [inputValue, setInputValue] = useState("");
     const [isFullscreen, setIsFullscreen] = useState(false);
     const chatEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
+    // Sync orb animation state with streaming
+    useEffect(() => {
+        setOrbState(isStreaming ? "thinking" : "idle");
+    }, [isStreaming, setOrbState]);
+
     // Auto-scroll
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, isTyping]);
+    }, [messages, isStreaming]);
 
     // Focus input on mount
     useEffect(() => {
@@ -132,36 +133,17 @@ export function ChatSplitView() {
     // Handle send message
     const handleSend = useCallback(() => {
         const trimmed = inputValue.trim();
-        if (!trimmed) return;
-
-        addMessage("user", trimmed);
+        if (!trimmed || isStreaming) return;
         setInputValue("");
-
-        // Simulate AI response (will be replaced with real API call)
-        setIsTyping(true);
-        setTimeout(() => {
-            setIsTyping(false);
-            addMessage(
-                "ai",
-                "Das ist eine tolle Frage! Lass mich dir dabei helfen. Basierend auf deinem aktuellen Lernfortschritt und dem Kontext der Seite habe ich ein paar Vorschläge für dich.",
-            );
-        }, 2000);
-    }, [inputValue, addMessage, setIsTyping]);
+        void sendMessage(trimmed);
+    }, [inputValue, isStreaming, sendMessage]);
 
     // Handle quick action
     const handleQuickAction = useCallback(
         (action: string) => {
-            addMessage("user", action);
-            setIsTyping(true);
-            setTimeout(() => {
-                setIsTyping(false);
-                addMessage(
-                    "ai",
-                    `Gerne helfe ich dir mit "${action}". Was genau möchtest du wissen?`,
-                );
-            }, 1500);
+            void sendMessage(action);
         },
-        [addMessage, setIsTyping],
+        [sendMessage],
     );
 
     // Keyboard submit
@@ -302,10 +284,25 @@ export function ChatSplitView() {
                     )}
 
                     {messages.map((message) => (
-                        <ChatMessage key={message.id} message={message} />
+                        <ChatMessage
+                            key={message.id}
+                            message={{
+                                id: message.id,
+                                // Mapping: hook uses "assistant", ChatMessage expects "ai"
+                                role: message.role === "assistant" ? "ai" : "user",
+                                content: message.content,
+                                timestamp: message.timestamp,
+                            }}
+                        />
                     ))}
 
-                    {isTyping && <TypingIndicator />}
+                    {isStreaming && <TypingIndicator />}
+
+                    {error && (
+                        <p className="px-5 py-2 text-xs text-red-500" role="alert">
+                            {error}
+                        </p>
+                    )}
 
                     <div ref={chatEndRef} />
                 </div>
@@ -358,7 +355,7 @@ export function ChatSplitView() {
                         <button
                             type="button"
                             onClick={handleSend}
-                            disabled={!inputValue.trim()}
+                            disabled={!inputValue.trim() || isStreaming}
                             className={cn(
                                 "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
                                 "bg-gradient-to-r from-brand-primary-500 to-brand-primary-600 text-white",
