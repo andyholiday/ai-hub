@@ -45,6 +45,10 @@ export function AdminUsersTab() {
     const [editIsApproved, setEditIsApproved] = useState(true);
     const [isSavingEdit, setIsSavingEdit] = useState(false);
 
+    // Delete User State
+    const [deletingUser, setDeletingUser] = useState<UserRow | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const fetchUsers = () => {
         setIsLoading(true);
         fetch("/api/admin/users")
@@ -154,21 +158,24 @@ export function AdminUsersTab() {
         }
     };
 
-    const handleDeleteUser = async (id: string) => {
-        if (!window.confirm("Benutzer wirklich löschen?")) return;
+    const handleConfirmDelete = async () => {
+        if (!deletingUser) return;
+        setIsDeleting(true);
         try {
             const res = await fetch("/api/admin/users", {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id })
+                body: JSON.stringify({ id: deletingUser.id })
             });
             const data = await res.json();
             if (data.error) throw new Error(data.error.message);
 
-            // Remove from local state
-            setUsers(users.filter(u => u.id !== id));
+            setUsers(users.filter(u => u.id !== deletingUser.id));
+            setDeletingUser(null);
         } catch (err: unknown) {
             alert("Fehler beim Löschen: " + (err instanceof Error ? err.message : String(err)));
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -283,7 +290,7 @@ export function AdminUsersTab() {
                                                 <Pencil className="h-4 w-4" />
                                             </button>
                                             <button
-                                                onClick={() => handleDeleteUser(user.id)}
+                                                onClick={() => setDeletingUser(user)}
                                                 className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-red-50 hover:text-red-600"
                                                 title="Löschen"
                                             >
@@ -495,6 +502,60 @@ export function AdminUsersTab() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {deletingUser && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-surface-900/50 p-4 backdrop-blur-sm"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="delete-user-title"
+                >
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl animate-scale-up">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h3 id="delete-user-title" className="text-xl font-bold text-surface-900">
+                                Benutzer löschen?
+                            </h3>
+                            <button
+                                onClick={() => setDeletingUser(null)}
+                                disabled={isDeleting}
+                                className="rounded-full p-1 text-surface-400 hover:bg-surface-100 hover:text-surface-700 disabled:opacity-50"
+                                aria-label="Abbrechen"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <p className="text-sm text-surface-600">
+                            Diese Aktion löscht den Benutzer{" "}
+                            <span className="font-semibold text-surface-900">
+                                {deletingUser.full_name || deletingUser.email}
+                            </span>{" "}
+                            (<span className="text-surface-500">{deletingUser.email}</span>)
+                            endgültig. Vorgang kann nicht rückgängig gemacht werden.
+                        </p>
+
+                        <div className="mt-6 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setDeletingUser(null)}
+                                disabled={isDeleting}
+                                className="rounded-xl border border-surface-200 px-4 py-2 font-medium text-surface-600 hover:bg-surface-50 disabled:opacity-50"
+                            >
+                                Abbrechen
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleConfirmDelete}
+                                disabled={isDeleting}
+                                className="flex items-center rounded-xl bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                            >
+                                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Löschen
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
