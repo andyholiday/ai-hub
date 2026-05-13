@@ -11,6 +11,8 @@ BEGIN;
 
 -- Step 1: Rename chatgpt row to openai.
 -- display_name is updated only if it still reflects a chatgpt-specific label.
+-- COALESCE: CASE returns 'OpenAI' on chatgpt-match else NULL; NULL falls back
+-- to display_name (no-op) — preserves admin-customized labels untouched.
 UPDATE public.ai_providers
 SET
   provider_key = 'openai',
