@@ -16,6 +16,8 @@
 | ADR-012 | Privacy Mode — C2PA v2.4 Audit-Log (Art. 50 KI-Transparenz) | Accepted | 2026-05-06 |
 | ADR-013 | Privacy Mode — Mistral EU-Privacy-Provider (supersedes ADR-011) | Accepted | 2026-05-07 |
 | ADR-014 | Postgres-Native Hybrid Search (tsvector + pgvector + RRF) | Accepted | 2026-05-07 |
+| ADR-015 | Orb-Status-Visualisierung — Kombiniertes Ring-Farb-Puls-Konzept | Accepted | 2026-05-12 |
+| ADR-016 | JWT app_metadata als primaere Role-Quelle mit DB-gesteuertem Sync | Accepted | 2026-05-12 |
 
 > ADR-001, 002, 004 sind Skizzen aus dem Architect-Review (siehe
 > `docs/IMPROVEMENTS.md` Anhang). Werden als formale ADRs ausgearbeitet
