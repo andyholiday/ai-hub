@@ -1,228 +1,263 @@
 // =============================================================================
-// Tests: ChatSplitView.callChatApi (F03 — Wave 4 Fix-Pass Iter-2)
+// Tests: ChatSplitView (ADR-005 consolidation — useOrbChat as state owner)
 //
-// Covers:
-//   Test 1: Happy-Path — User tippt + sendet, fetch mit korrektem Body, Antwort gerendert
-//   Test 2: Error-Path — fetch antwortet 503 mit { error: { message } }, deutscher Error-Text
-//   Test 3: Quick-Action-Chip Click triggert send
+// Mocks:
+//   - useOrbChat: simulates hook state and sendMessage
+//   - useOrb: provides minimize, pageContext, orbState, setOrbState
+//   - framer-motion: identity wrapper (no animations in tests)
 // =============================================================================
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import React from "react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ChatSplitView } from "@/components/features/ai-orb/chat-split-view";
+
+// jsdom does not implement scrollIntoView — stub it globally
+window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
 // ---------------------------------------------------------------------------
-// Module mocks — must be set up before importing ChatSplitView
+// Mock framer-motion to avoid animation issues in jsdom
 // ---------------------------------------------------------------------------
 
-vi.mock("framer-motion", () => {
-  const MotionDiv = React.forwardRef<
-    HTMLDivElement,
-    React.HTMLAttributes<HTMLDivElement> & {
-      variants?: unknown;
-      initial?: unknown;
-      animate?: unknown;
-      exit?: unknown;
-    }
-  >(({ children, ...rest }, ref) => (
-    <div ref={ref} {...(rest as React.HTMLAttributes<HTMLDivElement>)}>
-      {children}
-    </div>
-  ));
-  MotionDiv.displayName = "MotionDiv";
-
-  return {
-    motion: { div: MotionDiv },
-    AnimatePresence: ({ children }: { children: React.ReactNode }) => (
-      <>{children}</>
+vi.mock("framer-motion", () => ({
+  motion: {
+    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => (
+      <div {...props}>{children}</div>
     ),
-  };
-});
-
-vi.mock("@/components/features/ai-orb/chat-message", () => ({
-  ChatMessage: ({
-    message,
-  }: {
-    message: { id: string; role: string; content: string };
-  }) => <div data-testid={`msg-${message.role}`}>{message.content}</div>,
-  TypingIndicator: () => <div data-testid="typing-indicator" />,
+  },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 // ---------------------------------------------------------------------------
-// OrbProvider mock — controllable per test
+// Mock useOrb
 // ---------------------------------------------------------------------------
 
-import type { OrbState } from "@/components/features/ai-orb/orb-provider";
+const mockMinimize = vi.fn();
+const mockSetOrbState = vi.fn();
 
-const mockMessages: Array<{ id: string; role: "user" | "ai"; content: string; timestamp: Date }> = [];
-const mockOrb = {
-  minimize: vi.fn(),
-  messages: mockMessages,
-  addMessage: vi.fn((role: "user" | "ai", content: string) => {
-    mockMessages.push({ id: `msg-${Date.now()}`, role, content, timestamp: new Date() });
+vi.mock("@/components/features/ai-orb/orb-provider", () => ({
+  useOrb: () => ({
+    minimize: mockMinimize,
+    pageContext: "Dashboard",
+    orbState: "idle",
+    setOrbState: mockSetOrbState,
   }),
-  isTyping: false,
-  setIsTyping: vi.fn(),
-  pageContext: "Dashboard",
-  orbState: "idle" as OrbState,
+}));
+
+// ---------------------------------------------------------------------------
+// Mock useOrbChat
+// ---------------------------------------------------------------------------
+
+const mockSendMessage = vi.fn();
+
+let mockOrbChatState = {
+  messages: [] as Array<{ id: string; role: "user" | "assistant"; content: string; timestamp: Date }>,
+  sendMessage: mockSendMessage,
+  isStreaming: false,
+  error: null as string | null,
 };
 
-vi.mock("@/components/features/ai-orb/orb-provider", async (importOriginal) => {
-  const original =
-    await importOriginal<typeof import("@/components/features/ai-orb/orb-provider")>();
-  return {
-    ...original,
-    useOrb: () => mockOrb,
-  };
-});
+vi.mock("@/components/features/ai-orb/use-orb-chat", () => ({
+  useOrbChat: () => mockOrbChatState,
+}));
 
 // ---------------------------------------------------------------------------
-// System under test — imported after mocks
+// Helpers
 // ---------------------------------------------------------------------------
 
-import { ChatSplitView } from "@/components/features/ai-orb/chat-split-view";
-
-// ---------------------------------------------------------------------------
-// Fetch helpers
-// ---------------------------------------------------------------------------
-
-function mockFetchOk(content: string) {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({ message: { content } }),
-      }),
-    ),
-  );
-}
-
-function mockFetchError(status: number, errorMessage: string) {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(() =>
-      Promise.resolve({
-        ok: false,
-        status,
-        json: () =>
-          Promise.resolve({ error: { code: "PROVIDER_FAILED", message: errorMessage } }),
-      }),
-    ),
-  );
+function renderComponent() {
+  return render(<ChatSplitView />);
 }
 
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("ChatSplitView — callChatApi", () => {
+describe("ChatSplitView", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset mockMessages array in-place
-    mockMessages.splice(0, mockMessages.length);
-    // jsdom does not implement scrollIntoView — stub it globally
-    window.HTMLElement.prototype.scrollIntoView = vi.fn();
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  // -------------------------------------------------------------------------
-  // Test 1: Happy-Path
-  // -------------------------------------------------------------------------
-
-  it("sendet Nachricht und ruft fetch mit korrektem Body auf", async () => {
-    mockFetchOk("Das ist eine Testantwort");
-
-    render(<ChatSplitView />);
-
-    const input = screen.getByRole("textbox", { name: /Nachricht eingeben/i });
-    const sendButton = screen.getByRole("button", { name: /Nachricht senden/i });
-
-    fireEvent.change(input, { target: { value: "Hallo KI" } });
-    fireEvent.click(sendButton);
-
-    await waitFor(() => {
-      expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
-    });
-
-    const [url, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
-    expect(url).toBe("/api/ai/chat");
-
-    const body = JSON.parse(init.body as string) as {
-      messages: Array<{ role: string; content: string }>;
-      stream: boolean;
+    mockOrbChatState = {
+      messages: [],
+      sendMessage: mockSendMessage,
+      isStreaming: false,
+      error: null,
     };
-    expect(body.stream).toBe(false);
-    expect(body.messages.at(-1)).toMatchObject({ role: "user", content: "Hallo KI" });
-  });
-
-  it("zeigt die AI-Antwort nach erfolgreichem fetch an", async () => {
-    mockFetchOk("Ich bin die KI-Antwort");
-
-    render(<ChatSplitView />);
-
-    const input = screen.getByRole("textbox", { name: /Nachricht eingeben/i });
-    fireEvent.change(input, { target: { value: "Frage" } });
-    fireEvent.click(screen.getByRole("button", { name: /Nachricht senden/i }));
-
-    await waitFor(() => {
-      // addMessage muss zweimal aufgerufen worden sein: user + ai
-      expect(mockOrb.addMessage).toHaveBeenCalledTimes(2);
-    });
-
-    expect(mockOrb.addMessage).toHaveBeenNthCalledWith(1, "user", "Frage");
-    expect(mockOrb.addMessage).toHaveBeenNthCalledWith(2, "ai", "Ich bin die KI-Antwort");
+    mockSendMessage.mockResolvedValue(undefined);
   });
 
   // -------------------------------------------------------------------------
-  // Test 2: Error-Path — 503 mit { error: { message } }
+  // Rendering
   // -------------------------------------------------------------------------
 
-  it("zeigt deutschen Error-Text wenn fetch 503 zurueckliefert", async () => {
-    mockFetchError(503, "Der KI-Dienst ist gerade ausgelastet. Bitte versuche es gleich erneut.");
-
-    render(<ChatSplitView />);
-
-    const input = screen.getByRole("textbox", { name: /Nachricht eingeben/i });
-    fireEvent.change(input, { target: { value: "Fehlertest" } });
-    fireEvent.click(screen.getByRole("button", { name: /Nachricht senden/i }));
-
-    await waitFor(() => {
-      expect(mockOrb.addMessage).toHaveBeenCalledTimes(2);
-    });
-
-    // Zweiter addMessage-Aufruf muss deutschen Error-Text mit "Entschuldigung" enthalten
-    const [, errorContent] = mockOrb.addMessage.mock.calls[1] as [string, string];
-    expect(errorContent).toMatch(/Entschuldigung/);
-    expect(errorContent).toContain("Der KI-Dienst ist gerade ausgelastet");
+  it("renders the dialog with the correct aria-label", () => {
+    renderComponent();
+    expect(screen.getByRole("dialog", { name: "AI Mentor Command Center" })).toBeInTheDocument();
   });
 
-  // -------------------------------------------------------------------------
-  // Test 3: Quick-Action-Chip Click triggert send
-  // -------------------------------------------------------------------------
+  it("shows the empty state when no messages", () => {
+    renderComponent();
+    expect(screen.getByText("Wie kann ich dir helfen?")).toBeInTheDocument();
+  });
 
-  it("Quick-Action-Chip Click sendet die Chip-Beschriftung als Nachricht", async () => {
-    mockFetchOk("Chip-Antwort");
+  it("shows the page context from useOrb", () => {
+    renderComponent();
+    expect(screen.getByText(/Kontext: Dashboard/)).toBeInTheDocument();
+  });
 
-    render(<ChatSplitView />);
-
-    // "🎯 Idee bewerten" ist der erste Chip (QUICK_ACTIONS[0])
-    const chip = screen.getByRole("button", { name: /Idee bewerten/i });
-    fireEvent.click(chip);
-
-    await waitFor(() => {
-      expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
-    });
-
-    const [, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
-    const body = JSON.parse(init.body as string) as {
-      messages: Array<{ role: string; content: string }>;
+  it("renders user and assistant messages with correct role mapping", () => {
+    mockOrbChatState = {
+      ...mockOrbChatState,
+      messages: [
+        { id: "1", role: "user", content: "Hallo", timestamp: new Date() },
+        { id: "2", role: "assistant", content: "Wie kann ich helfen?", timestamp: new Date() },
+      ],
     };
-    expect(body.messages.at(-1)?.content).toContain("Idee bewerten");
+    renderComponent();
+    expect(screen.getByText("Hallo")).toBeInTheDocument();
+    expect(screen.getByText("Wie kann ich helfen?")).toBeInTheDocument();
+  });
+
+  // -------------------------------------------------------------------------
+  // Send message
+  // -------------------------------------------------------------------------
+
+  it("calls sendMessage with trimmed input when send button is clicked", async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    const input = screen.getByLabelText("Nachricht eingeben");
+    await user.type(input, "Test Nachricht");
+    await user.click(screen.getByLabelText("Nachricht senden"));
+
+    expect(mockSendMessage).toHaveBeenCalledWith("Test Nachricht");
+  });
+
+  it("calls sendMessage on Enter key press", async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    const input = screen.getByLabelText("Nachricht eingeben");
+    await user.type(input, "Enter Test{Enter}");
+
+    expect(mockSendMessage).toHaveBeenCalledWith("Enter Test");
+  });
+
+  it("clears the input after sending", async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    const input = screen.getByLabelText("Nachricht eingeben");
+    await user.type(input, "Test");
+    await user.click(screen.getByLabelText("Nachricht senden"));
+
+    expect(input).toHaveValue("");
+  });
+
+  it("does not call sendMessage when input is empty or whitespace", async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    const input = screen.getByLabelText("Nachricht eingeben");
+    await user.type(input, "   {Enter}");
+
+    expect(mockSendMessage).not.toHaveBeenCalled();
+  });
+
+  // -------------------------------------------------------------------------
+  // Disabled state during streaming
+  // -------------------------------------------------------------------------
+
+  it("disables send button while streaming", () => {
+    mockOrbChatState = { ...mockOrbChatState, isStreaming: true };
+    renderComponent();
+    expect(screen.getByLabelText("Nachricht senden")).toBeDisabled();
+  });
+
+  it("shows typing indicator while streaming", () => {
+    mockOrbChatState = { ...mockOrbChatState, isStreaming: true };
+    renderComponent();
+    // TypingIndicator renders three dot spans inside the messages area
+    const dots = document.querySelectorAll(".ai-orb-typing-dot");
+    expect(dots.length).toBeGreaterThan(0);
+  });
+
+  it("hides typing indicator when not streaming", () => {
+    mockOrbChatState = { ...mockOrbChatState, isStreaming: false };
+    renderComponent();
+    const dots = document.querySelectorAll(".ai-orb-typing-dot");
+    expect(dots.length).toBe(0);
+  });
+
+  // -------------------------------------------------------------------------
+  // Error display
+  // -------------------------------------------------------------------------
+
+  it("shows error message when error is set", () => {
+    mockOrbChatState = { ...mockOrbChatState, error: "API-Fehler: 500" };
+    renderComponent();
+    expect(screen.getByRole("alert")).toHaveTextContent("API-Fehler: 500");
+  });
+
+  it("does not render error element when error is null", () => {
+    renderComponent();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  // -------------------------------------------------------------------------
+  // Quick actions
+  // -------------------------------------------------------------------------
+
+  it("calls sendMessage when a quick action chip is clicked", async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    await user.click(screen.getByText(/Idee bewerten/));
+    expect(mockSendMessage).toHaveBeenCalledTimes(1);
+  });
+
+  // -------------------------------------------------------------------------
+  // Close behavior
+  // -------------------------------------------------------------------------
+
+  it("calls minimize when backdrop is clicked", async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    // The backdrop overlay is aria-hidden, find it by its fixed class
+    const backdrop = document.querySelector(".bg-black\\/20");
+    expect(backdrop).not.toBeNull();
+    await user.click(backdrop!);
+
+    expect(mockMinimize).toHaveBeenCalled();
+  });
+
+  it("calls minimize when close button is clicked", async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    await user.click(screen.getByLabelText("Chat schließen"));
+    expect(mockMinimize).toHaveBeenCalled();
+  });
+
+  it("calls minimize on Escape key", () => {
+    renderComponent();
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(mockMinimize).toHaveBeenCalled();
+  });
+
+  // -------------------------------------------------------------------------
+  // OrbState sync
+  // -------------------------------------------------------------------------
+
+  it("calls setOrbState('thinking') when isStreaming becomes true", () => {
+    mockOrbChatState = { ...mockOrbChatState, isStreaming: true };
+    renderComponent();
+    expect(mockSetOrbState).toHaveBeenCalledWith("thinking");
+  });
+
+  it("calls setOrbState('idle') when isStreaming is false", () => {
+    mockOrbChatState = { ...mockOrbChatState, isStreaming: false };
+    renderComponent();
+    expect(mockSetOrbState).toHaveBeenCalledWith("idle");
   });
 });
