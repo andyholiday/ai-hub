@@ -48,6 +48,7 @@ export function AdminUsersTab() {
     // Delete User State
     const [deletingUser, setDeletingUser] = useState<UserRow | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const fetchUsers = () => {
         setIsLoading(true);
@@ -158,9 +159,16 @@ export function AdminUsersTab() {
         }
     };
 
+    const closeDeleteModal = () => {
+        if (isDeleting) return;
+        setDeletingUser(null);
+        setDeleteError(null);
+    };
+
     const handleConfirmDelete = async () => {
         if (!deletingUser) return;
         setIsDeleting(true);
+        setDeleteError(null);
         try {
             const res = await fetch("/api/admin/users", {
                 method: "DELETE",
@@ -173,7 +181,7 @@ export function AdminUsersTab() {
             setUsers(users.filter(u => u.id !== deletingUser.id));
             setDeletingUser(null);
         } catch (err: unknown) {
-            alert("Fehler beim Löschen: " + (err instanceof Error ? err.message : String(err)));
+            setDeleteError(err instanceof Error ? err.message : String(err));
         } finally {
             setIsDeleting(false);
         }
@@ -512,6 +520,7 @@ export function AdminUsersTab() {
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="delete-user-title"
+                    onKeyDown={(e) => { if (e.key === "Escape") closeDeleteModal(); }}
                 >
                     <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl animate-scale-up">
                         <div className="mb-4 flex items-center justify-between">
@@ -519,7 +528,7 @@ export function AdminUsersTab() {
                                 Benutzer löschen?
                             </h3>
                             <button
-                                onClick={() => setDeletingUser(null)}
+                                onClick={closeDeleteModal}
                                 disabled={isDeleting}
                                 className="rounded-full p-1 text-surface-400 hover:bg-surface-100 hover:text-surface-700 disabled:opacity-50"
                                 aria-label="Abbrechen"
@@ -537,10 +546,16 @@ export function AdminUsersTab() {
                             endgültig. Vorgang kann nicht rückgängig gemacht werden.
                         </p>
 
+                        {deleteError && (
+                            <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+                                Fehler beim Löschen: {deleteError}
+                            </p>
+                        )}
+
                         <div className="mt-6 flex justify-end gap-3">
                             <button
                                 type="button"
-                                onClick={() => setDeletingUser(null)}
+                                onClick={closeDeleteModal}
                                 disabled={isDeleting}
                                 className="rounded-xl border border-surface-200 px-4 py-2 font-medium text-surface-600 hover:bg-surface-50 disabled:opacity-50"
                             >
@@ -550,6 +565,7 @@ export function AdminUsersTab() {
                                 type="button"
                                 onClick={handleConfirmDelete}
                                 disabled={isDeleting}
+                                autoFocus
                                 className="flex items-center rounded-xl bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-50"
                             >
                                 {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
