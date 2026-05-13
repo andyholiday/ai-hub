@@ -7,7 +7,6 @@ export { StatsGrid } from "./stats-grid";
 export { XpProgress } from "./xp-progress";
 export { RecommendationSection } from "./recommendation-section";
 export { ActivityFeed } from "./activity-feed";
-export { MentorMini } from "./mentor-mini";
 export { ChallengesCard } from "./challenges-card";
 export { LeaderboardMini } from "./leaderboard-mini";
 export { RecentAchievements } from "./recent-achievements";
