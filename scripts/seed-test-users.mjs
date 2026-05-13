@@ -14,8 +14,8 @@
  *
  * Ausfuehren: node scripts/seed-test-users.mjs
  *
- * WARNUNG: Script prueft auf Prod-DB (kein "supabase.co"-Check) —
- * stelle sicher, dass NEXT_PUBLIC_SUPABASE_URL auf deine lokale/Test-DB zeigt.
+ * WARNUNG: Script verweigert Ausfuehrung gegen Prod-DB (*.supabase.co ohne localhost).
+ * Fuer Prod-Ausfuehrung: --allow-production Flag oder SEED_ALLOW_PRODUCTION=1 setzen.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -56,6 +56,27 @@ if (!supabaseUrl || !supabaseKey) {
   process.exit(1);
 }
 
+// ---------------------------------------------------------------------------
+// Production-Guard: Abbruch wenn SUPABASE_URL auf *.supabase.co zeigt
+// (ausser explizit erlaubt via --allow-production oder SEED_ALLOW_PRODUCTION=1)
+// ---------------------------------------------------------------------------
+const isProductionUrl =
+  supabaseUrl.includes('.supabase.co') &&
+  !supabaseUrl.includes('localhost') &&
+  !supabaseUrl.includes('127.0.0.1');
+
+if (isProductionUrl) {
+  const allowed =
+    process.argv.includes('--allow-production') ||
+    process.env.SEED_ALLOW_PRODUCTION === '1';
+  if (!allowed) {
+    console.error('[seed] FEHLER: SUPABASE_URL zeigt auf eine Produktions-DB.');
+    console.error('[seed] Seed-Script nicht ausgefuehrt. Nutze --allow-production oder SEED_ALLOW_PRODUCTION=1 um fortzufahren.');
+    process.exit(1);
+  }
+  console.warn('[seed] WARNUNG: Ausfuehrung gegen Produktions-DB erlaubt (--allow-production).');
+}
+
 if (!TEST_USER_PASSWORD || !TEST_ADMIN_PASSWORD) {
   console.error('[seed] FEHLER: TEST_USER_PASSWORD und TEST_ADMIN_PASSWORD muessen gesetzt sein.');
   process.exit(1);
@@ -71,14 +92,21 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 async function upsertUser({ email, password, fullName, role }) {
   console.log(`[seed] Pruefe User: ${email} ...`);
 
-  // Pruefen ob User bereits existiert
-  const { data: existing, error: listError } = await supabase.auth.admin.listUsers();
-  if (listError) {
-    console.error(`[seed] listUsers Fehler:`, listError.message);
-    return null;
+  // Pruefen ob User bereits existiert (mit Pagination-Loop fuer grosse User-Listen)
+  let existingUser = null;
+  let page = 1;
+  const perPage = 1000;
+  while (true) {
+    const { data: batch, error: listError } = await supabase.auth.admin.listUsers({ page, perPage });
+    if (listError) {
+      console.error(`[seed] listUsers Fehler:`, listError.message);
+      return null;
+    }
+    const found = batch?.users?.find((u) => u.email === email);
+    if (found) { existingUser = found; break; }
+    if (!batch?.users?.length || batch.users.length < perPage) break;
+    page++;
   }
-
-  const existingUser = existing?.users?.find((u) => u.email === email);
 
   let userId;
 
@@ -102,16 +130,13 @@ async function upsertUser({ email, password, fullName, role }) {
     console.log(`[seed]   -> User angelegt (id: ${userId}).`);
   }
 
-  // Profile aktualisieren: role + is_approved
-  // (Trigger handle_new_user legt Profile an; wir setzen nur was der Trigger nicht setzt)
+  // Profile upserten: verhindert silent no-op falls handle_new_user-Trigger noch nicht durch ist
   const { error: profileError } = await supabase
     .from('profiles')
-    .update({
-      role,
-      is_approved: true,
-      full_name: fullName,
-    })
-    .eq('id', userId);
+    .upsert(
+      { id: userId, role, is_approved: true, full_name: fullName },
+      { onConflict: 'id' }
+    );
 
   if (profileError) {
     console.error(`[seed]   -> Fehler beim Profil-Update:`, profileError.message);
