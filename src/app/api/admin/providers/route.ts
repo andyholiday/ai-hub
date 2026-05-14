@@ -95,14 +95,13 @@ export async function PUT(req: NextRequest) {
         return apiNotFound("Provider not found");
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC not yet in generated types (run `supabase gen types` after migration 00014)
-      const { data: vaultUuid, error: vaultError } = await (supabase.rpc as any)(
+      const { data: vaultUuid, error: vaultError } = await supabase.rpc(
         "upsert_provider_vault_key",
         {
           p_provider_key: existing.provider_key,
           p_api_key: incomingApiKey,
         },
-      ) as { data: string | null; error: { message: string } | null };
+      );
 
       if (vaultError || !vaultUuid) {
         return apiInternalError(

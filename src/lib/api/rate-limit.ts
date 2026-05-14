@@ -38,11 +38,39 @@ export type RateLimitHeaders = Record<string, string>;
  * Whether Upstash Redis is configured. Rate limiting is a feature flag:
  * when the env vars are missing, an in-memory fallback is used instead.
  */
+const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
 const isConfigured =
-  typeof process.env.UPSTASH_REDIS_REST_URL === "string" &&
-  process.env.UPSTASH_REDIS_REST_URL.length > 0 &&
-  typeof process.env.UPSTASH_REDIS_REST_TOKEN === "string" &&
-  process.env.UPSTASH_REDIS_REST_TOKEN.length > 0;
+  typeof upstashUrl === "string" && upstashUrl.length > 0 &&
+  typeof upstashToken === "string" && upstashToken.length > 0;
+
+/**
+ * Hard-fail in production runtime when Upstash is not configured.
+ * In-memory rate limiting is per-Lambda-instance and provides no real
+ * protection in multi-instance deployments (Vercel, any serverless platform).
+ *
+ * The check is deferred to the first `rateLimit()` call (runtime). Throwing at
+ * module-load time would crash `next build` because NODE_ENV=production is set
+ * during the build phase, before any env var resolution against Vercel.
+ */
+const isProdRuntime =
+  process.env.NEXT_PHASE !== "phase-production-build" &&
+  (process.env.VERCEL_ENV === "production" ||
+    process.env.NODE_ENV === "production");
+
+let prodGateChecked = false;
+function assertProdConfigured(): void {
+  if (prodGateChecked) return;
+  prodGateChecked = true;
+  if (isProdRuntime && !isConfigured) {
+    throw new Error(
+      "[rate-limit] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are " +
+        "required in production. In-memory fallback is per-Lambda-instance and " +
+        "ineffective at scale. Set the vars via Vercel Dashboard → Integrations → Upstash.",
+    );
+  }
+}
 
 /**
  * Lazily initialised Redis client. Only created when the env vars exist.
@@ -53,8 +81,8 @@ export function getRedis(): Redis | null {
   if (!isConfigured) return null;
   if (!redis) {
     redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL!,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+      url: upstashUrl!,
+      token: upstashToken!,
     });
   }
   return redis;
@@ -70,6 +98,10 @@ export function getRedis(): Redis | null {
  * has its own counter — the aggregate limit across instances is higher
  * than the configured per-tier limit. Use Upstash for shared enforcement.
  */
+
+/** Emitted once per container lifecycle to avoid log spam. */
+let fallbackWarningEmitted = false;
+
 interface InMemoryBucket {
   count: number;
   resetAt: number;
@@ -213,18 +245,24 @@ export async function rateLimit(
   tier: RateLimitTier,
   userId?: string,
 ): Promise<RateLimitResult> {
+  // Enforce Upstash in production at first runtime call (not at module load).
+  assertProdConfigured();
+
   const identifier = getIdentifier(req, userId);
 
   // --- In-memory fallback when Upstash is not configured ---
   const limiter = getLimiter(tier);
   if (!limiter) {
-    console.warn(
-      JSON.stringify({
-        event: "rate_limit_in_memory_fallback",
-        tier,
-        reason: "Upstash not configured — using per-process in-memory limiter",
-      }),
-    );
+    if (!fallbackWarningEmitted) {
+      fallbackWarningEmitted = true;
+      console.warn(
+        JSON.stringify({
+          level: "warn",
+          event: "rate_limit_fallback_active",
+          reason: "Upstash not configured — using per-process in-memory limiter (dev/test only)",
+        }),
+      );
+    }
     return checkInMemory(identifier, tier);
   }
 

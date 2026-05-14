@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/api/admin-auth";
-import { apiSuccess, apiInternalError, apiBadRequest } from "@/lib/api/response";
+import { apiSuccess, apiInternalError, apiBadRequest, apiValidationError } from "@/lib/api/response";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createUserSchema } from "@/lib/validators/admin";
 
 // ---------------------------------------------------------------------------
 // F01 Fix: Zod-Schema fuer PATCH-Body — verhindert role="" Header-Trigger
@@ -163,12 +164,13 @@ export async function POST(req: NextRequest) {
         const auth = await requireAdmin(req);
         if ("response" in auth) return auth.response;
 
-        const body = await req.json();
-        const { email, password, full_name, is_approved, role } = body;
-
-        if (!email || !password || !full_name) {
-            return apiInternalError("Email, password and full name are required");
+        const rawBody: unknown = await req.json();
+        const parsed = createUserSchema.safeParse(rawBody);
+        if (!parsed.success) {
+            return apiValidationError(parsed.error);
         }
+
+        const { email, password, full_name, is_approved, role } = parsed.data;
 
         const supabase = createAdminClient();
 
@@ -213,9 +215,41 @@ export async function DELETE(req: NextRequest) {
 
         const supabase = createAdminClient();
 
+        // GDPR Art. 30: write erasure audit entry BEFORE deleting the user.
+        const { data: erasureRow, error: insertError } = await supabase
+            .from("gdpr_erasure_log")
+            .insert({ user_id: id })
+            .select("id")
+            .single();
+
+        if (insertError || !erasureRow) {
+            return apiInternalError("Audit-Log konnte nicht geschrieben werden.");
+        }
+
         // 1. Delete from Supabase Auth
         const { error: authError } = await supabase.auth.admin.deleteUser(id);
-        if (authError) return apiInternalError(authError.message);
+
+        if (authError) {
+            // Audit record stays with deleted_at = NULL as a failed-attempt marker.
+            return apiInternalError(authError.message);
+        }
+
+        // Mark erasure as complete in the audit log.
+        const { error: updateError } = await supabase
+            .from("gdpr_erasure_log")
+            .update({ deleted_at: new Date().toISOString() })
+            .eq("id", erasureRow.id);
+
+        if (updateError) {
+            console.error(
+                JSON.stringify({
+                    event: "erasure_log_update_failed",
+                    user_id: id,
+                    erasure_log_id: erasureRow.id,
+                    error: updateError.message,
+                }),
+            );
+        }
 
         // 2. Delete profile row (may already be cascaded, but ensure cleanup)
         const { error: profileError } = await supabase

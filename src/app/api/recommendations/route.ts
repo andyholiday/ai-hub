@@ -10,9 +10,10 @@ import {
   apiInternalError,
   apiValidationError,
 } from "@/lib/api/response";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { recommendationsQuerySchema } from "@/lib/validators/recommendations";
 import type { Recommendation } from "@/types/recommendations";
+import type { Database } from "@/lib/supabase/types";
 
 export const dynamic = 'force-dynamic';
 
@@ -57,7 +58,9 @@ export async function GET(req: NextRequest) {
 
     const { limit } = parsed.data;
     const { userId } = auth;
-    const supabase = createAdminClient();
+    // Cast: createServerClient<Database> and createClient<Database> both return
+    // SupabaseClient<Database>; the cast aligns the generic for tsc.
+    const supabase = auth.supabase as unknown as SupabaseClient<Database>;
 
     // ----- Fetch user profile for level-based filtering -----
     const { data: profile } = await supabase
@@ -112,7 +115,7 @@ export async function GET(req: NextRequest) {
 // ---------------------------------------------------------------------------
 
 async function fetchIncompleteCourses(
-  supabase: ReturnType<typeof createAdminClient>,
+  supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<Recommendation[]> {
   const { data: progress } = await supabase
@@ -162,7 +165,7 @@ async function fetchIncompleteCourses(
 // ---------------------------------------------------------------------------
 
 async function fetchNewCourses(
-  supabase: ReturnType<typeof createAdminClient>,
+  supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<Recommendation[]> {
   // Get courses the user has already started
@@ -208,7 +211,7 @@ async function fetchNewCourses(
 // ---------------------------------------------------------------------------
 
 async function fetchPopularBestPractices(
-  supabase: ReturnType<typeof createAdminClient>,
+  supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<Recommendation[]> {
   // Fetch top best practices by likes, excluding user's own
@@ -245,7 +248,7 @@ async function fetchPopularBestPractices(
 // ---------------------------------------------------------------------------
 
 async function fetchActiveCommunityPosts(
-  supabase: ReturnType<typeof createAdminClient>,
+  supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<Recommendation[]> {
   // Fetch recent posts with high engagement, excluding user's own
@@ -287,7 +290,7 @@ async function fetchActiveCommunityPosts(
 // ---------------------------------------------------------------------------
 
 async function fetchMatchingChallenges(
-  supabase: ReturnType<typeof createAdminClient>,
+  supabase: SupabaseClient<Database>,
   userId: string,
   _suitableDifficulties: Difficulty[],
 ): Promise<Recommendation[]> {

@@ -113,7 +113,8 @@ export async function POST(req: NextRequest) {
 
         // If custom signal content is provided, insert directly
         if (signalType && content) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // TODO(M-04): createServerClient generic mismatch with Insert type — needs client refactor
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- server client generic incompatible with Insert until client is unified
             const { data, error } = await (supabase as any)
                 .from("mentor_signals")
                 .insert({
@@ -163,7 +164,8 @@ export async function POST(req: NextRequest) {
             // Generate briefing based on page context
             const briefing = generateBriefingContent(page);
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // TODO(M-04): createServerClient generic mismatch with Insert type — needs client refactor
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- server client generic incompatible with Insert until client is unified
             const { data, error } = await (supabase as any)
                 .from("mentor_signals")
                 .insert({
@@ -233,7 +235,8 @@ export async function PATCH(req: NextRequest) {
                 ? { is_read: true, shown_at: new Date().toISOString() }
                 : { is_dismissed: true };
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // TODO(M-04): createServerClient generic mismatch with Update type — needs client refactor
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- server client generic incompatible with Update until client is unified
         const { error } = await (supabase as any)
             .from("mentor_signals")
             .update(updateData)

@@ -4,15 +4,32 @@
 // Handles database webhooks from Supabase (e.g., user creation, profile updates).
 // =============================================================================
 
+import * as nodeCrypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
-  // Verify webhook signature
-  const signature = request.headers.get("x-supabase-signature");
+  // Guard: reject all requests if SUPABASE_WEBHOOK_SECRET is not configured
+  const webhookSecret = process.env.SUPABASE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error("[Supabase Webhook] SUPABASE_WEBHOOK_SECRET is not configured - rejecting all requests");
+    return new Response("Server misconfiguration", { status: 503 });
+  }
 
-  if (!signature || signature !== process.env.SUPABASE_WEBHOOK_SECRET) {
+  // Verify webhook signature.
+  // Supabase Database Webhooks deliver the shared secret in the Authorization
+  // header as `Bearer <secret>`, not as a custom `x-supabase-signature` header.
+  const signature = request.headers.get("authorization");
+  const expected = `Bearer ${webhookSecret}`;
+
+  // Use timing-safe comparison to prevent timing attacks
+  const authorized =
+    signature !== null &&
+    signature.length === expected.length &&
+    nodeCrypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+
+  if (!authorized) {
     return NextResponse.json(
       { error: "Invalid webhook signature" },
       { status: 401 },

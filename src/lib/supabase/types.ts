@@ -396,6 +396,35 @@ export type Database = {
           },
         ]
       }
+      challenge_completions: {
+        Row: {
+          challenge_id: string
+          completed_at: string
+          user_id: string
+          xp_awarded: number
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string
+          user_id: string
+          xp_awarded?: number
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string
+          user_id?: string
+          xp_awarded?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_completions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           author_id: string
@@ -1355,6 +1384,43 @@ export type Database = {
           },
         ]
       }
+      // xp_log: added by migration 00032_xp_log.sql
+      // Regenerate via: supabase gen types typescript --project-id <ref>
+      xp_log: {
+        Row: {
+          id: string
+          user_id: string
+          action: string
+          amount: number
+          idempotency_key: string | null
+          awarded_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          action: string
+          amount: number
+          idempotency_key?: string | null
+          awarded_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          action?: string
+          amount?: number
+          idempotency_key?: string | null
+          awarded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xp_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_feature_prefs: {
         Row: {
           id: string
@@ -1575,6 +1641,10 @@ export type Database = {
       update_login_streak: {
         Args: { target_user_id: string }
         Returns: undefined
+      }
+      upsert_provider_vault_key: {
+        Args: { p_api_key: string; p_provider_key: string }
+        Returns: string
       }
     }
     Enums: {
