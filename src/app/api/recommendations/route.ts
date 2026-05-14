@@ -10,7 +10,7 @@ import {
   apiInternalError,
   apiValidationError,
 } from "@/lib/api/response";
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { recommendationsQuerySchema } from "@/lib/validators/recommendations";
 import type { Recommendation } from "@/types/recommendations";
 import type { Database } from "@/lib/supabase/types";
