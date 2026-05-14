@@ -3,6 +3,7 @@
 // POST /api/webhooks/supabase
 // Handles database webhooks from Supabase (e.g., user creation, profile updates).
 // =============================================================================
+/* eslint-disable no-console -- intentional structured operational logging for webhook event audit trail; console.warn/error reserved for misconfig and exceptions */
 
 import * as nodeCrypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";

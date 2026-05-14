@@ -71,6 +71,7 @@ export async function GET(request: NextRequest) {
   // Job 2: Streak Reset — not needed; update_login_streak has a 48h guard built in.
   // Job 3: Daily Cap Reset — not needed; Redis keys have TTL 24h, auto-expire.
 
+  // eslint-disable-next-line no-console -- intentional operational log for Vercel cron monitoring
   console.log("[cron] completed", JSON.stringify(results));
 
   return apiSuccess(results);
