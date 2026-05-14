@@ -47,6 +47,11 @@ export async function GET(req: NextRequest) {
       .order("is_active", { ascending: false })
       .order("created_at", { ascending: true });
 
+    // DEBUG-OPENROUTER (temp, remove after diagnosis)
+    console.log("[DEBUG-OR] raw count:", providers?.length, "keys:", providers?.map((p) => p.provider_key));
+    console.log("[DEBUG-OR] url:", process.env.NEXT_PUBLIC_SUPABASE_URL?.slice(8, 30), "keyPrefix:", process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 15), "keyLen:", process.env.SUPABASE_SERVICE_ROLE_KEY?.length);
+    console.log("[DEBUG-OR] error:", error?.message ?? "none");
+
     if (error) {
       return apiInternalError(error.message);
     }
@@ -56,6 +61,8 @@ export async function GET(req: NextRequest) {
       ...p,
       api_key_encrypted: maskApiKey(p.api_key_encrypted),
     }));
+
+    console.log("[DEBUG-OR] mapped count:", safeProviders.length, "keys:", safeProviders.map((p) => p.provider_key));
 
     return apiSuccess(safeProviders);
   } catch {
