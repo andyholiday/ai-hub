@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Phase 2 — Hardening Wave 2026-05-14
+
+#### Security
+
+- `cron/route.ts` C-01: Bearer-undefined-Bypass geschlossen — ENV-Guard +
+  `crypto.timingSafeEqual` fuer timing-sicheren Token-Vergleich.
+- Migration `00031_fix_audit_logs_policy.sql` C-02: `audit_logs` INSERT-Policy
+  auf `service_role` eingegrenzt (war zuvor PUBLIC zugaenglich).
+- `admin/users/route.ts` C-03: GDPR-Erasure-Audit fuer Admin-initiierte
+  Loeschung ergaenzt (Art. 17/30).
+- `admin/providers/test/route.ts` C-04: Provider-Test-Route nutzt jetzt
+  `getAIRouterWithDBKeys()` — Vault-Keys werden korrekt erkannt.
+- `webhooks/supabase/route.ts` M-03: timing-safe-Compare + ENV-Guard +
+  korrekter `Authorization`-Header ergaenzt.
+- `gamification/badges/route.ts` M-01: `requireAuth` + Session-User-Forcing
+  implementiert — Enumerierungs-Angriff geschlossen.
+- `leaderboard/route.ts` M-02: Optional-Auth + Rate-Limit hinzugefuegt.
+- `lib/api/rate-limit.ts` M-06/Task-16: Hard-Fail in Production wenn
+  Upstash-ENV fehlt — deferred runtime check statt stiller Fallback.
+- `admin/providers/route.ts` + `lib/supabase/types.{ts,generated.ts}` M-04:
+  Supabase-Types regeneriert; `(supabase as any)`-Casts entfernt.
+- Diverse Routes M-07: Admin-Client durch User-Context fuer read-only
+  User-Routes ersetzt (RLS damit aktiv).
+
+#### Added
+
+- Migration `00032_xp_log.sql`: XP-Log-Tabelle mit `idempotency_key` +
+  partiellem UNIQUE-Index fuer race-freie XP-Awards (Task 12).
+- `XP_ACTIONS.COMPLETE_ONBOARDING` (50 XP) und Wiring in `PATCH /api/profile`
+  mit Idempotenz-Guard (Task 5).
+- `first-steps`-Badge-Criterion via `onboardingCompleted` in `badges.ts`
+  (Task 13).
+- `provider-config-modal.tsx`: Vollstaendiges Edit-UI fuer model, max_tokens,
+  top_p, endpoint, temperature, budget (Task 14).
+- Test-Suite erweitert: AI-Chat-Streaming, Provider-Vault-Write,
+  Profile-DELETE, Rate-Limit-Fallback (Task 15).
+- `docs/RUNBOOK-rate-limit.md`: Ops-Anleitung fuer Upstash + Tier-Tabelle
+  (Task 16).
+- `docs/RELEASE-CHECKLIST-openrouter.md`: Verifizierungs-Checkliste fuer
+  OpenRouter-Provider-Release.
+
+#### Fixed
+
+- OpenRouter erscheint nicht im Admin-Panel: Stale-Build verifiziert; Source
+  clean, lokaler Rebuild zeigt OpenRouter. Production-Fix erfordert
+  Vercel-Preview-Env-Check (User-Action erforderlich).
+- XP-Award Daily-Cap-Order: RPC laeuft vor Redis-Increment; Rollback bei
+  RPC-Fehler implementiert (Task 10).
+- `xp.ts` daily-cap Race-Condition auf in-memory tracked.
+- Onboarding-Wizard zeigt jetzt echtes XP-Award-Result mit
+  Level-Up-Banner statt Fake-Toast.
+
+#### Changed
+
+- `XP_ACTIONS` bereinigt — duplizierter `gamification.ts`-Export entfernt;
+  Drift-Risiko eliminiert. `DAILY_LOGIN` / `REFER_USER` bleiben als
+  Feature-TODOs (Task 11 partial).
+
+---
+
 ### Phase 1/2 — Audit Follow-up Wave 2026-05-13
 
 #### Added

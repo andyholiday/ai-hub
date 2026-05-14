@@ -16,8 +16,18 @@ import { NextRequest } from "next/server";
 // Mocks
 // ---------------------------------------------------------------------------
 
+// Shared client mock — both `auth.supabase` (user-context) and `createAdminClient`
+// (service-role) resolve to the same fake client per test, since the tests assert
+// behaviour without distinguishing the two contexts.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- test helper
+let mockAdminClientImpl: any = vi.fn();
+
 vi.mock("@/lib/api/require-auth", () => ({
-  requireAuth: vi.fn().mockResolvedValue({ userId: "user-42", role: "user", supabase: {} }),
+  requireAuth: vi.fn().mockImplementation(async () => ({
+    userId: "user-42",
+    role: "user",
+    supabase: mockAdminClientImpl(),
+  })),
 }));
 
 const mockAwardXP = vi.fn().mockResolvedValue({ newXP: 150, newLevel: 2, leveledUp: false });
@@ -25,9 +35,6 @@ vi.mock("@/lib/gamification/xp", () => ({
   awardXP: mockAwardXP,
 }));
 
-// Configurable per-test admin client mock (reassigned in beforeEach)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- test helper
-let mockAdminClientImpl: any = vi.fn();
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => mockAdminClientImpl()),
 }));
