@@ -1,5 +1,6 @@
 // =============================================================================
-// Tests: POST /api/webhooks/supabase — M-09 safeEqual + signature verification
+// Tests: POST /api/webhooks/supabase
+// Covers: M-09 signature verification + M-01 event routing
 // =============================================================================
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -17,10 +18,57 @@ beforeEach(() => {
 });
 
 // ---------------------------------------------------------------------------
+// Mocks
+// ---------------------------------------------------------------------------
+
+const mockInsert = vi.fn();
+const mockUpdate = vi.fn();
+const mockSelect = vi.fn();
+const mockEq = vi.fn();
+const mockMaybeSingle = vi.fn();
+const mockSuggestTags = vi.fn();
+
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminClient: vi.fn(() => ({
+    from: vi.fn((table: string) => {
+      if (table === "notifications") {
+        return {
+          insert: mockInsert,
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                  maybeSingle: mockMaybeSingle,
+                })),
+              })),
+            })),
+          })),
+        };
+      }
+      if (table === "community_posts") {
+        return {
+          update: vi.fn(() => ({
+            eq: mockEq,
+          })),
+        };
+      }
+      return {};
+    }),
+  })),
+}));
+
+vi.mock("@/lib/ai/auto-tagger", () => ({
+  suggestTags: mockSuggestTags,
+}));
+
+// ---------------------------------------------------------------------------
 // Helper: build a NextRequest for the webhook endpoint
 // ---------------------------------------------------------------------------
 
-function makeRequest(authHeader: string | null, body: unknown = { type: "INSERT", table: "profiles" }): NextRequest {
+function makeRequest(
+  authHeader: string | null,
+  body: unknown = { type: "INSERT", table: "profiles", schema: "public", record: {}, old_record: null },
+): NextRequest {
   const headers: Record<string, string> = { "content-type": "application/json" };
   if (authHeader !== null) headers["authorization"] = authHeader;
   return new NextRequest("http://localhost/api/webhooks/supabase", {
@@ -31,10 +79,10 @@ function makeRequest(authHeader: string | null, body: unknown = { type: "INSERT"
 }
 
 // ---------------------------------------------------------------------------
-// Tests
+// Tests — Signature Verification (M-09, existing)
 // ---------------------------------------------------------------------------
 
-describe("POST /api/webhooks/supabase", () => {
+describe("POST /api/webhooks/supabase — signature verification", () => {
   it("returns 401 when authorization header is missing", async () => {
     const { POST } = await import("@/app/api/webhooks/supabase/route");
     const res = await POST(makeRequest(null));
@@ -48,6 +96,7 @@ describe("POST /api/webhooks/supabase", () => {
   });
 
   it("returns 200 when secret is correct", async () => {
+    mockMaybeSingle.mockResolvedValue({ data: null, error: null });
     const { POST } = await import("@/app/api/webhooks/supabase/route");
     const res = await POST(makeRequest(`Bearer ${VALID_SECRET}`));
     expect(res.status).toBe(200);
@@ -63,9 +112,6 @@ describe("POST /api/webhooks/supabase", () => {
   });
 
   it("safeEqual handles multibyte bytes correctly — Buffer.byteLength not string.length", async () => {
-    // HTTP headers are ASCII-only (ByteString spec), so multibyte chars cannot be injected
-    // via NextRequest headers. Instead we unit-test the safeEqual invariant directly.
-    // This verifies the core fix: using Buffer byte-length instead of string .length.
     const { timingSafeEqual } = await import("node:crypto");
     function safeEqual(a: string, b: string): boolean {
       const aBuf = Buffer.from(a);
@@ -73,13 +119,9 @@ describe("POST /api/webhooks/supabase", () => {
       if (aBuf.length !== bBuf.length) return false;
       try { return timingSafeEqual(aBuf, bBuf); } catch { return false; }
     }
-    // "Ä" is 2 UTF-8 bytes, "AB" is also 2 bytes — same byte count, different content
     expect(safeEqual("\xC4\x84", "AB")).toBe(false);
-    // Identical strings must match
     expect(safeEqual("Bearer secret", "Bearer secret")).toBe(true);
-    // Different byte lengths: no timingSafeEqual call, no throw
     expect(safeEqual("a", "ab")).toBe(false);
-    // Empty vs non-empty
     expect(safeEqual("", "a")).toBe(false);
   });
 
@@ -100,7 +142,139 @@ describe("POST /api/webhooks/supabase", () => {
       body: "not-valid-json{{{",
     });
     const res = await POST(req);
-    // Caught by try/catch in route — returns 500, not an uncaught exception
     expect(res.status).toBe(500);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests — Event Routing (M-01, new)
+// ---------------------------------------------------------------------------
+
+describe("POST /api/webhooks/supabase — event routing", () => {
+  function makeAuthRequest(body: unknown): NextRequest {
+    return makeRequest(`Bearer ${VALID_SECRET}`, body);
+  }
+
+  it("user_created: inserts welcome notification when none exists", async () => {
+    mockMaybeSingle.mockResolvedValue({ data: null, error: null });
+    mockInsert.mockResolvedValue({ data: null, error: null });
+
+    const { POST } = await import("@/app/api/webhooks/supabase/route");
+    const res = await POST(makeAuthRequest({
+      type: "INSERT",
+      schema: "auth",
+      table: "users",
+      record: { id: "user-123" },
+      old_record: null,
+    }));
+
+    expect(res.status).toBe(200);
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: "user-123",
+        type: "system",
+        title: "Willkommen im AI Hub!",
+      }),
+    );
+  });
+
+  it("user_created: skips insert when welcome notification already exists (idempotency)", async () => {
+    mockMaybeSingle.mockResolvedValue({ data: { id: "existing-notif" }, error: null });
+    mockInsert.mockClear();
+
+    const { POST } = await import("@/app/api/webhooks/supabase/route");
+    const res = await POST(makeAuthRequest({
+      type: "INSERT",
+      schema: "auth",
+      table: "users",
+      record: { id: "user-123" },
+      old_record: null,
+    }));
+
+    expect(res.status).toBe(200);
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("post_created: calls suggestTags and updates community_posts.tags", async () => {
+    mockSuggestTags.mockResolvedValue({
+      suggestions: [
+        { tag: "ChatGPT", confidence: 0.9 },
+        { tag: "Prompt Engineering", confidence: 0.8 },
+      ],
+      provider: "openai",
+      model: "gpt-4",
+    });
+    mockEq.mockResolvedValue({ data: null, error: null });
+
+    const { POST } = await import("@/app/api/webhooks/supabase/route");
+    const res = await POST(makeAuthRequest({
+      type: "INSERT",
+      schema: "public",
+      table: "community_posts",
+      record: { id: "post-456", title: "My Post", content: "About ChatGPT", tags: [] },
+      old_record: null,
+    }));
+
+    expect(res.status).toBe(200);
+    expect(mockSuggestTags).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "My Post", description: "About ChatGPT" }),
+    );
+    expect(mockEq).toHaveBeenCalledWith("id", "post-456");
+  });
+
+  it("post_created: skips auto-tag when tags already set (idempotency)", async () => {
+    mockSuggestTags.mockClear();
+
+    const { POST } = await import("@/app/api/webhooks/supabase/route");
+    const res = await POST(makeAuthRequest({
+      type: "INSERT",
+      schema: "public",
+      table: "community_posts",
+      record: { id: "post-789", title: "My Post", content: "Content", tags: ["existing-tag"] },
+      old_record: null,
+    }));
+
+    expect(res.status).toBe(200);
+    expect(mockSuggestTags).not.toHaveBeenCalled();
+  });
+
+  it("post_created: returns 200 even when suggestTags throws (no retry storm)", async () => {
+    mockSuggestTags.mockRejectedValue(new Error("LLM timeout"));
+
+    const { POST } = await import("@/app/api/webhooks/supabase/route");
+    const res = await POST(makeAuthRequest({
+      type: "INSERT",
+      schema: "public",
+      table: "community_posts",
+      record: { id: "post-999", title: "My Post", content: "Content", tags: [] },
+      old_record: null,
+    }));
+
+    expect(res.status).toBe(200);
+  });
+
+  it("unknown event: returns 200 without side effects", async () => {
+    mockInsert.mockClear();
+    mockSuggestTags.mockClear();
+
+    const { POST } = await import("@/app/api/webhooks/supabase/route");
+    const res = await POST(makeAuthRequest({
+      type: "UPDATE",
+      schema: "public",
+      table: "profiles",
+      record: { id: "user-x" },
+      old_record: { id: "user-x" },
+    }));
+
+    expect(res.status).toBe(200);
+    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockSuggestTags).not.toHaveBeenCalled();
+  });
+
+  it("unknown payload shape: returns 200 without crash (Zod mismatch)", async () => {
+    const { POST } = await import("@/app/api/webhooks/supabase/route");
+    const res = await POST(makeAuthRequest({ completely: "unexpected", payload: true }));
+    // Zod parse fails → schema mismatch handler → 200 to avoid retry
+    expect(res.status).toBe(200);
   });
 });
