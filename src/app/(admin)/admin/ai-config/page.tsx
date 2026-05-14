@@ -75,14 +75,6 @@ export default function AIConfigPage() {
     [admin],
   );
 
-  // --- Provider setup handler ---
-  const handleSetupProvider = useCallback(
-    async (id: string) => {
-      await admin.updateProvider(id, { is_active: true });
-    },
-    [admin],
-  );
-
   // --- API-Key modal state ---
   const [keyModalProviderId, setKeyModalProviderId] = useState<string | null>(null);
 
@@ -98,10 +90,25 @@ export default function AIConfigPage() {
     setKeyModalProviderId(null);
   }, []);
 
+  // "Jetzt einrichten" opens the same key modal — saving the key then
+  // also activates the provider in handleSaveApiKey below.
+  const handleSetupProvider = useCallback(
+    (id: string) => {
+      setKeyModalProviderId(id);
+    },
+    [],
+  );
+
   const handleSaveApiKey = useCallback(
     async (plainKey: string): Promise<boolean> => {
       if (!keyModalProviderId) return false;
-      return admin.updateProvider(keyModalProviderId, { api_key_encrypted: plainKey });
+      const provider = admin.providers.find((p) => p.id === keyModalProviderId);
+      const updates: Record<string, unknown> = { api_key_encrypted: plainKey };
+      // Auto-activate inactive providers once a key is supplied via setup flow.
+      if (provider && provider.status === "inactive") {
+        updates.is_active = true;
+      }
+      return admin.updateProvider(keyModalProviderId, updates);
     },
     [admin, keyModalProviderId],
   );
