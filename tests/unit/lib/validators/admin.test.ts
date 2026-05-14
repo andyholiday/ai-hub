@@ -147,6 +147,35 @@ describe("updateProviderSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  // M-01: api_endpoint field
+  it("should accept a valid api_endpoint URL", () => {
+    const result = updateProviderSchema.safeParse({
+      id: VALID_UUID,
+      api_endpoint: "https://api.openai.com/v1",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("should reject a plain string that is not a URL for api_endpoint", () => {
+    const result = updateProviderSchema.safeParse({
+      id: VALID_UUID,
+      api_endpoint: "not-a-url",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("should strip unknown 'endpoint' field (Zod strips unknown keys)", () => {
+    const result = updateProviderSchema.safeParse({
+      id: VALID_UUID,
+      endpoint: "https://api.openai.com/v1", // wrong key — should be api_endpoint
+    });
+    // Zod strips unknown keys by default; the parse succeeds but endpoint is not in output
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect((result.data as Record<string, unknown>).endpoint).toBeUndefined();
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------

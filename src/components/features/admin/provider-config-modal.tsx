@@ -72,7 +72,11 @@ function buildUpdates(
   }
 
   if (current.endpoint.trim() !== initial.endpoint.trim()) {
-    updates.endpoint = current.endpoint.trim();
+    const v = current.endpoint.trim();
+    if (v !== "") {
+      updates.api_endpoint = v;
+    }
+    // Empty endpoint: omit from updates (DB column is NOT NULL, cannot clear to null)
   }
 
   if (current.budget !== initial.budget) {

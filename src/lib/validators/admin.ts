@@ -39,6 +39,7 @@ export const updateProviderSchema = z.object({
     .optional(),
   fallback_provider_id: z.string().uuid("Invalid fallback provider ID").nullable().optional(),
   monthly_budget_limit: z.number().min(0).nullable().optional(),
+  api_endpoint: z.string().url("api_endpoint must be a valid URL").optional(),
 });
 
 export type UpdateProviderInput = z.infer<typeof updateProviderSchema>;

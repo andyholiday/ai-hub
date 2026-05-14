@@ -63,4 +63,17 @@ test.describe("Admin Panel", () => {
     const providerTab = tabList.getByRole("tab", { name: "KI-Provider" });
     await expect(providerTab).toHaveAttribute("aria-selected", "false");
   });
+
+  test("Provider-Card Bearbeiten-Button oeffnet Konfiguration-Dialog", async ({ page }) => {
+    await page.goto("/admin");
+
+    // Wait for the KI-Provider tab content to be visible (not loading skeleton)
+    // The provider cards appear once data loads; wait for the first edit button
+    const editButton = page.getByRole("button", { name: /bearbeiten/i }).first();
+    await editButton.waitFor({ state: "visible", timeout: 10_000 });
+    await editButton.click();
+
+    // The ProviderConfigModal renders with role="dialog"
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 5_000 });
+  });
 });
