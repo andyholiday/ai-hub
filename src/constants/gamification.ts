@@ -130,19 +130,5 @@ export const BADGES: BadgeDefinition[] = [
   },
 ];
 
-// ---------------------------------------------------------------------------
-// XP Actions
-// ---------------------------------------------------------------------------
-
-export const XP_ACTIONS = {
-  DAILY_LOGIN: 10,
-  PUBLISH_BEST_PRACTICE: 50,
-  COMPLETE_LESSON: 25,
-  COMPLETE_COURSE: 100,
-  CREATE_COMMUNITY_POST: 15,
-  WRITE_COMMENT: 5,
-  RECEIVE_LIKE: 3,
-  COMPLETE_CHALLENGE: 100,
-  WIN_CHALLENGE: 200,
-  REFER_USER: 75,
-} as const;
+// XP_ACTIONS was removed (dead export — diverged from the real definition in
+// src/lib/gamification/xp.ts and was never imported from this file).

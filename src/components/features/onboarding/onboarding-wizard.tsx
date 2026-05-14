@@ -15,15 +15,17 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
     const [department, setDepartment] = useState("");
     const [position, setPosition] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [xpAwarded, setXpAwarded] = useState<{ leveledUp: boolean; newLevel: number } | null | undefined>(undefined);
 
     const displayName = userName?.split(" ")[0] || "Dort";
 
     const handleNext = () => setStep((s) => s + 1);
 
-    const handleComplete = async () => {
+    // Fires the PATCH before showing step 3 so we have real xp_awarded data.
+    const handleCompleteOnboarding = async () => {
         setIsSubmitting(true);
         try {
-            await fetch("/api/profile", {
+            const res = await fetch("/api/profile", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -32,9 +34,15 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
                     onboarding_completed: true,
                 }),
             });
-            onComplete(); // Triggers a re-fetch of the dashboard data
+            const json = res.ok ? await res.json() : null;
+            // json.data.xp_awarded is AwardXPResult | null from the API
+            setXpAwarded(json?.data?.xp_awarded ?? null);
+            setStep(3);
         } catch (error) {
             console.error("Fehler beim Speichern des Onboardings", error);
+            setXpAwarded(null);
+            setStep(3);
+        } finally {
             setIsSubmitting(false);
         }
     };
@@ -140,14 +148,15 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
                         </div>
 
                         <Button
-                            onClick={handleNext}
+                            onClick={handleCompleteOnboarding}
                             size="lg"
                             className="w-full text-[15px]"
+                            isLoading={isSubmitting}
                         >
                             Weiter
                         </Button>
                         <button
-                            onClick={handleNext}
+                            onClick={handleCompleteOnboarding}
                             className="mt-4 w-full text-center text-[13px] font-medium text-surface-500 hover:text-surface-900"
                         >
                             Überspringen
@@ -170,21 +179,24 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
                         <h2 className="font-display text-3xl font-bold text-surface-900 mb-3">
                             Du bist startklar!
                         </h2>
-                        <p className="mb-2 text-[15px] font-medium text-brand-primary-600">
-                            🎉 +50 XP Onboarding Bonus freigeschaltet!
-                        </p>
+                        {xpAwarded != null && (
+                            <p className="mb-2 text-[15px] font-medium text-brand-primary-600">
+                                {xpAwarded.leveledUp
+                                    ? `Level Up! Du bist jetzt Level ${xpAwarded.newLevel}! +50 XP freigeschaltet!`
+                                    : "+50 XP Onboarding Bonus freigeschaltet!"}
+                            </p>
+                        )}
                         <p className="mb-8 text-[15px] leading-relaxed text-surface-600">
                             Dein Profil ist eingerichtet. Dein KI-Begleiter ist bereit – und die
                             Community freut sich auf deine ersten Use Cases.
                         </p>
 
                         <Button
-                            onClick={handleComplete}
+                            onClick={onComplete}
                             size="lg"
                             className="w-full text-[15px]"
-                            isLoading={isSubmitting}
                         >
-                            {isSubmitting ? "Wird finalisiert..." : "Auf zum Dashboard!"}
+                            Auf zum Dashboard!
                         </Button>
                     </motion.div>
                 )}

@@ -18,6 +18,8 @@ import {
 } from "@/lib/api/response";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateProfileSchema } from "@/lib/validators/profile";
+import { awardCommunityXP } from "@/lib/gamification/xp";
+import { checkAndAwardBadges } from "@/lib/gamification/badges";
 
 export const dynamic = 'force-dynamic';
 
@@ -227,6 +229,13 @@ export async function PATCH(req: NextRequest) {
 
     const supabase = createAdminClient();
 
+    // Fetch previous onboarding_completed value to enforce idempotency on XP award.
+    const { data: previous } = await supabase
+      .from("profiles")
+      .select("onboarding_completed")
+      .eq("id", auth.userId)
+      .single();
+
     const { data: updatedProfile, error } = await supabase
       .from("profiles")
       .update({
@@ -241,7 +250,15 @@ export async function PATCH(req: NextRequest) {
       return apiInternalError(error.message);
     }
 
-    return apiSuccess(updatedProfile);
+    // Award XP and badges for onboarding completion exactly once.
+    // Guard: only when this PATCH transitions onboarding_completed from false → true.
+    let xp_awarded = null;
+    if (parsed.data.onboarding_completed === true && previous?.onboarding_completed === false) {
+      xp_awarded = await awardCommunityXP(supabase, auth.userId, "COMPLETE_ONBOARDING");
+      await checkAndAwardBadges(supabase, auth.userId);
+    }
+
+    return apiSuccess({ ...updatedProfile, xp_awarded });
   } catch {
     return apiInternalError();
   }
