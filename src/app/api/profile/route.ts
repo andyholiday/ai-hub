@@ -18,7 +18,7 @@ import {
 } from "@/lib/api/response";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateProfileSchema } from "@/lib/validators/profile";
-import { awardCommunityXP } from "@/lib/gamification/xp";
+import { awardCommunityXP, awardXP, XP_ACTIONS } from "@/lib/gamification/xp";
 import { checkAndAwardBadges } from "@/lib/gamification/badges";
 
 export const dynamic = 'force-dynamic';
@@ -47,6 +47,14 @@ export async function GET(req: NextRequest) {
       } | null;
 
       if (data?.profile) {
+        // C-03: fire-and-forget login streak update (DB function has 20h guard)
+        supabase
+          .rpc("update_login_streak", { target_user_id: auth.userId })
+          .then(
+            () => {},
+            (err: unknown) => console.error("[Profile GET] update_login_streak failed:", err),
+          );
+
         return apiSuccess(data);
       }
     }
@@ -229,12 +237,13 @@ export async function PATCH(req: NextRequest) {
 
     const supabase = createAdminClient();
 
-    // Fetch previous onboarding_completed value to enforce idempotency on XP award.
+    // C-05: use maybeSingle() so a missing profile row returns null instead of error.
+    // Also select department for M-03 department-bonus check.
     const { data: previous } = await supabase
       .from("profiles")
-      .select("onboarding_completed")
+      .select("onboarding_completed, department")
       .eq("id", auth.userId)
-      .single();
+      .maybeSingle();
 
     const { data: updatedProfile, error } = await supabase
       .from("profiles")
@@ -251,14 +260,31 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Award XP and badges for onboarding completion exactly once.
-    // Guard: only when this PATCH transitions onboarding_completed from false → true.
-    let xp_awarded = null;
-    if (parsed.data.onboarding_completed === true && previous?.onboarding_completed === false) {
+    // C-05: Guard uses `== null` to handle both null profile row and explicit false.
+    let xp_awarded: Awaited<ReturnType<typeof awardCommunityXP>> = null;
+    let xp_department: Awaited<ReturnType<typeof awardXP>> = null;
+
+    if (
+      parsed.data.onboarding_completed === true &&
+      (previous == null || previous.onboarding_completed === false)
+    ) {
       xp_awarded = await awardCommunityXP(supabase, auth.userId, "COMPLETE_ONBOARDING");
       await checkAndAwardBadges(supabase, auth.userId);
     }
 
-    return apiSuccess({ ...updatedProfile, xp_awarded });
+    // M-03: Award department-set bonus exactly once (idempotency handled by DB function).
+    if (parsed.data.department && !previous?.department) {
+      xp_department = await awardXP(
+        supabase,
+        auth.userId,
+        XP_ACTIONS.DEPARTMENT_SET.action,
+        XP_ACTIONS.DEPARTMENT_SET.amount,
+        "department_set",
+      );
+      await checkAndAwardBadges(supabase, auth.userId);
+    }
+
+    return apiSuccess({ ...updatedProfile, xp_awarded, xp_department });
   } catch {
     return apiInternalError();
   }

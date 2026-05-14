@@ -1528,6 +1528,21 @@ export type Database = {
           new_xp: number
         }[]
       }
+      // award_xp_idempotent: added by migration 00033_atomic_award_xp.sql
+      award_xp_idempotent: {
+        Args: {
+          target_user_id: string
+          xp_amount: number
+          action_text: string
+          idem_key?: string | null
+        }
+        Returns: {
+          new_xp: number
+          new_level: number
+          leveled_up: boolean
+          awarded: boolean
+        }[]
+      }
       generate_page_briefing: {
         Args: { p_page_context: string; p_user_id: string }
         Returns: string

@@ -16,6 +16,7 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
     const [position, setPosition] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [xpAwarded, setXpAwarded] = useState<{ leveledUp: boolean; newLevel: number } | null | undefined>(undefined);
+    const [xpDepartment, setXpDepartment] = useState<{ newXP: number } | null | undefined>(undefined);
 
     const displayName = userName?.split(" ")[0] || "Dort";
 
@@ -37,6 +38,8 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
             const json = res.ok ? await res.json() : null;
             // json.data.xp_awarded is AwardXPResult | null from the API
             setXpAwarded(json?.data?.xp_awarded ?? null);
+            // json.data.xp_department is AwardXPResult | null (M-03 department bonus)
+            setXpDepartment(json?.data?.xp_department ?? null);
             setStep(3);
         } catch (error) {
             console.error("Fehler beim Speichern des Onboardings", error);
@@ -180,10 +183,15 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
                             Du bist startklar!
                         </h2>
                         {xpAwarded != null && (
-                            <p className="mb-2 text-[15px] font-medium text-brand-primary-600">
+                            <p className="mb-1 text-[15px] font-medium text-brand-primary-600">
                                 {xpAwarded.leveledUp
-                                    ? `Level Up! Du bist jetzt Level ${xpAwarded.newLevel}! +50 XP freigeschaltet!`
-                                    : "+50 XP Onboarding Bonus freigeschaltet!"}
+                                    ? `Level Up! Du bist jetzt Level ${xpAwarded.newLevel}! +50 XP Onboarding-Bonus!`
+                                    : "+50 XP Onboarding-Bonus freigeschaltet!"}
+                            </p>
+                        )}
+                        {xpDepartment != null && (
+                            <p className="mb-1 text-[15px] font-medium text-brand-primary-500">
+                                +25 XP Abteilungs-Bonus freigeschaltet!
                             </p>
                         )}
                         <p className="mb-8 text-[15px] leading-relaxed text-surface-600">

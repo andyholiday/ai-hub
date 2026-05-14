@@ -1,13 +1,13 @@
 // =============================================================================
-// Tests: XP System — awardXP critical paths
-// Prueft: Idempotency-Check, Daily-Cap, Call-Order, 23505-Race-Detection
+// Tests: XP System — awardXP (new DB-side idempotency via award_xp_idempotent)
+// Covers: idempotency, daily cap (Redis + SQL fallback), Redis fail-closed (M-07)
 // =============================================================================
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { awardXP, DAILY_XP_LIMIT } from "@/lib/gamification/xp";
 
 // ---------------------------------------------------------------------------
-// Mocks
+// Redis mock
 // ---------------------------------------------------------------------------
 
 const mockRedis = {
@@ -21,209 +21,246 @@ vi.mock("@/lib/api/rate-limit", () => ({
 }));
 
 // ---------------------------------------------------------------------------
-// Supabase Mock Factory
+// Supabase mock factory
 // ---------------------------------------------------------------------------
 
-/**
- * Builds a minimal Supabase mock with per-table/operation overrides.
- * The chain object must handle:
- *   .from("xp_log").select(...).eq(...).eq(...).eq(...).limit(1).maybeSingle()
- *   .rpc("award_xp", ...)
- *   .from("xp_log").insert(...)
- *   .from("notifications").insert(...)
- */
+type RpcRow = { new_xp: number; new_level: number; leveled_up: boolean; awarded: boolean };
+
 function buildSupabaseMock(opts: {
-  /**
-   * When true, the mock expects a xp_log SELECT before the INSERT
-   * (i.e. the caller will pass an idempotencyKey to awardXP).
-   * When false (default), the first from("xp_log") call is the INSERT.
-   */
-  hasIdempotencySelect?: boolean;
-  idempotencyCheckData?: { id: string } | null;
-  rpcData?: Array<{ new_xp: number; new_level: number; leveled_up: boolean }>;
-  rpcError?: { message: string; code?: string };
-  xpLogInsertError?: { message: string; code?: string } | null;
+  rpcRow?: RpcRow;
+  rpcError?: { message: string };
+  /** rows returned by xp_log SELECT (for SQL cap fallback) */
+  xpLogRows?: { amount: number }[];
 }) {
   const {
-    hasIdempotencySelect = false,
-    idempotencyCheckData = null,
-    rpcData = [{ new_xp: 200, new_level: 2, leveled_up: false }],
+    rpcRow = { new_xp: 200, new_level: 2, leveled_up: false, awarded: true },
     rpcError,
-    xpLogInsertError = null,
+    xpLogRows = [],
   } = opts;
 
-  // xp_log select chain (for idempotency check)
-  const xpLogSelectChain = {
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    maybeSingle: vi.fn().mockResolvedValue({
-      data: idempotencyCheckData,
-      error: null,
-    }),
-  };
-
-  // xp_log insert (for audit log)
-  const xpLogInsert = vi.fn().mockResolvedValue({
-    data: null,
-    error: xpLogInsertError,
-  });
-
-  // notifications insert
   const notificationsInsert = vi.fn().mockResolvedValue({ data: null, error: null });
 
-  // from() returns different chains depending on table + call order.
-  // When hasIdempotencySelect=true, xp_log is called twice: SELECT then INSERT.
-  // When hasIdempotencySelect=false, the SELECT is skipped — first call is INSERT.
-  let xpLogCallCount = 0;
   const from = vi.fn((table: string) => {
     if (table === "xp_log") {
-      xpLogCallCount++;
-      if (hasIdempotencySelect && xpLogCallCount === 1) {
-        return xpLogSelectChain;
-      }
-      return { insert: xpLogInsert };
+      // Supports .select("amount").eq("user_id", ...).gte("awarded_at", ...) chain
+      const gteResult = { data: xpLogRows, error: null };
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            gte: vi.fn().mockResolvedValue(gteResult),
+          }),
+        }),
+      };
     }
     if (table === "notifications") {
       return { insert: notificationsInsert };
     }
-    return { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() };
+    return {};
   });
 
-  // rpc mock
-  const rpc = vi.fn().mockResolvedValue(
-    rpcError
-      ? { data: null, error: rpcError }
-      : { data: rpcData, error: null },
-  );
+  const rpc = vi.fn().mockImplementation((fn: string) => {
+    if (fn === "award_xp_idempotent") {
+      return Promise.resolve(
+        rpcError ? { data: null, error: rpcError } : { data: [rpcRow], error: null },
+      );
+    }
+    // update_login_streak etc.
+    return Promise.resolve({ data: null, error: null });
+  });
 
   return {
     supabase: { from, rpc } as unknown as Parameters<typeof awardXP>[0],
-    xpLogSelectChain,
-    xpLogInsert,
     notificationsInsert,
     rpc,
     from,
   };
 }
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
 const USER_ID = "user-xp-test-123";
-const ACTION = "post_created";
+const ACTION = "test_action";
 const AMOUNT = 50;
-const IDEMPOTENCY_KEY = "idempotency-key-abc";
 
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("awardXP — idempotency pre-check hits", () => {
+describe("awardXP — successful award", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRedis.get.mockResolvedValue(0);
+    mockRedis.incrby.mockResolvedValue(1);
+    mockRedis.expire.mockResolvedValue(1);
   });
 
-  it("returns null and does NOT call rpc when xp_log already has a row for the key", async () => {
-    const { supabase, rpc } = buildSupabaseMock({
-      hasIdempotencySelect: true,
-      idempotencyCheckData: { id: "existing-row-id" },
+  it("returns AwardXPResult on first award", async () => {
+    const { supabase } = buildSupabaseMock({
+      rpcRow: { new_xp: 150, new_level: 2, leveled_up: true, awarded: true },
     });
 
-    const result = await awardXP(supabase, USER_ID, ACTION, AMOUNT, IDEMPOTENCY_KEY);
-
-    expect(result).toBeNull();
-    expect(rpc).not.toHaveBeenCalled();
-  });
-});
-
-describe("awardXP — daily cap exceeded", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+    const result = await awardXP(supabase, USER_ID, ACTION, AMOUNT);
+    expect(result).toEqual({ newXP: 150, newLevel: 2, leveledUp: true });
   });
 
-  it("returns null and does NOT call rpc when Redis indicates cap would be exceeded", async () => {
-    // currentDailyXp = DAILY_XP_LIMIT - 1, so adding AMOUNT pushes it over
-    mockRedis.get.mockResolvedValue(DAILY_XP_LIMIT - AMOUNT + 1);
-
+  it("calls award_xp_idempotent RPC with correct args", async () => {
     const { supabase, rpc } = buildSupabaseMock({});
 
-    const result = await awardXP(supabase, USER_ID, ACTION, AMOUNT);
+    await awardXP(supabase, USER_ID, ACTION, AMOUNT, "key-abc");
 
-    expect(result).toBeNull();
-    expect(rpc).not.toHaveBeenCalled();
+    expect(rpc).toHaveBeenCalledWith("award_xp_idempotent", {
+      target_user_id: USER_ID,
+      xp_amount: AMOUNT,
+      action_text: ACTION,
+      idem_key: "key-abc",
+    });
+  });
+
+  it("increments Redis after successful DB write", async () => {
+    const { supabase } = buildSupabaseMock({});
+    await awardXP(supabase, USER_ID, ACTION, AMOUNT);
+    expect(mockRedis.incrby).toHaveBeenCalledWith(
+      expect.stringContaining(`daily_xp:${USER_ID}`),
+      AMOUNT,
+    );
+  });
+
+  it("creates a level-up notification when leveled_up=true", async () => {
+    const { supabase, notificationsInsert } = buildSupabaseMock({
+      rpcRow: { new_xp: 110, new_level: 2, leveled_up: true, awarded: true },
+    });
+    await awardXP(supabase, USER_ID, ACTION, AMOUNT);
+    expect(notificationsInsert).toHaveBeenCalled();
+  });
+
+  it("does NOT create notification when leveled_up=false", async () => {
+    const { supabase, notificationsInsert } = buildSupabaseMock({
+      rpcRow: { new_xp: 50, new_level: 1, leveled_up: false, awarded: true },
+    });
+    await awardXP(supabase, USER_ID, ACTION, AMOUNT);
+    expect(notificationsInsert).not.toHaveBeenCalled();
   });
 });
 
-describe("awardXP — daily-cap-order-correctness (Redis after RPC)", () => {
+describe("awardXP — idempotency (DB-side awarded=false)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRedis.get.mockResolvedValue(0);
   });
 
-  it("does NOT call redis.incrby when rpc fails", async () => {
-    mockRedis.get.mockResolvedValue(0);
-
+  it("returns null when DB reports awarded=false (duplicate idempotency key)", async () => {
     const { supabase } = buildSupabaseMock({
-      rpcError: { message: "DB error" },
+      rpcRow: { new_xp: 150, new_level: 2, leveled_up: false, awarded: false },
     });
 
-    const result = await awardXP(supabase, USER_ID, ACTION, AMOUNT);
-
+    const result = await awardXP(supabase, USER_ID, ACTION, AMOUNT, "key-duplicate");
     expect(result).toBeNull();
+  });
+
+  it("does NOT increment Redis when awarded=false", async () => {
+    const { supabase } = buildSupabaseMock({
+      rpcRow: { new_xp: 150, new_level: 2, leveled_up: false, awarded: false },
+    });
+
+    await awardXP(supabase, USER_ID, ACTION, AMOUNT, "key-duplicate");
     expect(mockRedis.incrby).not.toHaveBeenCalled();
   });
 
-  it("calls redis.incrby AFTER rpc succeeds (call-order assertion)", async () => {
-    const callOrder: string[] = [];
-    mockRedis.get.mockResolvedValue(0);
-    mockRedis.incrby.mockImplementation(async () => {
-      callOrder.push("redis.incrby");
-      return 1;
+  it("double-call scenario: second call returns null, RPC still called but awarded=false", async () => {
+    // Simulates: first call awarded=true, second call awarded=false (DB deduped)
+    const { supabase: s1 } = buildSupabaseMock({
+      rpcRow: { new_xp: 50, new_level: 1, leveled_up: false, awarded: true },
     });
+    const first = await awardXP(s1, USER_ID, ACTION, AMOUNT, "key-once");
+    expect(first).not.toBeNull();
+    expect(first?.newXP).toBe(50);
 
-    const { supabase, rpc } = buildSupabaseMock({});
-
-    // Wrap rpc to record order
-    const originalRpc = rpc.getMockImplementation();
-    rpc.mockImplementation(async (...args) => {
-      callOrder.push("rpc");
-      return originalRpc ? originalRpc(...args) : { data: [{ new_xp: 200, new_level: 2, leveled_up: false }], error: null };
+    const { supabase: s2 } = buildSupabaseMock({
+      rpcRow: { new_xp: 50, new_level: 1, leveled_up: false, awarded: false },
     });
-
-    await awardXP(supabase, USER_ID, ACTION, AMOUNT);
-
-    const rpcIdx = callOrder.indexOf("rpc");
-    const redisIdx = callOrder.indexOf("redis.incrby");
-    expect(rpcIdx).toBeGreaterThanOrEqual(0);
-    expect(redisIdx).toBeGreaterThan(rpcIdx);
+    const second = await awardXP(s2, USER_ID, ACTION, AMOUNT, "key-once");
+    expect(second).toBeNull();
   });
 });
 
-describe("awardXP — 23505 race detection", () => {
+describe("awardXP — daily cap (Redis)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRedis.incrby.mockResolvedValue(1);
+    mockRedis.expire.mockResolvedValue(1);
   });
 
-  it("returns null and logs xp_double_award_race when xp_log insert fails with code 23505", async () => {
-    mockRedis.get.mockResolvedValue(0);
+  it("returns null and skips RPC when Redis cap would be exceeded", async () => {
+    mockRedis.get.mockResolvedValue(DAILY_XP_LIMIT - AMOUNT + 1);
+    const { supabase, rpc } = buildSupabaseMock({});
 
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-    const { supabase } = buildSupabaseMock({
-      hasIdempotencySelect: true,
-      idempotencyCheckData: null, // pre-check returns no row → proceeds
-      xpLogInsertError: { message: "duplicate key", code: "23505" },
-    });
-
-    const result = await awardXP(supabase, USER_ID, ACTION, AMOUNT, IDEMPOTENCY_KEY);
-
+    const result = await awardXP(supabase, USER_ID, ACTION, AMOUNT);
     expect(result).toBeNull();
-    expect(warnSpy).toHaveBeenCalledWith(
-      "[XP] xp_double_award_race",
-      expect.objectContaining({ event: "xp_double_award_race" }),
-    );
+    expect(rpc).not.toHaveBeenCalled();
+  });
 
-    warnSpy.mockRestore();
+  it("allows award when Redis value is exactly at limit minus amount", async () => {
+    mockRedis.get.mockResolvedValue(DAILY_XP_LIMIT - AMOUNT);
+    const { supabase } = buildSupabaseMock({});
+
+    const result = await awardXP(supabase, USER_ID, ACTION, AMOUNT);
+    expect(result).not.toBeNull();
+  });
+});
+
+describe("awardXP — M-07 Redis fail-closed / SQL fallback", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRedis.incrby.mockResolvedValue(1);
+    mockRedis.expire.mockResolvedValue(1);
+  });
+
+  it("falls back to DB cap check when Redis.get throws", async () => {
+    mockRedis.get.mockRejectedValue(new Error("Redis connection refused"));
+
+    // xpLogRows total = 0, so award should proceed
+    const { supabase, rpc } = buildSupabaseMock({ xpLogRows: [] });
+    const result = await awardXP(supabase, USER_ID, ACTION, AMOUNT);
+    expect(rpc).toHaveBeenCalledWith("award_xp_idempotent", expect.any(Object));
+    expect(result).not.toBeNull();
+  });
+
+  it("returns null (fail-closed) when Redis.get throws AND DB cap would be exceeded", async () => {
+    mockRedis.get.mockRejectedValue(new Error("Redis connection refused"));
+
+    // xpLogRows sum = DAILY_XP_LIMIT (cap already hit)
+    const xpLogRows = [{ amount: DAILY_XP_LIMIT }];
+    const { supabase, rpc } = buildSupabaseMock({ xpLogRows });
+
+    const result = await awardXP(supabase, USER_ID, ACTION, AMOUNT);
+    expect(result).toBeNull();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("does NOT increment Redis after Redis-fail path (redisKey=null)", async () => {
+    mockRedis.get.mockRejectedValue(new Error("Redis down"));
+
+    const { supabase } = buildSupabaseMock({ xpLogRows: [] });
+    await awardXP(supabase, USER_ID, ACTION, AMOUNT);
+
+    // redisKey was set to null after failure, so incrby should NOT be called
+    expect(mockRedis.incrby).not.toHaveBeenCalled();
+  });
+});
+
+describe("awardXP — RPC failure", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRedis.get.mockResolvedValue(0);
+  });
+
+  it("returns null when RPC returns an error", async () => {
+    const { supabase } = buildSupabaseMock({ rpcError: { message: "db error" } });
+    const result = await awardXP(supabase, USER_ID, ACTION, AMOUNT);
+    expect(result).toBeNull();
+  });
+
+  it("does NOT increment Redis when RPC fails", async () => {
+    const { supabase } = buildSupabaseMock({ rpcError: { message: "db error" } });
+    await awardXP(supabase, USER_ID, ACTION, AMOUNT);
+    expect(mockRedis.incrby).not.toHaveBeenCalled();
   });
 });
