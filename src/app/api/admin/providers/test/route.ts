@@ -13,7 +13,7 @@ import {
 } from "@/lib/api/response";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { testProviderSchema } from "@/lib/validators/admin";
-import { getAIRouter } from "@/lib/ai/router";
+import { getAIRouterWithDBKeys } from "@/lib/ai/router";
 import type { AIProvider } from "@/lib/ai/types";
 
 export const dynamic = 'force-dynamic';
@@ -48,8 +48,9 @@ export async function POST(req: NextRequest) {
       return apiNotFound("Provider not found");
     }
 
-    // Use the AI Router to check availability
-    const router = getAIRouter();
+    // Use the AI Router with DB-sourced keys (env-var-only router would always
+    // fail for providers whose API keys are stored in the Supabase Vault).
+    const router = await getAIRouterWithDBKeys();
     const startMs = Date.now();
 
     let available = false;
@@ -62,6 +63,7 @@ export async function POST(req: NextRequest) {
       available = resolved.provider === provider.provider_key;
     } catch (err) {
       errorMessage = err instanceof Error ? err.message : "Unknown error";
+      console.error("[admin/providers/test] resolveProvider failed:", { provider: provider.provider_key, err });
     }
 
     const latencyMs = Date.now() - startMs;
@@ -74,7 +76,8 @@ export async function POST(req: NextRequest) {
       error: errorMessage,
       tested_at: new Date().toISOString(),
     });
-  } catch {
+  } catch (err) {
+    console.error("[provider-test] error:", err);
     return apiInternalError();
   }
 }

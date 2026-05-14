@@ -5,15 +5,30 @@
 // Protected by a secret token via the Authorization header.
 // =============================================================================
 
+import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  // Guard: reject all requests if CRON_SECRET is not configured
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    console.error("[cron] CRON_SECRET is not configured - rejecting all requests");
+    return new Response("Server misconfiguration", { status: 503 });
+  }
+
   // Verify the cron secret to prevent unauthorized access
   const authHeader = request.headers.get("authorization");
+  const expected = `Bearer ${cronSecret}`;
 
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Use timing-safe comparison to prevent timing attacks
+  const authorized =
+    authHeader !== null &&
+    authHeader.length === expected.length &&
+    timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected));
+
+  if (!authorized) {
     const ip =
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
       request.headers.get("x-real-ip") ??
