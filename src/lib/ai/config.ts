@@ -160,6 +160,33 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       supportsFunctionCalling: true,
     },
   ],
+
+  openrouter: [
+    {
+      id: "openai/gpt-4o-mini",
+      provider: "openrouter",
+      name: "openai/gpt-4o-mini",
+      displayName: "OpenRouter → GPT-4o Mini",
+      maxTokens: 4096,
+      inputCostPer1k: 0.00015,
+      outputCostPer1k: 0.0006,
+      supportsStreaming: true,
+      supportsVision: true,
+      supportsFunctionCalling: true,
+    },
+    {
+      id: "anthropic/claude-3.5-sonnet",
+      provider: "openrouter",
+      name: "anthropic/claude-3.5-sonnet",
+      displayName: "OpenRouter → Claude 3.5 Sonnet",
+      maxTokens: 8192,
+      inputCostPer1k: 0.003,
+      outputCostPer1k: 0.015,
+      supportsStreaming: true,
+      supportsVision: true,
+      supportsFunctionCalling: true,
+    },
+  ],
 };
 
 // ---------------------------------------------------------------------------
@@ -175,6 +202,7 @@ export const DEFAULT_FALLBACK_CHAIN: AIProvider[] = [
   "groq",
   "mistral",
   "copilot",
+  "openrouter",
 ];
 
 export function getRouterConfig(): RouterConfig {
@@ -224,6 +252,13 @@ export function getRouterConfig(): RouterConfig {
         defaultModel: "mistral-large-latest",
         models: AI_MODELS.mistral,
         enabled: !!process.env.MISTRAL_API_KEY,
+      },
+      openrouter: {
+        provider: "openrouter",
+        apiKey: process.env.OPENROUTER_API_KEY || "",
+        defaultModel: "openai/gpt-4o-mini",
+        models: AI_MODELS.openrouter,
+        enabled: !!process.env.OPENROUTER_API_KEY,
       },
     },
   };
