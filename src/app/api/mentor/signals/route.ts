@@ -6,13 +6,15 @@
 // =============================================================================
 
 import { NextRequest, NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireAuth } from "@/lib/api/require-auth";
+import type { Database } from "@/lib/supabase/types";
 
 export const dynamic = 'force-dynamic';
 
-// Note: mentor_signals table types will be fully available after running
-// migration 00010 and regenerating types with `supabase gen types`.
-// Until then, we use explicit typing for insert/update operations.
+// TODO: regen types with `supabase gen types` after migration 00010 is applied
+// to remove the typed cast below. mentor_signals is in types.ts but the SSR
+// client generic resolves Insert/Update as never due to PostgrestVersion mismatch.
 
 type MentorSignalType =
     | "page_entry_briefing"
@@ -31,7 +33,10 @@ type MentorSignalType =
 export async function GET(req: NextRequest) {
     const auth = await requireAuth(req);
     if ("response" in auth) return auth.response;
-    const { userId, supabase } = auth;
+    const { userId } = auth;
+    // Narrow to SupabaseClient<Database> — SSR client generic resolves Insert/Update
+    // as never for this table due to PostgrestVersion mismatch; cast is safe here.
+    const supabase = auth.supabase as unknown as SupabaseClient<Database>;
 
     const url = new URL(req.url);
     const page = url.searchParams.get("page") || undefined;
@@ -100,7 +105,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     const auth = await requireAuth(req);
     if ("response" in auth) return auth.response;
-    const { userId, supabase } = auth;
+    const { userId } = auth;
+    const supabase = auth.supabase as unknown as SupabaseClient<Database>;
 
     try {
         const body = await req.json();
@@ -113,9 +119,7 @@ export async function POST(req: NextRequest) {
 
         // If custom signal content is provided, insert directly
         if (signalType && content) {
-            // TODO(M-04): createServerClient generic mismatch with Insert type — needs client refactor
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- server client generic incompatible with Insert until client is unified
-            const { data, error } = await (supabase as any)
+            const { data, error } = await supabase
                 .from("mentor_signals")
                 .insert({
                     user_id: userId,
@@ -164,9 +168,7 @@ export async function POST(req: NextRequest) {
             // Generate briefing based on page context
             const briefing = generateBriefingContent(page);
 
-            // TODO(M-04): createServerClient generic mismatch with Insert type — needs client refactor
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- server client generic incompatible with Insert until client is unified
-            const { data, error } = await (supabase as any)
+            const { data, error } = await supabase
                 .from("mentor_signals")
                 .insert({
                     user_id: userId,
@@ -214,7 +216,8 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
     const auth = await requireAuth(req);
     if ("response" in auth) return auth.response;
-    const { userId, supabase } = auth;
+    const { userId } = auth;
+    const supabase = auth.supabase as unknown as SupabaseClient<Database>;
 
     try {
         const body = await req.json();
@@ -235,9 +238,7 @@ export async function PATCH(req: NextRequest) {
                 ? { is_read: true, shown_at: new Date().toISOString() }
                 : { is_dismissed: true };
 
-        // TODO(M-04): createServerClient generic mismatch with Update type — needs client refactor
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- server client generic incompatible with Update until client is unified
-        const { error } = await (supabase as any)
+        const { error } = await supabase
             .from("mentor_signals")
             .update(updateData)
             .eq("user_id", userId)

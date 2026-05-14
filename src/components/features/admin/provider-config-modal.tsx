@@ -144,7 +144,7 @@ export function ProviderConfigModal({
       const timer = setTimeout(() => firstInputRef.current?.focus(), 50);
       return () => clearTimeout(timer);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally omits initialValues: snapshot on open only, not on every parent re-render
   }, [isOpen]);
 
   // Close on Escape

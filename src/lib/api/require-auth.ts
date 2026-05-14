@@ -6,7 +6,9 @@
 // SECURITY:
 // - Uses getUser() to validate the JWT server-side via an Auth API round-trip.
 //   This prevents session-spoofing via a tampered cookie.
-// - Reads user role from JWT app_metadata instead of a separate DB query.
+// - ADR-016 Mismatch-Guard: DB is source of truth for role. After JWT validation
+//   a lightweight DB read on profiles.role detects stale-JWT scenarios. On
+//   mismatch the DB role wins; on DB error the JWT role is used as fallback.
 // =============================================================================
 
 import { NextRequest, NextResponse } from "next/server";
@@ -84,8 +86,38 @@ export async function requireAuth(
     };
   }
 
-  // --- Read role from JWT app_metadata (no DB query) ---
-  const role = (user.app_metadata?.role ?? "user") as AuthResult["role"];
+  // --- ADR-016 Mismatch-Guard: DB is source of truth for role ---
+  // A lightweight profiles.role read detects stale-JWT scenarios (e.g. role
+  // was changed in DB but the user hasn't refreshed their token yet).
+  // On mismatch: DB wins, log warning. On DB error: fall back to JWT, no 500.
+  const jwtRole = (user.app_metadata?.role ?? "user") as AuthResult["role"];
+
+  let role = jwtRole;
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const dbRole = (profile as { role: string } | null)?.role as
+      | AuthResult["role"]
+      | undefined;
+
+    if (dbRole !== undefined && dbRole !== jwtRole) {
+      console.warn(
+        `[require-auth] Role mismatch for user ${user.id}: jwt=${jwtRole} db=${dbRole} — trusting DB`,
+      );
+      role = dbRole;
+    } else if (dbRole !== undefined) {
+      role = dbRole;
+    }
+  } catch (dbErr) {
+    console.warn(
+      `[require-auth] DB role lookup failed for user ${user.id}, falling back to JWT role:`,
+      dbErr instanceof Error ? dbErr.message : dbErr,
+    );
+  }
 
   return {
     userId: user.id,

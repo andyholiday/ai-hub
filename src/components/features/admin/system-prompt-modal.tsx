@@ -47,7 +47,7 @@ export function SystemPromptModal({
       const timer = setTimeout(() => textareaRef.current?.focus(), 50);
       return () => clearTimeout(timer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally omits initialPrompt: snapshot on open only, not on every parent re-render
   }, [open]);
 
   // Close on Escape.
