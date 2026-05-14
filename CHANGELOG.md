@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Audit-Fix-Wave 2026-05-14
+
+#### Critical Fixes
+
+- C-01: Admin-Page-Stub konsolidiert — `/admin/page.tsx` nutzt jetzt
+  `ProviderKeyModal`/`ProviderConfigModal`/`SystemPromptModal` statt
+  `window.prompt`. Provider koennen vollstaendig konfiguriert werden. (be4c412)
+- C-02: Dev-Skripte `set-admin.mjs` + `update-gemini-key.mjs` aus Root und
+  `scripts/` entfernt; `.gitignore` aktualisiert. Keine hardcoded Secrets
+  enthalten, daher kein History-Rewrite noetig. (62d3828, fcc15f5)
+- C-03: Login-Streak aktiviert — `update_login_streak` RPC wird im
+  `GET /api/profile` als Fire-and-Forget aufgerufen (Tier 1+2). Streak-Days
+  werden jetzt taeglich aktualisiert. (ff7cd32, 3a28644)
+- C-04: `awardXP` atomarisiert — neue DB-Funktion `award_xp_idempotent` mit
+  ON-CONFLICT-Gate (Migration 00033). Race-Condition fuer Double-Award
+  eliminiert. (ff7cd32)
+- C-05: Profile-null-Guard — `.single()` zu `.maybeSingle()` in
+  `PATCH /api/profile`; neue User ohne profile-row erhalten jetzt
+  Onboarding-XP. (ff7cd32)
+
+#### Major Fixes
+
+- M-01: `api_endpoint` ist jetzt nullable (Migration 00034) — Admin kann
+  Custom-Endpoint zuruecksetzen. (3a28644, be4c412)
+- M-02: Provider-Test gibt klare Fehlermeldung "Kein API-Key hinterlegt"
+  statt stiller Fallback-Maskierung. (be4c412)
+- M-03: Department-Bonus +25 XP idempotent (action `department_set`) — User
+  erhaelt Bonus beim ersten Setzen der Abteilung. (ff7cd32)
+- M-04/05/06: Idempotency-Keys fuer `lesson_completed`, `course_completed`,
+  `idea_evaluated` — kein Double-Award mehr bei Retries. (ff7cd32)
+- M-07: Daily-Cap fail-closed — bei Redis-Fehler aggregiert SQL ueber
+  `xp_log` statt Cap zu umgehen. (ff7cd32)
+- M-08: Rate-Limit Tier `"admin"` (20/min) auf allen `/api/admin/*`-Routes
+  inkl. `providers`. (62d3828, a3150fb)
+- M-09: Webhook `safeEqual()` mit Buffer-byte-Length + try-catch. (62d3828)
+- M-10: Error-Hygiene — keine rohen Supabase-Errors mehr in
+  Admin-Responses. (62d3828, 3a28644)
+- M-11: `requireAuth` mit DB-Mismatch-Guard analog `requireAdmin`. (f79f95e)
+
+#### Minor / Hardening
+
+- m-01: Supabase-Webhook implementiert Welcome-Notification (`type=system`)
+  + Auto-Tag fuer neue Posts. (bf506c7)
+- m-02: Vercel-Cron-Job `0 2 * * *` ruft taeglich
+  `cleanup_expired_chat_messages` auf (GDPR Chat-Retention). (bf506c7)
+- m-03: `require-auth.ts` Coverage 0% auf 94% angehoben. (f79f95e)
+- m-04/05: `as any` aus `mentor/signals` + `hybrid-search` entfernt. (f79f95e)
+- m-06: ESLint-Suppress-Begruendungen ergaenzt. (f79f95e, a3150fb)
+- m-07: Community-XSS-Audit — kein Befund; React-Plain-Text-Rendering.
+  Regression-Tests dokumentieren das. (7056b88)
+- m-08: `ProviderConfigModal` Component-Tests (15) + E2E-Stubs. (7056b88)
+
+#### Migrations
+
+- `00033_atomic_award_xp.sql` — `award_xp_idempotent` mit ON-CONFLICT-Gate
+- `00034_api_endpoint_nullable.sql` — `ai_providers.api_endpoint DROP NOT NULL`
+
+#### Stats
+
+- 833 Tests (von 725 vor Welle 1, +108)
+- Coverage 35.62% (von ~30%, +5.6 pp)
+- 12 Commits, 0 Critical/Major-Findings offen
+
+---
+
 ### Phase 2 — Hardening Wave 2026-05-14
 
 #### Security
