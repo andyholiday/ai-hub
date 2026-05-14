@@ -65,6 +65,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Drift-Risiko eliminiert. `DAILY_LOGIN` / `REFER_USER` bleiben als
   Feature-TODOs (Task 11 partial).
 
+#### Quality-Gate 2 Follow-up
+
+- `tests/unit/lib/gamification/xp.test.ts` + `badges.test.ts`: 7 neue
+  Critical-Path-Tests (Idempotency, Daily-Cap-Order, 23505-Race,
+  first-steps-Badge) — schliesst F-04 (0% Coverage auf Core-Gamification).
+- `recommendations/route.ts`: `import type` fuer `SupabaseClient` — schliesst
+  F-01 (Value-Import statt Type-Import). 732 Tests passing, tsc + lint clean.
+
 ---
 
 ### Phase 1/2 — Audit Follow-up Wave 2026-05-13
