@@ -289,6 +289,7 @@ export interface AdminDataState {
 
   // --- Prompts ---
   prompts: SystemPromptItem[];
+  promptRows: SystemPromptRow[];
   promptsLoading: boolean;
   promptsError: string | null;
 
@@ -681,6 +682,7 @@ export function useAdminData(): AdminDataState {
 
     // Prompts
     prompts,
+    promptRows,
     promptsLoading,
     promptsError,
 

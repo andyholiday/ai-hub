@@ -102,3 +102,28 @@ export const updateFeatureSchema = z.object({
 });
 
 export type UpdateFeatureInput = z.infer<typeof updateFeatureSchema>;
+
+// ---------------------------------------------------------------------------
+// User Management
+// ---------------------------------------------------------------------------
+
+/**
+ * Allowed role values — mirrors the Postgres user_role enum:
+ * CREATE TYPE user_role AS ENUM ('user', 'moderator', 'admin', 'super_admin');
+ */
+export const userRoleEnum = z.enum(["user", "moderator", "admin", "super_admin"]);
+
+export type UserRole = z.infer<typeof userRoleEnum>;
+
+/**
+ * POST /api/admin/users - Create a new user
+ */
+export const createUserSchema = z.object({
+  email: z.string().email("Invalid email"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  full_name: z.string().min(1, "full_name is required"),
+  role: userRoleEnum.optional(),
+  is_approved: z.boolean().optional(),
+});
+
+export type CreateUserInput = z.infer<typeof createUserSchema>;

@@ -17,7 +17,10 @@ import {
   FeatureToggles,
   ProviderSandbox,
   ProviderKeyModal,
+  ProviderConfigModal,
+  SystemPromptModal,
 } from "@/components/features/admin";
+import type { ProviderConfigValues } from "@/components/features/admin";
 import { useAdminData } from "@/hooks/use-admin-data";
 
 // -----------------------------------------------------------------------------
@@ -52,27 +55,48 @@ export default function AIConfigPage() {
     [admin],
   );
 
-  // --- Provider edit handler ---
-  const handleEditProvider = useCallback(
-    (id: string) => {
-      const provider = admin.providers.find((p) => p.id === id);
-      if (!provider) return;
+  // --- Provider config modal state ---
+  const [configModalProviderId, setConfigModalProviderId] = useState<string | null>(null);
 
-      const newTemp = window.prompt(
-        `Temperature fuer ${provider.name} (aktuell: ${provider.temperature}):`,
-        String(provider.temperature),
-      );
+  const configModalProvider = configModalProviderId
+    ? admin.providers.find((p) => p.id === configModalProviderId) ?? null
+    : null;
 
-      if (newTemp === null) return;
+  const configModalProviderRow = configModalProviderId
+    ? admin.providerRows.find((r) => r.id === configModalProviderId) ?? null
+    : null;
 
-      const parsed = parseFloat(newTemp);
-      if (isNaN(parsed) || parsed < 0 || parsed > 2) {
-        return;
+  const configModalInitialValues: ProviderConfigValues = configModalProvider
+    ? {
+        model: configModalProvider.model,
+        temperature: String(configModalProvider.temperature),
+        max_tokens: configModalProviderRow?.max_tokens != null
+          ? String(configModalProviderRow.max_tokens)
+          : "",
+        top_p: configModalProviderRow?.top_p != null
+          ? String(configModalProviderRow.top_p)
+          : "",
+        endpoint: configModalProvider.endpoint,
+        budget: configModalProviderRow?.monthly_budget_limit != null
+          ? String(configModalProviderRow.monthly_budget_limit)
+          : "",
       }
+    : { model: "", temperature: "1", max_tokens: "", top_p: "", endpoint: "", budget: "" };
 
-      admin.updateProvider(id, { temperature: parsed });
+  const handleOpenConfigModal = useCallback((id: string) => {
+    setConfigModalProviderId(id);
+  }, []);
+
+  const handleCloseConfigModal = useCallback(() => {
+    setConfigModalProviderId(null);
+  }, []);
+
+  const handleSaveConfig = useCallback(
+    async (updates: Record<string, unknown>): Promise<boolean> => {
+      if (!configModalProviderId) return false;
+      return admin.updateProvider(configModalProviderId, updates);
     },
-    [admin],
+    [admin, configModalProviderId],
   );
 
   // --- API-Key modal state ---
@@ -113,21 +137,25 @@ export default function AIConfigPage() {
     [admin, keyModalProviderId],
   );
 
-  // --- Prompt edit handler ---
+  // --- Prompt edit modal state ---
+  const [editingPrompt, setEditingPrompt] = useState<{ key: string; value: string } | null>(null);
+
   const handleEditPrompt = useCallback(
     (promptId: string) => {
-      const prompt = admin.prompts.find((p) => p.id === promptId);
-      if (!prompt) return;
-
-      const newText = window.prompt(
-        `Prompt-Text fuer "${prompt.name}" bearbeiten:`,
-      );
-
-      if (newText === null || newText.trim() === "") return;
-
-      admin.updatePrompt(promptId, newText.trim());
+      const row = admin.promptRows.find((r) => r.prompt_key === promptId);
+      if (!row) return;
+      setEditingPrompt({ key: row.prompt_key, value: row.prompt_text });
     },
-    [admin],
+    [admin.promptRows],
+  );
+
+  const handleSavePrompt = useCallback(
+    async (newPrompt: string) => {
+      if (!editingPrompt) return;
+      const success = await admin.updatePrompt(editingPrompt.key, newPrompt);
+      if (!success) throw new Error("Speichern fehlgeschlagen");
+    },
+    [admin, editingPrompt],
   );
 
   // --- Feature toggle handler ---
@@ -255,7 +283,7 @@ export default function AIConfigPage() {
                 <ProviderCard
                   key={provider.id}
                   provider={provider}
-                  onEdit={handleEditProvider}
+                  onEdit={handleOpenConfigModal}
                   onTest={handleTestProvider}
                   onSetPrimary={admin.setProviderPrimary}
                   onSetup={handleSetupProvider}
@@ -320,6 +348,24 @@ export default function AIConfigPage() {
         }
         onSave={handleSaveApiKey}
         onClose={handleCloseKeyModal}
+      />
+
+      {/* Provider Config Modal */}
+      <ProviderConfigModal
+        isOpen={configModalProviderId !== null}
+        providerName={configModalProvider?.name ?? ""}
+        initialValues={configModalInitialValues}
+        onSave={handleSaveConfig}
+        onClose={handleCloseConfigModal}
+      />
+
+      {/* System Prompt Modal */}
+      <SystemPromptModal
+        open={editingPrompt !== null}
+        initialPrompt={editingPrompt?.value ?? ""}
+        promptKey={editingPrompt?.key ?? ""}
+        onSave={handleSavePrompt}
+        onClose={() => setEditingPrompt(null)}
       />
     </div>
   );
