@@ -33,11 +33,22 @@ export async function GET(req: NextRequest) {
     if ("response" in auth) return auth.response;
 
     const supabase = createAdminClient();
+    const userId = auth.userId;
 
     // ---- Tier 1: Try optimized single RPC call (requires migration 00009) ----
     const { data: rawData, error: rpcError } = await supabase.rpc("get_user_profile_data", {
-      target_user_id: auth.userId,
+      target_user_id: userId,
     });
+
+    // C-03: fire-and-forget login streak update (DB function has 20h guard)
+    function fireStreakUpdate(): void {
+      supabase
+        .rpc("update_login_streak", { target_user_id: userId })
+        .then(
+          () => {},
+          (err: unknown) => console.error("[Profile GET] update_login_streak failed:", err),
+        );
+    }
 
     if (!rpcError) {
       const data = rawData as unknown as {
@@ -47,14 +58,7 @@ export async function GET(req: NextRequest) {
       } | null;
 
       if (data?.profile) {
-        // C-03: fire-and-forget login streak update (DB function has 20h guard)
-        supabase
-          .rpc("update_login_streak", { target_user_id: auth.userId })
-          .then(
-            () => {},
-            (err: unknown) => console.error("[Profile GET] update_login_streak failed:", err),
-          );
-
+        fireStreakUpdate();
         return apiSuccess(data);
       }
     }
@@ -100,6 +104,7 @@ export async function GET(req: NextRequest) {
         .eq("user_id", auth.userId)
         .not("completed_at", "is", null);
 
+      fireStreakUpdate();
       return apiSuccess({
         profile,
         badges,
@@ -273,7 +278,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     // M-03: Award department-set bonus exactly once (idempotency handled by DB function).
-    if (parsed.data.department && !previous?.department) {
+    const wasDeptEmpty = previous == null || previous.department == null || previous.department === "";
+    if (parsed.data.department && wasDeptEmpty) {
       xp_department = await awardXP(
         supabase,
         auth.userId,

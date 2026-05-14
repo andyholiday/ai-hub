@@ -157,6 +157,25 @@ describe("updateProviderSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("should accept null for api_endpoint (clear to default)", () => {
+    const result = updateProviderSchema.safeParse({
+      id: VALID_UUID,
+      api_endpoint: null,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.api_endpoint).toBeNull();
+    }
+  });
+
+  it("should accept api_endpoint omitted (no change)", () => {
+    const result = updateProviderSchema.safeParse({ id: VALID_UUID });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.api_endpoint).toBeUndefined();
+    }
+  });
+
   it("should reject a plain string that is not a URL for api_endpoint", () => {
     const result = updateProviderSchema.safeParse({
       id: VALID_UUID,

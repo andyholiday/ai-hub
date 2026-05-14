@@ -104,7 +104,8 @@ export async function GET(req: NextRequest) {
     const { data: costRows, error: costError } = await baseQuery;
 
     if (costError) {
-      return apiInternalError(costError.message);
+      console.error("[admin/costs] fetch ai_cost_log:", costError);
+      return apiInternalError("Interner Fehler");
     }
 
     // --- Fetch provider names for aggregation ---

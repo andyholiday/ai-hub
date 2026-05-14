@@ -40,7 +40,8 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: true });
 
     if (error) {
-      return apiInternalError(error.message);
+      console.error("[admin/features] fetch feature_flags:", error);
+      return apiInternalError("Interner Fehler");
     }
 
     return apiSuccess(features ?? []);
@@ -87,7 +88,8 @@ export async function PUT(req: NextRequest) {
       if (error.code === "PGRST116") {
         return apiNotFound("Feature flag not found");
       }
-      return apiInternalError(error.message);
+      console.error("[admin/features] update feature_flags:", error);
+      return apiInternalError("Interner Fehler");
     }
 
     return apiSuccess(feature);

@@ -25,7 +25,10 @@ export async function GET(req: NextRequest) {
             .order("created_at", { ascending: false })
             .limit(20);
 
-        if (bpError) return apiInternalError(bpError.message);
+        if (bpError) {
+            console.error("[admin/content] fetch best_practices:", bpError);
+            return apiInternalError("Interner Fehler");
+        }
 
         // Fetch community posts
         const { data: posts, error: postError } = await supabase
@@ -34,7 +37,10 @@ export async function GET(req: NextRequest) {
             .order("created_at", { ascending: false })
             .limit(20);
 
-        if (postError) return apiInternalError(postError.message);
+        if (postError) {
+            console.error("[admin/content] fetch community_posts:", postError);
+            return apiInternalError("Interner Fehler");
+        }
 
         return apiSuccess({
             bestPractices: practices,

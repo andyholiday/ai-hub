@@ -42,7 +42,8 @@ export async function GET(req: NextRequest) {
       .order("version", { ascending: false });
 
     if (error) {
-      return apiInternalError(error.message);
+      console.error("[admin/prompts] fetch system_prompts:", error);
+      return apiInternalError("Interner Fehler");
     }
 
     // Group by prompt_key and pick the latest active version
@@ -125,7 +126,8 @@ export async function PUT(req: NextRequest) {
       .single();
 
     if (error) {
-      return apiInternalError(error.message);
+      console.error("[admin/prompts] insert system_prompts:", error);
+      return apiInternalError("Interner Fehler");
     }
 
     // --- Deactivate all previous versions (new version is already persisted) ---

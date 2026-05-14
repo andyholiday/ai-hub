@@ -10,9 +10,9 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 
 /**
- * Timing-safe string comparison using Buffer.byteLength to handle multibyte
- * characters correctly. Falls back to false on any error (e.g. mismatched
- * buffer sizes due to encoding edge-cases).
+ * Timing-safe string comparison. Uses Buffer byte length (utf8 encoding) for
+ * length-check; timingSafeEqual on equal-length buffers. Falls back to false
+ * on any error (e.g. mismatched buffer sizes due to encoding edge-cases).
  */
 function safeEqual(a: string, b: string): boolean {
   const aBuf = Buffer.from(a);

@@ -48,7 +48,8 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: true });
 
     if (error) {
-      return apiInternalError(error.message);
+      console.error("[admin/providers] fetch ai_providers:", error);
+      return apiInternalError("Interner Fehler");
     }
 
     // Mask api_key_encrypted for the response - never send raw keys to the client
@@ -104,9 +105,8 @@ export async function PUT(req: NextRequest) {
       );
 
       if (vaultError || !vaultUuid) {
-        return apiInternalError(
-          vaultError?.message ?? "Failed to store key in Vault",
-        );
+        console.error("[admin/providers] upsert_provider_vault_key:", vaultError);
+        return apiInternalError("Interner Fehler");
       }
 
       // Write the vault UUID into the column (never the plaintext key)
@@ -137,7 +137,8 @@ export async function PUT(req: NextRequest) {
       if (error.code === "PGRST116") {
         return apiNotFound("Provider not found");
       }
-      return apiInternalError(error.message);
+      console.error("[admin/providers] update ai_providers:", error);
+      return apiInternalError("Interner Fehler");
     }
 
     // Mask the key before returning

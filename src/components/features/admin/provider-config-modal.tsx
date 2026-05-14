@@ -73,10 +73,12 @@ function buildUpdates(
 
   if (current.endpoint.trim() !== initial.endpoint.trim()) {
     const v = current.endpoint.trim();
-    if (v !== "") {
+    if (v === "") {
+      // User cleared the endpoint — send null to reset to provider default.
+      updates.api_endpoint = null;
+    } else {
       updates.api_endpoint = v;
     }
-    // Empty endpoint: omit from updates (DB column is NOT NULL, cannot clear to null)
   }
 
   if (current.budget !== initial.budget) {

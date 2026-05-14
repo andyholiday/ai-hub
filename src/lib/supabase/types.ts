@@ -182,7 +182,7 @@ export type Database = {
       }
       ai_providers: {
         Row: {
-          api_endpoint: string
+          api_endpoint: string | null
           api_key_encrypted: string | null
           created_at: string
           display_name: string
@@ -199,7 +199,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          api_endpoint: string
+          api_endpoint?: string | null
           api_key_encrypted?: string | null
           created_at?: string
           display_name: string
@@ -216,7 +216,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          api_endpoint?: string
+          api_endpoint?: string | null
           api_key_encrypted?: string | null
           created_at?: string
           display_name?: string
