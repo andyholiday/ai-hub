@@ -13,7 +13,7 @@ import { NextRequest } from "next/server";
 // ---------------------------------------------------------------------------
 
 /** Available rate-limiting tiers. */
-export type RateLimitTier = "ai" | "search" | "api" | "auth";
+export type RateLimitTier = "ai" | "search" | "api" | "auth" | "admin";
 
 /** Result returned by the `rateLimit` function. */
 export interface RateLimitResult {
@@ -174,6 +174,7 @@ const TIER_CONFIG: Record<RateLimitTier, { requests: number; window: `${number} 
   search: { requests: 30, window: "1 m" },   // Medium  -- Semantic Search
   api: { requests: 60, window: "1 m" },   // Standard -- All other API routes
   auth: { requests: 5, window: "1 m" },   // Auth    -- Login, Register
+  admin: { requests: 20, window: "1 m" }, // Admin   -- Admin panel routes (brute-force protection)
 };
 
 /**

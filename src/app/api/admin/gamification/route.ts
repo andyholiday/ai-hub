@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/api/admin-auth";
 import { apiSuccess, apiInternalError } from "@/lib/api/response";
+import { rateLimit } from "@/lib/api/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = 'force-dynamic';
@@ -9,6 +10,11 @@ export async function GET(req: NextRequest) {
     try {
         const auth = await requireAdmin(req);
         if ("response" in auth) return auth.response;
+
+        const rl = await rateLimit(req, "admin", auth.userId);
+        if (!rl.success) {
+            return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
+        }
 
         const supabase = createAdminClient();
 

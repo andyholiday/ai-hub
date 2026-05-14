@@ -12,6 +12,7 @@ import {
   apiNotFound,
   apiValidationError,
 } from "@/lib/api/response";
+import { rateLimit } from "@/lib/api/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateFeatureSchema } from "@/lib/validators/admin";
 
@@ -25,6 +26,11 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await requireAdmin(req);
     if ("response" in auth) return auth.response;
+
+    const rl = await rateLimit(req, "admin", auth.userId);
+    if (!rl.success) {
+      return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
+    }
 
     const supabase = createAdminClient();
 
@@ -51,6 +57,11 @@ export async function PUT(req: NextRequest) {
   try {
     const auth = await requireAdmin(req);
     if ("response" in auth) return auth.response;
+
+    const rl = await rateLimit(req, "admin", auth.userId);
+    if (!rl.success) {
+      return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
+    }
 
     const body: unknown = await req.json();
     const parsed = updateFeatureSchema.safeParse(body);

@@ -9,6 +9,22 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Timing-safe string comparison using Buffer.byteLength to handle multibyte
+ * characters correctly. Falls back to false on any error (e.g. mismatched
+ * buffer sizes due to encoding edge-cases).
+ */
+function safeEqual(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) return false;
+  try {
+    return nodeCrypto.timingSafeEqual(aBuf, bBuf);
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest) {
   // Guard: reject all requests if SUPABASE_WEBHOOK_SECRET is not configured
   const webhookSecret = process.env.SUPABASE_WEBHOOK_SECRET;
@@ -23,11 +39,8 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get("authorization");
   const expected = `Bearer ${webhookSecret}`;
 
-  // Use timing-safe comparison to prevent timing attacks
-  const authorized =
-    signature !== null &&
-    signature.length === expected.length &&
-    nodeCrypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  // Use timing-safe comparison to prevent timing attacks and handle multibyte secrets
+  const authorized = signature !== null && safeEqual(signature, expected);
 
   if (!authorized) {
     return NextResponse.json(
