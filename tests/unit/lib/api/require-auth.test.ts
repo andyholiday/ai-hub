@@ -60,6 +60,36 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+describe("requireAuth — missing Supabase env vars on Vercel", () => {
+  it("returns 503 when NEXT_PUBLIC_SUPABASE_URL is not set and VERCEL is set", async () => {
+    const originalUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const originalKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const originalVercel = process.env.VERCEL;
+
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    process.env.VERCEL = "1"; // simulate Vercel deployment environment
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const result = await requireAuth(makeRequest());
+
+    expect("response" in result).toBe(true);
+    if ("response" in result) {
+      expect(result.response.status).toBe(503);
+      const body = await result.response.json();
+      expect(body.error.code).toBe("SERVICE_UNAVAILABLE");
+    }
+
+    errorSpy.mockRestore();
+    if (originalUrl !== undefined) process.env.NEXT_PUBLIC_SUPABASE_URL = originalUrl;
+    else delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (originalKey !== undefined) process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = originalKey;
+    else delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (originalVercel !== undefined) process.env.VERCEL = originalVercel;
+    else delete process.env.VERCEL;
+  });
+});
+
 describe("requireAuth", () => {
   // -------------------------------------------------------------------------
   // 401 paths

@@ -46,9 +46,14 @@ const isConfigured =
   typeof upstashToken === "string" && upstashToken.length > 0;
 
 /**
- * Hard-fail in production runtime when Upstash is not configured.
+ * Hard-fail only in Vercel production deployments when Upstash is not configured.
  * In-memory rate limiting is per-Lambda-instance and provides no real
  * protection in multi-instance deployments (Vercel, any serverless platform).
+ *
+ * Detection strategy:
+ * - VERCEL_ENV === "production": true only in Vercel production, NOT in preview.
+ * - NODE_ENV === "production" alone is intentionally NOT used: Vercel sets it in
+ *   both preview and production environments, causing false positives on previews.
  *
  * The check is deferred to the first `rateLimit()` call (runtime). Throwing at
  * module-load time would crash `next build` because NODE_ENV=production is set
@@ -56,18 +61,20 @@ const isConfigured =
  */
 const isProdRuntime =
   process.env.NEXT_PHASE !== "phase-production-build" &&
-  (process.env.VERCEL_ENV === "production" ||
-    process.env.NODE_ENV === "production");
+  process.env.VERCEL_ENV === "production";
 
 let prodGateChecked = false;
 function assertProdConfigured(): void {
   if (prodGateChecked) return;
   prodGateChecked = true;
   if (isProdRuntime && !isConfigured) {
-    throw new Error(
+    // Warn instead of throw so a missing Upstash config in production degrades
+    // gracefully to the in-memory fallback rather than returning 500 to users.
+    // Ops alert: check Vercel Dashboard → Integrations → Upstash.
+    console.error(
       "[rate-limit] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are " +
-        "required in production. In-memory fallback is per-Lambda-instance and " +
-        "ineffective at scale. Set the vars via Vercel Dashboard → Integrations → Upstash.",
+        "missing in Vercel production. In-memory fallback is per-Lambda-instance " +
+        "and ineffective at scale. Set the vars via Vercel Dashboard → Integrations → Upstash.",
     );
   }
 }

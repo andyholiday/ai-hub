@@ -51,9 +51,36 @@ export interface AuthError {
 export async function requireAuth(
   req: NextRequest,
 ): Promise<AuthResult | AuthError> {
+  // Guard: if Supabase env vars are missing on a Vercel deployment (preview or
+  // production), createServerClient would throw a synchronous error and produce
+  // a 500. Detect this case early and return 503 with a clear message instead.
+  // The guard is scoped to Vercel environments (process.env.VERCEL is set by
+  // Vercel automatically) so it does not affect local dev or test runs where
+  // env vars may intentionally be absent.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (process.env.VERCEL && (!supabaseUrl || !supabaseAnonKey)) {
+    console.error(
+      "[require-auth] NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not set. " +
+        "Configure these env vars in Vercel Dashboard → Settings → Environment Variables.",
+    );
+    return {
+      response: NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: "SERVICE_UNAVAILABLE",
+            message: "Authentication service is not configured.",
+          },
+        },
+        { status: 503 },
+      ),
+    };
+  }
+
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl ?? "",
+    supabaseAnonKey ?? "",
     {
       cookies: {
         get(name: string) {
