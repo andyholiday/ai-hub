@@ -144,6 +144,7 @@ describe("PATCH /api/admin/users — error hygiene", () => {
 describe("DELETE /api/admin/users — error hygiene", () => {
   beforeEach(() => {
     vi.resetModules();
+    mockSupabase.auth.admin.deleteUser.mockReset();
     // GDPR log insert succeeds
     mockSupabase.from.mockReturnValue({
       insert: vi.fn().mockReturnThis(),
@@ -156,15 +157,25 @@ describe("DELETE /api/admin/users — error hygiene", () => {
   });
 
   it("does not leak deleteUser error message to client", async () => {
+    // Uses a valid UUID so F06 schema validation passes; error comes from deleteUser itself.
     mockSupabase.auth.admin.deleteUser.mockResolvedValue({
       error: { message: "User not found — internal Supabase auth detail" },
     });
 
     const { DELETE } = await import("@/app/api/admin/users/route");
-    const res = await DELETE(makeRequest("DELETE", { id: "nonexistent-user-id" }));
+    const res = await DELETE(makeRequest("DELETE", { id: "00000000-0000-0000-0000-000000000001" }));
     const json = await res.json();
 
     expect(res.status).toBe(500);
     expect(JSON.stringify(json)).not.toContain("User not found — internal Supabase auth detail");
+  });
+
+  it("non-UUID id → 400 (F06 schema validation)", async () => {
+    // Verifies that the DeleteUserSchema introduced by F06 rejects non-UUID ids early.
+    const { DELETE } = await import("@/app/api/admin/users/route");
+    const res = await DELETE(makeRequest("DELETE", { id: "nonexistent-user-id" }));
+
+    expect(res.status).toBe(400);
+    expect(mockSupabase.auth.admin.deleteUser).not.toHaveBeenCalled();
   });
 });

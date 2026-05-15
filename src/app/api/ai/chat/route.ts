@@ -15,30 +15,10 @@ import { decideGate } from "@/lib/ai/gate/llm-gate";
 import { logGateDecision } from "@/lib/ai/gate/telemetry";
 import { buildManifest, persistManifest } from "@/lib/audit/c2pa-manifest";
 import { AI_HUB_SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
+import { chatRequestSchema, type ChatRequestBody } from "@/lib/validators/chat";
+import { apiValidationError } from "@/lib/api/response";
 
 export const dynamic = 'force-dynamic';
-
-// ---------------------------------------------------------------------------
-// Request validation types
-// ---------------------------------------------------------------------------
-
-interface ChatRequestBody {
-  messages: Array<{
-    id?: string;
-    role: "system" | "user" | "assistant";
-    content: string;
-  }>;
-  // systemPrompt intentionally omitted: client-supplied prompts are rejected
-  // to prevent prompt-injection. The system prompt is set server-side only.
-  context?: Record<string, unknown>;
-  provider?: AIProvider;
-  model?: string;
-  temperature?: number;
-  maxTokens?: number;
-  stream?: boolean;
-  /** Optional: Bestehende Session-ID fuer Persistenz (ADR-005) */
-  sessionId?: string;
-}
 
 // ---------------------------------------------------------------------------
 // Session-Persistenz Helpers (ADR-005)
@@ -137,43 +117,12 @@ export async function POST(req: NextRequest): Promise<Response> {
       );
     }
 
-    // --- Parse and validate request body ---
-    const body = (await req.json()) as ChatRequestBody;
-
-    if (!body.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
-      return NextResponse.json(
-        { error: "messages array is required and must not be empty" },
-        { status: 400 }
-      );
+    // --- Parse and validate request body (F03: Zod safeParse) ---
+    const parsed = chatRequestSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return apiValidationError(parsed.error);
     }
-
-    // Validate each message
-    for (const msg of body.messages) {
-      if (!msg.role || !msg.content) {
-        return NextResponse.json(
-          { error: "Each message must have a role and content" },
-          { status: 400 }
-        );
-      }
-      if (msg.role === "system") {
-        return NextResponse.json(
-          {
-            data: null,
-            error: {
-              code: "INVALID_MESSAGE_ROLE",
-              message: "Client-supplied system messages are not allowed.",
-            },
-          },
-          { status: 400 },
-        );
-      }
-      if (!["user", "assistant"].includes(msg.role)) {
-        return NextResponse.json(
-          { error: `Invalid message role: "${msg.role}"` },
-          { status: 400 }
-        );
-      }
-    }
+    const body: ChatRequestBody = parsed.data;
 
     // --- Build internal ChatMessage array ---
     const messages: ChatMessage[] = body.messages.map((m, i) => ({
@@ -244,7 +193,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         // prompts are rejected earlier in the request-validation step.
         systemPrompt: AI_HUB_SYSTEM_PROMPT,
         context: body.context,
-        provider: body.provider,
+        provider: body.provider as AIProvider | undefined,
         model: body.model,
         temperature: body.temperature,
         maxTokens: body.maxTokens,
@@ -257,7 +206,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       messages,
       systemPrompt: AI_HUB_SYSTEM_PROMPT,
       context: body.context,
-      provider: body.provider,
+      provider: body.provider as AIProvider | undefined,
       model: body.model,
       temperature: body.temperature,
       maxTokens: body.maxTokens,
@@ -374,33 +323,49 @@ function handleStreamingResponse(
         }
 
         // C2PA Audit-Log nach Stream-Ende (ADR-012, Pattern P4.3, fire-and-forget)
-        // TODO(Wave-5): privacyMode aus user_feature_prefs server-side resolve
-        // und an chatStream weiterreichen. Aktuell: hardcoded false bis Wiring steht.
-        const PRIVACY_MODE_PLACEHOLDER_WAVE5 = false;
+        // F09: privacyMode server-seitig aus user_feature_prefs lesen.
+        // Tabelle existiert (migration 00023). feature_id='privacy_mode'.
+        // Fallback false wenn Zeile fehlt oder DB-Fehler.
         if (provider && model && assistantContent) {
-          // Resolve the admin module once before entering the IIFE to avoid
-          // a redundant dynamic-import call inside the async block (F06 fix).
           const { createAdminClient } = await import("@/lib/supabase/admin");
           void (async () => {
             try {
               const adminClient = createAdminClient();
+
+              // Resolve privacyMode from user_feature_prefs (F09)
+              let privacyMode = false;
+              try {
+                const { data: prefRow } = await adminClient
+                  .from("user_feature_prefs")
+                  .select("is_enabled")
+                  .eq("user_id", userId)
+                  .eq("feature_id", "privacy_mode")
+                  .maybeSingle();
+                privacyMode = prefRow?.is_enabled ?? false;
+              } catch {
+                // DB error: fall back to false (non-blocking)
+              }
+
               const manifest = await buildManifest({
                 modelId: model,
                 provider,
                 region: process.env.AI_REGION ?? "eu-west-1",
-                privacyMode: PRIVACY_MODE_PLACEHOLDER_WAVE5,
+                privacyMode,
                 content: assistantContent,
                 userId,
               });
-              persistManifest(adminClient, {
-                userId,
-                modelId: model,
-                provider,
-                region: process.env.AI_REGION ?? "eu-west-1",
-                privacyMode: PRIVACY_MODE_PLACEHOLDER_WAVE5,
-                content: assistantContent,
-                manifest,
-              });
+              // If privacyMode=true, skip persisting the audit log entry
+              if (!privacyMode) {
+                persistManifest(adminClient, {
+                  userId,
+                  modelId: model,
+                  provider,
+                  region: process.env.AI_REGION ?? "eu-west-1",
+                  privacyMode,
+                  content: assistantContent,
+                  manifest,
+                });
+              }
             } catch (err) {
               console.error("c2pa-manifest-error", err);
             }

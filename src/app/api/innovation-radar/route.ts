@@ -60,7 +60,9 @@ export async function GET(req: NextRequest) {
     }
 
     if (search) {
-      query = query.ilike("title", `%${search}%`);
+      // F04: escape ilike special chars to prevent injection via wildcard abuse
+      const escapedSearch = search.replace(/[%_\\]/g, "\\$&");
+      query = query.ilike("title", `%${escapedSearch}%`);
     }
 
     // Sorting

@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/api/admin-auth";
 import { apiSuccess, apiInternalError, apiBadRequest, apiValidationError } from "@/lib/api/response";
 import { rateLimit } from "@/lib/api/rate-limit";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, AdminClientConfigError } from "@/lib/supabase/admin";
 import { createUserSchema } from "@/lib/validators/admin";
 
 // ---------------------------------------------------------------------------
@@ -17,6 +18,14 @@ const PatchUserSchema = z.object({
   full_name: z.string().optional(),
   department: z.string().optional(),
   position: z.string().optional(),
+});
+
+// ---------------------------------------------------------------------------
+// F06 Fix: Zod-Schema fuer DELETE-Body — verhindert fehlende/ungueltige UUID
+// ---------------------------------------------------------------------------
+
+const DeleteUserSchema = z.object({
+  id: z.string().uuid(),
 });
 
 export const dynamic = 'force-dynamic';
@@ -108,7 +117,10 @@ export async function GET(req: NextRequest) {
         }));
 
         return apiSuccess(users);
-    } catch {
+    } catch (err) {
+        if (err instanceof AdminClientConfigError) {
+            return apiInternalError(err.message);
+        }
         return apiInternalError();
     }
 }
@@ -173,6 +185,9 @@ export async function PATCH(req: NextRequest) {
         }
         return res;
     } catch (err) {
+        if (err instanceof AdminClientConfigError) {
+            return apiInternalError(err.message);
+        }
         console.error("[admin/users] PATCH unexpected error:", err);
         return apiInternalError("Benutzer konnte nicht aktualisiert werden");
     }
@@ -226,6 +241,9 @@ export async function POST(req: NextRequest) {
 
         return apiSuccess(userData.user);
     } catch (err) {
+        if (err instanceof AdminClientConfigError) {
+            return apiInternalError(err.message);
+        }
         console.error("[admin/users] POST unexpected error:", err);
         return apiInternalError("Benutzer konnte nicht erstellt werden");
     }
@@ -241,17 +259,25 @@ export async function DELETE(req: NextRequest) {
             return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
         }
 
-        const body = await req.json();
-        const { id } = body;
+        const rawBody: unknown = await req.json();
+        const parsed = DeleteUserSchema.safeParse(rawBody);
+        if (!parsed.success) {
+            return apiValidationError(parsed.error);
+        }
+        const { id } = parsed.data;
 
-        if (!id) return apiBadRequest("Missing user id");
+        // F08 Fix: sha256(x-forwarded-for) fuer GDPR-Audit-Log
+        const rawIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+        const ip_hash = rawIp
+            ? createHash("sha256").update(rawIp).digest("hex")
+            : null;
 
         const supabase = createAdminClient();
 
         // GDPR Art. 30: write erasure audit entry BEFORE deleting the user.
         const { data: erasureRow, error: insertError } = await supabase
             .from("gdpr_erasure_log")
-            .insert({ user_id: id })
+            .insert({ user_id: id, ip_hash })
             .select("id")
             .single();
 
@@ -298,6 +324,9 @@ export async function DELETE(req: NextRequest) {
 
         return apiSuccess({ deleted: true });
     } catch (err) {
+        if (err instanceof AdminClientConfigError) {
+            return apiInternalError(err.message);
+        }
         console.error("[admin/users] DELETE unexpected error:", err);
         return apiInternalError("Benutzer konnte nicht gelöscht werden");
     }

@@ -10,13 +10,14 @@
 // =============================================================================
 
 import { NextRequest } from "next/server";
+import { createHash } from "node:crypto";
 import { requireAuth } from "@/lib/api/require-auth";
 import {
   apiSuccess,
   apiInternalError,
   apiValidationError,
 } from "@/lib/api/response";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, AdminClientConfigError } from "@/lib/supabase/admin";
 import { updateProfileSchema } from "@/lib/validators/profile";
 import { awardCommunityXP, awardXP, XP_ACTIONS } from "@/lib/gamification/xp";
 import { checkAndAwardBadges } from "@/lib/gamification/badges";
@@ -162,7 +163,10 @@ export async function GET(req: NextRequest) {
         coursesCompleted: 0,
       },
     });
-  } catch {
+  } catch (err) {
+    if (err instanceof AdminClientConfigError) {
+      return apiInternalError(err.message);
+    }
     return apiInternalError();
   }
 }
@@ -179,11 +183,18 @@ export async function DELETE(req: NextRequest) {
 
     const supabase = createAdminClient();
 
+    // F08: hash the client IP for GDPR audit (Art. 30). SHA-256 of the first
+    // entry in x-forwarded-for; null if header is absent.
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const rawIp = forwardedFor ? (forwardedFor.split(",")[0]?.trim() ?? null) : null;
+    const ipHash = rawIp
+      ? createHash("sha256").update(rawIp).digest("hex")
+      : null;
+
     // GDPR Art. 30: write erasure audit entry BEFORE deleting the user.
-    // ip_hash is left NULL — GDPR requires the audit record, not the IP itself.
     const { data: erasureRow, error: insertError } = await supabase
       .from("gdpr_erasure_log")
-      .insert({ user_id: auth.userId })
+      .insert({ user_id: auth.userId, ip_hash: ipHash })
       .select("id")
       .single();
 
@@ -219,7 +230,10 @@ export async function DELETE(req: NextRequest) {
     }
 
     return apiSuccess({ deleted: true });
-  } catch {
+  } catch (err) {
+    if (err instanceof AdminClientConfigError) {
+      return apiInternalError(err.message);
+    }
     return apiInternalError();
   }
 }
@@ -291,7 +305,10 @@ export async function PATCH(req: NextRequest) {
     }
 
     return apiSuccess({ ...updatedProfile, xp_awarded, xp_department });
-  } catch {
+  } catch (err) {
+    if (err instanceof AdminClientConfigError) {
+      return apiInternalError(err.message);
+    }
     return apiInternalError();
   }
 }

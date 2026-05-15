@@ -16,7 +16,7 @@ import type { User } from "@supabase/supabase-js";
 // Route Definitions
 // ---------------------------------------------------------------------------
 
-const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/callback"];
+const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/callback", "/privacy"];
 const ADMIN_ROUTES = ["/admin", "/api/admin"];
 
 // Cookie names that may hold a corrupted Supabase session.
