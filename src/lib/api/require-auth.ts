@@ -93,10 +93,21 @@ export async function requireAuth(
   );
 
   // --- Validate user via Auth API (server-side JWT verification) ---
-  const {
-    data: { user },
-    error: sessionError,
-  } = await supabase.auth.getUser();
+  // RESILIENCE: a corrupted auth cookie (e.g. access_token containing newlines)
+  // makes @supabase/ssr throw synchronously in Headers.append. Catch it so the
+  // route returns a clean 401 instead of bubbling up as an unhandled rejection.
+  let user: Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"] = null;
+  let sessionError: Awaited<ReturnType<typeof supabase.auth.getUser>>["error"] = null;
+  try {
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+    sessionError = result.error;
+  } catch (err) {
+    console.warn(
+      "[require-auth] Failed to resolve Supabase session (corrupted cookie?):",
+      err instanceof Error ? err.message : err,
+    );
+  }
 
   if (sessionError || !user) {
     return {

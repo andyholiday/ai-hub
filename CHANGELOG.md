@@ -58,6 +58,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - m-07: Community-XSS-Audit — kein Befund; React-Plain-Text-Rendering.
   Regression-Tests dokumentieren das. (7056b88)
 - m-08: `ProviderConfigModal` Component-Tests (15) + E2E-Stubs. (7056b88)
+- m-09: Middleware + `require-auth` haerten gegen korruptes Supabase-Auth-Cookie
+  — `supabase.auth.getUser()` warf bei kaputtem `access_token` (z.B. Newlines)
+  oder bei `Invalid Base64-URL`-Decode synchron in `Headers.append`, was als
+  `unhandledRejection` HTTP 500 auf jeder Unterseite ausloeste. `try/catch`
+  treats das jetzt als anonym; Middleware emittiert zusaetzlich `Set-Cookie:
+  max-age=0` fuer alle `sb-*-auth-token`-Cookies, sodass das poisoning-Cookie
+  beim naechsten Request weg ist.
 
 #### Migrations
 
