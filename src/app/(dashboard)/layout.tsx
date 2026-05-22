@@ -9,6 +9,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { OrbProvider } from "@/components/features/ai-orb";
+import { CommandPaletteTrigger } from "@/components/shared/command-palette";
 
 // ---------------------------------------------------------------------------
 // Lazy-load the Cosmos Companion (pulls in framer-motion ~45 kB gzipped).
@@ -54,6 +55,9 @@ export default function DashboardLayout({
 
       {/* Cosmos Companion – lazy-loaded floating KI companion */}
       <CosmosCompanionLazy />
+
+      {/* Command Palette – Cmd/Ctrl+K global search + navigation */}
+      <CommandPaletteTrigger />
     </OrbProvider>
   );
 }

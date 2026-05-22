@@ -140,7 +140,7 @@ export const FEATURE_REGISTRY: readonly FeatureConfig[] = [
     id: 'hybrid-search',
     label: 'Hybrid Search (Postgres-Native)',
     description: 'BM25 + Vektor-Suche fusioniert in Supabase Postgres (ADR-014)',
-    defaultEnabled: false,
+    defaultEnabled: true, // Enabled for command-palette global search (migration 00022 fixed RLS leak)
     userToggleable: true,
     orgToggleable: true,
     deps: [],

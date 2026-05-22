@@ -16,7 +16,7 @@
 
 import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils/cn";
-import { AnimatePresence, motion, type PanInfo } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, type PanInfo } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -25,6 +25,9 @@ import { CelebrationFireworks } from "./celebration-fireworks";
 import { useOrbIdleState } from "./use-orb-idle-state";
 import { OrbAnimationLayer } from "./orb-animation-layer";
 import { getFeature } from "@/lib/features/feature-registry";
+import { useOrbTrigger } from "./use-orb-trigger";
+import { BubbleSpeech } from "./bubble-speech";
+import { OrbPageContext } from "./orb-page-context";
 
 // ---------------------------------------------------------------------------
 // Lazy-load the SplitView ChatPanel
@@ -83,7 +86,12 @@ export function CosmosCompanion() {
         tooltipText,
         hasNotification,
         orbState,
+        setBubblePayload,
+        bubblePayload,
     } = useOrb();
+
+    const prefersReducedMotion = useReducedMotion();
+    const orbButtonRef = useRef<HTMLButtonElement>(null);
 
     const [isHovered, setIsHovered] = useState(false);
     const [dockPosition, setDockPosition] = useState<DockPosition>("bottom-right");
@@ -97,6 +105,16 @@ export function CosmosCompanion() {
     const idleEnabled = getFeature("orb-idle-state").defaultEnabled;
     const { state: idleState } = useOrbIdleState();
     const effectiveIdleState = idleEnabled ? idleState : "active";
+
+    // Proactive bubble (ADR-008) — gated by proactive-orb-bubble feature flag.
+    // useOrbTrigger is always called (rules of hooks); payload is only applied
+    // when the feature is enabled.
+    const proactiveEnabled = getFeature("proactive-orb-bubble").defaultEnabled;
+    const { payload: triggerPayload, dismiss: dismissBubble } = useOrbTrigger();
+
+    useEffect(() => {
+        setBubblePayload(proactiveEnabled ? triggerPayload : null);
+    }, [proactiveEnabled, triggerPayload, setBubblePayload]);
 
     // Track state changes for aria-live announcement
     const stateChanged = prevStateRef.current !== orbState;
@@ -130,6 +148,15 @@ export function CosmosCompanion() {
         [],
     );
 
+    // Return focus to the orb button when the chat panel is closed.
+    const prevExpandedRef = useRef(isExpanded);
+    useEffect(() => {
+        if (prevExpandedRef.current && !isExpanded) {
+            orbButtonRef.current?.focus();
+        }
+        prevExpandedRef.current = isExpanded;
+    }, [isExpanded]);
+
     // Micro-reactions: subtle scale pulse on scroll
     const [scrollPulse, setScrollPulse] = useState(false);
     useEffect(() => {
@@ -153,6 +180,9 @@ export function CosmosCompanion() {
 
     return (
         <>
+            {/* Wire current route into OrbProvider.pageContext */}
+            <OrbPageContext />
+
             {/* Accessibility: Announce orb state changes to screen readers */}
             <div aria-live="polite" aria-atomic="true" className="sr-only">
                 {tooltipText}
@@ -181,15 +211,16 @@ export function CosmosCompanion() {
                         onDragEnd={handleDragEnd}
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{
-                            scale: scrollPulse ? 0.95 : 1,
+                            // Scroll-pulse is silenced for users who prefer reduced motion.
+                            scale: (!prefersReducedMotion && scrollPulse) ? 0.95 : 1,
                             opacity: 1,
                         }}
                         exit={{ scale: 0, opacity: 0 }}
-                        transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 25,
-                        }}
+                        transition={
+                            prefersReducedMotion
+                                ? { duration: 0 }
+                                : { type: "spring", stiffness: 300, damping: 25 }
+                        }
                         className={cn(
                             "cursor-grab active:cursor-grabbing",
                         )}
@@ -258,6 +289,7 @@ export function CosmosCompanion() {
 
                         {/* Multi-Layer Fluid Blob Container */}
                         <button
+                            ref={orbButtonRef}
                             type="button"
                             onClick={handleClick}
                             onMouseEnter={() => setIsHovered(true)}
@@ -326,6 +358,11 @@ export function CosmosCompanion() {
                                 aria-hidden="true"
                             />
                         </button>
+
+                        {/* Proactive bubble (ADR-008) — only rendered when feature flag is on */}
+                        {proactiveEnabled && (
+                            <BubbleSpeech payload={bubblePayload} onDismiss={dismissBubble} />
+                        )}
                     </motion.div>
                     </OrbAnimationLayer>
                 )}

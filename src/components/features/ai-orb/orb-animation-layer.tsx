@@ -15,7 +15,7 @@
 // =============================================================================
 
 import { useMemo } from 'react';
-import { motion, type MotionProps } from 'framer-motion';
+import { motion, useReducedMotion, type MotionProps } from 'framer-motion';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -94,9 +94,20 @@ export function OrbAnimationLayer({
   children,
   className,
 }: OrbAnimationLayerProps) {
+  const prefersReducedMotion = useReducedMotion();
+
   const animationConfig = useMemo(
-    () => buildAnimationConfig(idleState),
-    [idleState],
+    () => {
+      if (prefersReducedMotion) {
+        // Reduced-motion: static, no looping or transform animations.
+        return {
+          animate: { scale: 1, y: 0, rotate: 0 },
+          transition: { duration: 0 },
+        } satisfies AnimationConfig;
+      }
+      return buildAnimationConfig(idleState);
+    },
+    [idleState, prefersReducedMotion],
   );
 
   return (
