@@ -13,7 +13,7 @@ import {
 } from "@/lib/api/response";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { testProviderSchema } from "@/lib/validators/admin";
-import { getAIRouter } from "@/lib/ai/router";
+import { getAIRouterWithDBKeys } from "@/lib/ai/router";
 import type { AIProvider } from "@/lib/ai/types";
 
 export const dynamic = 'force-dynamic';
@@ -48,8 +48,8 @@ export async function POST(req: NextRequest) {
       return apiNotFound("Provider not found");
     }
 
-    // Use the AI Router to check availability
-    const router = getAIRouter();
+    // Use the AI Router to check availability (DB/Vault keys, mirrors chat route)
+    const router = await getAIRouterWithDBKeys();
     const startMs = Date.now();
 
     let available = false;
