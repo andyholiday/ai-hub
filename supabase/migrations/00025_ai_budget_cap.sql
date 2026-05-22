@@ -70,12 +70,13 @@ BEGIN
   END IF;
 END $$;
 
+DROP TRIGGER IF EXISTS ai_budget_reservations_set_updated_at ON public.ai_budget_reservations;
 CREATE TRIGGER ai_budget_reservations_set_updated_at
   BEFORE UPDATE ON public.ai_budget_reservations
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- Indexes
-CREATE INDEX idx_ai_budget_res_user_month
+CREATE INDEX IF NOT EXISTS idx_ai_budget_res_user_month
   ON public.ai_budget_reservations (user_id, year_month);
 
 -- ---------------------------------------------------------------------------
@@ -83,6 +84,7 @@ CREATE INDEX idx_ai_budget_res_user_month
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.ai_budget_reservations ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "budget_select_own" ON public.ai_budget_reservations;
 CREATE POLICY "budget_select_own"
   ON public.ai_budget_reservations FOR SELECT
   USING (user_id = auth.uid());
@@ -159,11 +161,16 @@ BEGIN
 END;
 $$;
 
--- Restrict EXECUTE to service_role only (revoke from public and anon)
+-- Restrict EXECUTE to service_role only (revoke from public, anon, authenticated)
 REVOKE ALL ON FUNCTION public.check_and_reserve_ai_budget(uuid, numeric, numeric) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.check_and_reserve_ai_budget(uuid, numeric, numeric) FROM anon;
 REVOKE ALL ON FUNCTION public.check_and_reserve_ai_budget(uuid, numeric, numeric) FROM authenticated;
--- service_role inherits superuser privileges; explicit GRANT not required on Supabase.
+GRANT EXECUTE ON FUNCTION public.check_and_reserve_ai_budget(uuid, numeric, numeric) TO service_role;
+
+-- Table: service_role needs INSERT, UPDATE, SELECT to drive the budget accumulator.
+-- Authenticated users get SELECT only (governed further by the RLS policy above).
+GRANT SELECT, INSERT, UPDATE ON public.ai_budget_reservations TO service_role;
+GRANT SELECT ON public.ai_budget_reservations TO authenticated;
 
 COMMENT ON TABLE public.ai_budget_reservations IS
   'Per-user/month running cost accumulator for AI budget cap enforcement (ADR: see 00025 header).';
