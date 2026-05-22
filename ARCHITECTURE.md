@@ -533,24 +533,21 @@ Die Codebase folgt einer **Feature-Sliced Architecture**, bei der Komponenten na
 ```
 <OrbProvider>                       # React Context (State-Management)
   |
-  +-- <AiOrb>                       # Haupt-Komponente (ai-orb.tsx)
+  +-- <CosmosCompanion>             # Haupt-Komponente (cosmos-companion.tsx), lazy-loaded, SSR disabled
   |   |
-  |   +-- aria-live Region          # Screen Reader Announcements
+  |   +-- <BubbleSpeech>            # Proaktive Bubbles (Rule-Engine, Cooldown-Guard)
+  |   +-- <OrbPageContext>          # Page-Context-Sync (Seiten-spezifischer State)
+  |   +-- <CelebrationFireworks>    # Feier-Partikel (celebration)
+  |   +-- <OrbAnimationLayer>       # Multi-Layer Fluid-Blob (3 morphende Schichten)
   |   +-- <AnimatePresence>          # Framer Motion (Exit-Animations)
-  |   |   +-- <ChatPanel>           # Lazy-loaded (Dynamic Import)
-  |   |       |
-  |   |       +-- Header (Cloud Mini + Status)
-  |   |       +-- Message List (Virtualisiert)
-  |   |       +-- Context Banner
-  |   |       +-- Input + Quick Actions
-  |   |
-  |   +-- <AnimatePresence>          # Orb (wenn Panel geschlossen)
-  |       +-- Tooltip (Hover)
-  |       +-- <OrbParticles>         # Feier-Partikel (celebration)
-  |       +-- Rotating Ring          # Gold-Partikel
-  |       +-- Orb Button             # 64px, Gradient, Sparkles Icon
-  |           +-- Status Dot
+  |       +-- <ChatSplitView>       # Lazy-loaded Split-View (50/50), persistent Chat
+  |           |
+  |           +-- Header (Status + Orb-State)
+  |           +-- Message List
+  |           +-- Context Banner
+  |           +-- Input + Quick Actions
   |
+  +-- <CommandPaletteTrigger>       # Cmd/Ctrl+K Command Palette (global, im DashboardLayout)
   +-- <useOrbPageState>              # Hook: setzt State je nach Seite
 ```
 

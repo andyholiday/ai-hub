@@ -121,7 +121,9 @@ export class GeminiProvider extends BaseAIProvider {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(60_000),
+      signal: request.signal
+        ? AbortSignal.any([request.signal, AbortSignal.timeout(60_000)])
+        : AbortSignal.timeout(60_000),
     });
 
     if (!response.ok) {
@@ -185,7 +187,9 @@ export class GeminiProvider extends BaseAIProvider {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(120_000),
+      signal: request.signal
+        ? AbortSignal.any([request.signal, AbortSignal.timeout(120_000)])
+        : AbortSignal.timeout(120_000),
     });
 
     if (!response.ok) {

@@ -204,7 +204,7 @@ Motivationssystem mit Tiefe:
 
 ### Sicherheit
 
-- **Rate Limiting**: Upstash Redis mit 4 Tiers (ai, search, write, read)
+- **Rate Limiting**: Upstash Redis mit 4 Tiers (ai, search, api, auth)
 - **XSS-Schutz**: DOMPurify Sanitization auf allen HTML-Rendering-Stellen
 - **Row Level Security**: 50+ RLS Policies in Supabase
 - **Auth**: getUser() auf allen API-Endpoints (getSession komplett migriert)
@@ -287,7 +287,7 @@ Die Komponenten sind nach Features organisiert, nicht nach technischer Schicht:
 - Konsistente Auth mit `requireAuth()` / `requireAdmin()` Middleware
 - Zod-Validierung auf allen Inputs
 - Einheitliche Response-Formate (`apiSuccess` / `apiError` Pattern)
-- Rate Limiting auf AI- und Search-Routen (Upstash Redis, 4 Tiers)
+- Rate Limiting auf AI- und Search-Routen (Upstash Redis, 4 Tiers: ai, search, api, auth)
 - Fire-and-forget Cost Logging fuer alle AI-Calls
 
 ---
@@ -521,7 +521,7 @@ ai-hub/
 |---------|-------|-------------|
 | GET/PATCH | `/api/profile` | Profil lesen / aktualisieren |
 | GET | `/api/recommendations` | Personalisierte Empfehlungen |
-| GET | `/api/search` | Semantische Suche (Rate Limited) |
+| POST | `/api/search` | Semantische Suche (Rate Limited) |
 | GET | `/api/innovation-radar` | Radar-Themen laden |
 | POST | `/api/cron` | Cron-Job Endpoint |
 | POST | `/api/webhooks/supabase` | Supabase Webhook |

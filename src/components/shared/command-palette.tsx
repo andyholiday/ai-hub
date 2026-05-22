@@ -4,8 +4,10 @@
 // CommandPalette — Global Cmd/Ctrl+K Command Palette
 // Two modes:
 //   1. Quick navigation — static allowlisted routes
-//   2. Hybrid search — POST /api/search/hybrid (debounced 200ms)
+//   2a. Hybrid search — POST /api/search/hybrid (debounced 200ms) [default]
+//   2b. Local search — in-browser 384-d cosine search [privacy-mode]
 //
+// When privacy-mode is ON, queries never leave the browser (Pattern P4.1).
 // Security: only allowlisted internal paths are ever pushed via router.push.
 // Degrades gracefully if hybrid-search endpoint returns 403/disabled.
 // =============================================================================
@@ -29,6 +31,48 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { usePrivacyMode } from "@/hooks/use-privacy-mode";
+import { getLocalSearchIndex } from "@/lib/search/local-search";
+import type { LocalCorpusItem } from "@/lib/search/local-search";
+
+// ---------------------------------------------------------------------------
+// Local search corpus — best-practice titles/excerpts for privacy-mode index.
+// Must be kept in sync with the demo data in best-practices/page.tsx.
+// 384-d vectors only — never compared against the 1536-d pgvector server index.
+// ---------------------------------------------------------------------------
+
+const LOCAL_CORPUS: readonly LocalCorpusItem[] = [
+  {
+    id: "1",
+    title: "ChatGPT-Prompts fuer Social Media Content",
+    content: "Erfahre, wie du mit gezielten Prompt-Techniken fesselnde Social Media Posts erstellst. Von Instagram Captions bis LinkedIn Artikel -- diese Best Practice zeigt dir bewaehrte Prompt-Strukturen fuer maximales Engagement.",
+  },
+  {
+    id: "2",
+    title: "KI-Automatisierung im Kundenservice",
+    content: "Wie KI-gestuetzte Automatisierung den Kundenservice revolutioniert. Lerne, wie Chatbots und automatische E-Mail-Klassifizierung die Antwortzeiten um 60% reduzieren und die Kundenzufriedenheit steigern.",
+  },
+  {
+    id: "3",
+    title: "Datenanalyse mit Claude fuer Vertriebsberichte",
+    content: "Nutze die analytischen Faehigkeiten von Claude, um komplexe Vertriebsdaten in aussagekraeftige Berichte zu verwandeln. Schritt-fuer-Schritt Anleitung mit Beispiel-Prompts und Vorlagen fuer Quartalsberichte.",
+  },
+  {
+    id: "4",
+    title: "Ethische Richtlinien fuer den KI-Einsatz im Unternehmen",
+    content: "Ein umfassender Leitfaden zu den ethischen Grundsaetzen beim Einsatz von KI in unserem Unternehmen. Von Datenschutz ueber Transparenz bis hin zu fairer Nutzung -- diese Best Practice definiert den Rahmen fuer verantwortungsvollen KI-Einsatz.",
+  },
+  {
+    id: "5",
+    title: "Top 10 KI-Tools fuer Marketer 2026",
+    content: "Die besten KI-Tools fuer das Marketing-Team: Von Text-Generierung ueber Bildbearbeitung bis zur Analyse. Jedes Tool wird mit konkreten Anwendungsfaellen vorgestellt und bewertet.",
+  },
+  {
+    id: "6",
+    title: "Midjourney-Prompts fuer Produktbilder",
+    content: "Erstelle professionelle Produktbilder mit Midjourney. Diese Best Practice enthaelt bewaehrte Prompt-Formeln, Stil-Referenzen und Nachbearbeitungstipps fuer Produkte im E-Commerce und Social Media.",
+  },
+] as const;
 
 // ---------------------------------------------------------------------------
 // Navigation allowlist — STRICT: only these paths may be pushed
@@ -96,6 +140,8 @@ interface SearchResult {
 type SearchState =
   | { status: "idle" }
   | { status: "loading" }
+  // local-loading: privacy-mode, model still initializing
+  | { status: "local-loading" }
   | { status: "results"; items: SearchResult[] }
   | { status: "empty" }
   | { status: "error"; message: string }
@@ -116,6 +162,17 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const [searchState, setSearchState] = useState<SearchState>({ status: "idle" });
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const privacyMode = usePrivacyMode();
+
+  // When privacy-mode is on, pre-build the local index so the model is ready.
+  useEffect(() => {
+    if (!privacyMode) return;
+    const idx = getLocalSearchIndex();
+    if (!idx) return;
+    // Build is idempotent — safe to call without awaiting here; errors are
+    // handled inside the index itself (status -> 'error').
+    void idx.build([...LOCAL_CORPUS]);
+  }, [privacyMode]);
 
   // Reset state when dialog closes
   useEffect(() => {
@@ -125,7 +182,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     }
   }, [open]);
 
-  // Debounced search
+  // Debounced search — switches between local (privacy-mode) and server paths
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (abortRef.current) abortRef.current.abort();
@@ -135,6 +192,44 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       return;
     }
 
+    if (privacyMode) {
+      // ---------- Privacy-mode: local 384-d index, no network request ----------
+      const idx = getLocalSearchIndex();
+      if (!idx) {
+        // SSR guard — should never happen in a 'use client' component
+        setSearchState({ status: "error", message: "Lokale Suche nicht verfuegbar." });
+        return;
+      }
+
+      if (idx.indexStatus === "loading") {
+        setSearchState({ status: "local-loading" });
+      } else {
+        setSearchState({ status: "loading" });
+      }
+
+      debounceRef.current = setTimeout(() => {
+        idx
+          .search(query.trim(), 8)
+          .then((results) => {
+            const items: SearchResult[] = results.map((r) => ({
+              id: r.id,
+              title: r.title,
+              content: r.content,
+              score: r.score,
+            }));
+            setSearchState(items.length > 0 ? { status: "results", items } : { status: "empty" });
+          })
+          .catch(() => {
+            setSearchState({ status: "error", message: "Lokale Suche fehlgeschlagen." });
+          });
+      }, 200);
+
+      return () => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+      };
+    }
+
+    // ---------- Default path: server hybrid search ----------
     setSearchState({ status: "loading" });
 
     debounceRef.current = setTimeout(() => {
@@ -172,7 +267,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query]);
+  }, [query, privacyMode]);
 
   const navigate = useCallback(
     (path: string) => {
@@ -185,6 +280,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   const showSearch =
     searchState.status === "loading" ||
+    searchState.status === "local-loading" ||
     searchState.status === "results" ||
     searchState.status === "empty" ||
     searchState.status === "error" ||
@@ -221,8 +317,11 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             "outline-none dark:text-surface-50",
           )}
         />
-        {searchState.status === "loading" && (
-          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-surface-400" aria-label="Suche laeuft..." />
+        {(searchState.status === "loading" || searchState.status === "local-loading") && (
+          <Loader2
+            className="h-4 w-4 shrink-0 animate-spin text-surface-400"
+            aria-label={searchState.status === "local-loading" ? "KI-Modell wird geladen..." : "Suche laeuft..."}
+          />
         )}
         <kbd
           className={cn(
@@ -287,6 +386,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               </Command.Item>
             ))}
           </Command.Group>
+        )}
+
+        {/* Local model loading state */}
+        {searchState.status === "local-loading" && (
+          <div className="py-6 text-center text-[13px] text-surface-500 dark:text-surface-400">
+            KI-Modell wird geladen (einmalig)...
+          </div>
         )}
 
         {/* Empty results state */}

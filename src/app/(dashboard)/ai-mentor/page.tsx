@@ -129,11 +129,6 @@ export default function AIMentorPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         messages: [
-          {
-            role: "system",
-            content:
-              "Du bist der KI-Mentor der AI Hub Community. Du hilfst Community-Mitgliedern, KI im Arbeitsalltag einzusetzen. Antworte auf Deutsch, freundlich und praxisnah. Halte deine Antworten kompakt aber hilfreich.",
-          },
           ...messages.map((m) => ({
             role: m.role === "ai" ? "assistant" : "user",
             content: m.content,
@@ -209,14 +204,7 @@ export default function AIMentorPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [
-            {
-              role: "system",
-              content:
-                "Du bist der KI-Mentor der AI Hub Community. Du hilfst Community-Mitgliedern, KI im Arbeitsalltag einzusetzen. Antworte auf Deutsch, freundlich und praxisnah.",
-            },
-            { role: "user", content: prompt },
-          ],
+          messages: [{ role: "user", content: prompt }],
           stream: false,
         }),
       })

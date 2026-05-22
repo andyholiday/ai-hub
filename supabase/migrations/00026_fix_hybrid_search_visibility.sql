@@ -1,6 +1,6 @@
 -- =============================================================================
 -- AI Hub - Fix Hybrid Search Visibility (Security Fix)
--- Version: 00022
+-- Version: 00026
 -- Date: 2026-05-22
 -- Description: Closes content-leak in hybrid_search_best_practices.
 --   The function was called via service-role admin client, bypassing RLS and

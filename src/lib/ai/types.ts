@@ -59,6 +59,12 @@ export interface ChatCompletionRequest {
   context?: Record<string, unknown>;
   /** ADR-013: Leitet Anfrage an Mistral EU Privacy Provider (Experiment-Tier) */
   privacyMode?: boolean;
+  /**
+   * AbortSignal propagated from the HTTP request so that a client disconnect
+   * aborts the upstream LLM fetch. Combined with the per-provider timeout
+   * via AbortSignal.any() in each provider implementation.
+   */
+  signal?: AbortSignal;
 }
 
 export interface ChatCompletionResponse {
