@@ -65,11 +65,11 @@ export function Header({
     >
       {/* Left: Greeting */}
       <div className="min-w-0 flex-1">
-        <h1 className="truncate font-display text-[26px] font-bold leading-tight text-surface-900">
+        <p className="truncate font-display text-[26px] font-bold leading-tight text-surface-900 dark:text-surface-50">
           {greeting}, {resolvedName}
-        </h1>
+        </p>
         {subtitle && (
-          <p className="mt-1 text-[14px] text-surface-500">{subtitle}</p>
+          <p className="mt-1 text-[14px] text-surface-600 dark:text-surface-400">{subtitle}</p>
         )}
       </div>
 
@@ -104,8 +104,8 @@ export function Header({
           href="/notifications"
           className={cn(
             "relative flex h-10 w-10 items-center justify-center rounded-xl",
-            "text-surface-500 transition-colors duration-150",
-            "hover:bg-surface-100 hover:text-surface-700",
+            "text-surface-600 transition-colors duration-150",
+            "hover:bg-surface-100 hover:text-surface-700 dark:text-surface-400 dark:hover:bg-surface-800 dark:hover:text-surface-200",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2"
           )}
           aria-label={`Benachrichtigungen${notificationCount > 0 ? ` (${notificationCount} ungelesen)` : ""}`}

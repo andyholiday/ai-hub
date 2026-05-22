@@ -289,7 +289,7 @@ function PageHeader({
         <p className="mt-1 text-body-sm text-surface-500">
           Entdecke KI-Trends und Technologien, die unsere Community bewertet.
           {itemCount !== undefined && itemCount > 0 && (
-            <span className="ml-1 text-surface-400">
+            <span className="ml-1 text-surface-600">
               {itemCount} Topics
             </span>
           )}
@@ -320,7 +320,7 @@ function RadarLegend() {
       <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4">
         {/* Rings */}
         <div>
-          <p className="text-overline font-semibold uppercase text-surface-400">
+          <p className="text-overline font-semibold uppercase text-surface-600">
             Ringe
           </p>
           <div className="mt-1.5 space-y-1">
@@ -333,7 +333,7 @@ function RadarLegend() {
 
         {/* Quadrants */}
         <div>
-          <p className="text-overline font-semibold uppercase text-surface-400">
+          <p className="text-overline font-semibold uppercase text-surface-600">
             Quadranten
           </p>
           <div className="mt-1.5 space-y-1">
@@ -346,7 +346,7 @@ function RadarLegend() {
 
         {/* Size */}
         <div>
-          <p className="text-overline font-semibold uppercase text-surface-400">
+          <p className="text-overline font-semibold uppercase text-surface-600">
             Punkt-Groesse
           </p>
           <p className="mt-1.5 text-caption text-surface-500">
@@ -356,7 +356,7 @@ function RadarLegend() {
 
         {/* Interaction */}
         <div>
-          <p className="text-overline font-semibold uppercase text-surface-400">
+          <p className="text-overline font-semibold uppercase text-surface-600">
             Interaktion
           </p>
           <p className="mt-1.5 text-caption text-surface-500">

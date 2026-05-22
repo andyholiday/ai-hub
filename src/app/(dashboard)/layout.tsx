@@ -37,7 +37,7 @@ export default function DashboardLayout({
         </div>
 
         {/* Main Content Area */}
-        <main className="flex flex-1 flex-col overflow-x-hidden bg-[#F7F8FA]">
+        <main className="flex flex-1 flex-col overflow-x-hidden bg-surface-50 dark:bg-surface-900">
           {/* Header */}
           <div className="px-5 pt-6 sm:px-7 lg:px-8 lg:pt-7">
             <Header />

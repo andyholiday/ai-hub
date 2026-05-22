@@ -86,6 +86,9 @@ export async function hybridSearchBestPractices(
   }
 
   // --- RPC-Call ---
+  // caller_id is passed so the SQL function can enforce visibility:
+  // only published rows OR rows owned by the caller are returned.
+  // Without this, the service-role admin client bypasses RLS entirely.
   const admin = createAdminClient();
   const { data, error } = await admin.rpc(
     'hybrid_search_best_practices' as never,
@@ -96,6 +99,7 @@ export async function hybridSearchBestPractices(
       full_text_weight: fullTextWeight,
       semantic_weight: semanticWeight,
       rrf_k: rrfK,
+      caller_id: userId ?? null,
     } as never,
   );
 

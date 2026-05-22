@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import { Plus_Jakarta_Sans, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "@/app/globals.css";
 import { ConsentBanner } from "@/components/consent-banner";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 
 // ---------------------------------------------------------------------------
 // Analytics (lazy-loaded, renders nothing)
@@ -85,10 +86,20 @@ export default function RootLayout({
       className={`${plusJakartaSans.variable} ${dmSans.variable} ${jetBrainsMono.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen bg-surface-50 font-sans text-surface-900 antialiased">
-        <WebVitalsReporter />
-        <ConsentBanner />
-        {children}
+      <head>
+        {/* Anti-FOUC: read localStorage before first paint and apply .dark immediately */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('ai-hub-theme');var d=document.documentElement;if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){d.classList.add('dark');}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className="min-h-screen bg-surface-50 font-sans text-surface-900 antialiased dark:bg-surface-950 dark:text-surface-50">
+        <ThemeProvider>
+          <WebVitalsReporter />
+          <ConsentBanner />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

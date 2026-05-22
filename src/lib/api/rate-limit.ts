@@ -25,6 +25,11 @@ export interface RateLimitResult {
   remaining: number;
   /** Unix timestamp (ms) when the current window resets. */
   reset: number;
+  /**
+   * Set to true when Upstash is required (fail-closed mode) but not configured.
+   * Callers should return HTTP 503 rather than 429 in this case.
+   */
+  configError?: true;
 }
 
 /** Headers to attach to every API response for rate-limit transparency. */
@@ -43,6 +48,23 @@ const isConfigured =
   process.env.UPSTASH_REDIS_REST_URL.length > 0 &&
   typeof process.env.UPSTASH_REDIS_REST_TOKEN === "string" &&
   process.env.UPSTASH_REDIS_REST_TOKEN.length > 0;
+
+/**
+ * Controls the behaviour when Upstash is not configured.
+ *
+ * - "warn"       – use per-process in-memory fallback (logs a warning).
+ *                  Safe for local development; unreliable on multi-instance.
+ * - "fail-closed" – reject all requests with 503 when Upstash is missing.
+ *                  Recommended for production to avoid silently disabled limits.
+ *
+ * Set via RATE_LIMIT_FALLBACK_BEHAVIOR env var.
+ * Defaults to "fail-closed" when NODE_ENV === "production", "warn" otherwise.
+ */
+const fallbackBehavior: "warn" | "fail-closed" = (() => {
+  const env = process.env.RATE_LIMIT_FALLBACK_BEHAVIOR;
+  if (env === "warn" || env === "fail-closed") return env;
+  return process.env.NODE_ENV === "production" ? "fail-closed" : "warn";
+})();
 
 /**
  * Lazily initialised Redis client. Only created when the env vars exist.
@@ -215,14 +237,34 @@ export async function rateLimit(
 ): Promise<RateLimitResult> {
   const identifier = getIdentifier(req, userId);
 
-  // --- In-memory fallback when Upstash is not configured ---
+  // --- Handle missing Upstash according to configured fallback behavior ---
   const limiter = getLimiter(tier);
   if (!limiter) {
+    if (fallbackBehavior === "fail-closed") {
+      // Hard config error: Upstash is required in this environment.
+      // Callers must treat configError=true as a 503, not a 429.
+      console.error(
+        JSON.stringify({
+          event: "rate_limit_config_error",
+          tier,
+          reason:
+            "Upstash not configured and RATE_LIMIT_FALLBACK_BEHAVIOR=fail-closed. " +
+            "Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN, or set " +
+            "RATE_LIMIT_FALLBACK_BEHAVIOR=warn to allow in-memory fallback.",
+        }),
+      );
+      return { success: false, limit: 0, remaining: 0, reset: 0, configError: true };
+    }
+
+    // fallbackBehavior === "warn": per-process in-memory (local dev only)
     console.warn(
       JSON.stringify({
         event: "rate_limit_in_memory_fallback",
         tier,
-        reason: "Upstash not configured — using per-process in-memory limiter",
+        reason:
+          "Upstash not configured — using per-process in-memory limiter. " +
+          "This is unreliable on multi-instance deployments. " +
+          "Set RATE_LIMIT_FALLBACK_BEHAVIOR=fail-closed to enforce Upstash in production.",
       }),
     );
     return checkInMemory(identifier, tier);

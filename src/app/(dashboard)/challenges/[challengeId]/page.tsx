@@ -519,7 +519,7 @@ export default function ChallengeDetailPage() {
                 Teilnehmen
               </Button>
             ) : isExpired ? (
-              <p className="text-body-sm font-medium text-surface-400">
+              <p className="text-body-sm font-medium text-surface-600">
                 Diese Challenge ist bereits beendet.
               </p>
             ) : null}

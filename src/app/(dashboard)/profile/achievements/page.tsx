@@ -124,7 +124,7 @@ function SummaryCards({ summary }: { summary: AchievementSummary }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <div className="rounded-xl border border-surface-200 bg-white p-4 shadow-card">
-        <div className="text-caption font-semibold uppercase tracking-wide text-surface-400">
+        <div className="text-caption font-semibold uppercase tracking-wide text-surface-600">
           Freigeschaltet
         </div>
         <div className="mt-1 font-display text-[24px] font-bold tabular-nums text-brand-primary-500">
@@ -132,15 +132,15 @@ function SummaryCards({ summary }: { summary: AchievementSummary }) {
         </div>
       </div>
       <div className="rounded-xl border border-surface-200 bg-white p-4 shadow-card">
-        <div className="text-caption font-semibold uppercase tracking-wide text-surface-400">
+        <div className="text-caption font-semibold uppercase tracking-wide text-surface-600">
           Gesperrt
         </div>
-        <div className="mt-1 font-display text-[24px] font-bold tabular-nums text-surface-400">
+        <div className="mt-1 font-display text-[24px] font-bold tabular-nums text-surface-600">
           {summary.locked}
         </div>
       </div>
       <div className="rounded-xl border border-surface-200 bg-white p-4 shadow-card">
-        <div className="text-caption font-semibold uppercase tracking-wide text-surface-400">
+        <div className="text-caption font-semibold uppercase tracking-wide text-surface-600">
           Gesamt
         </div>
         <div className="mt-1 font-display text-[24px] font-bold tabular-nums text-surface-900">
@@ -148,7 +148,7 @@ function SummaryCards({ summary }: { summary: AchievementSummary }) {
         </div>
       </div>
       <div className="rounded-xl border border-surface-200 bg-white p-4 shadow-card">
-        <div className="text-caption font-semibold uppercase tracking-wide text-surface-400">
+        <div className="text-caption font-semibold uppercase tracking-wide text-surface-600">
           XP verdient
         </div>
         <div className="mt-1 font-display text-[24px] font-bold tabular-nums text-amber-500">
@@ -201,7 +201,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
             <h4
               className={cn(
                 "text-body-sm font-semibold",
-                achievement.unlocked ? "text-surface-900" : "text-surface-500",
+                achievement.unlocked ? "text-surface-900" : "text-surface-700",
               )}
             >
               {achievement.title}
@@ -217,7 +217,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
           <p
             className={cn(
               "mt-0.5 text-caption",
-              achievement.unlocked ? "text-surface-500" : "text-surface-400",
+              achievement.unlocked ? "text-surface-600" : "text-surface-600",
             )}
           >
             {achievement.description}
@@ -241,7 +241,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
           {/* Progress Bar (only for locked achievements) */}
           {!achievement.unlocked && !achievement.isHidden && (
             <div className="mt-3">
-              <div className="flex items-center justify-between text-[10px] font-medium text-surface-400">
+              <div className="flex items-center justify-between text-[10px] font-medium text-surface-600">
                 <span>Fortschritt</span>
                 <span className="tabular-nums">
                   {achievement.currentProgress}/{achievement.requirementValue}
@@ -259,7 +259,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
 
           {/* Unlock Date */}
           {achievement.unlocked && achievement.unlockedAt && (
-            <div className="mt-2 text-[10px] font-medium text-surface-400">
+            <div className="mt-2 text-[10px] font-medium text-surface-600">
               Freigeschaltet am {formatDate(achievement.unlockedAt)}
             </div>
           )}

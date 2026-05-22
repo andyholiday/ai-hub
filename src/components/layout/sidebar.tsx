@@ -123,10 +123,10 @@ function SidebarLogo() {
 
       {/* Platform Name */}
       <div className="flex flex-col">
-        <span className="font-display text-[13px] font-bold leading-tight text-surface-900">
+        <span className="font-display text-[13px] font-bold leading-tight text-surface-900 dark:text-surface-50">
           {isHydrated ? branding.appName : "AI Hub"}
         </span>
-        <span className="text-[11px] leading-tight text-surface-500">
+        <span className="text-[11px] leading-tight text-surface-600 dark:text-surface-400">
           {isHydrated ? branding.appSubtitle : "Community Platform"}
         </span>
       </div>
@@ -150,8 +150,8 @@ function SidebarNavItem({
       className={cn(
         "group flex items-center gap-3 rounded-[10px] px-3.5 py-2.5 text-[13.5px] font-medium transition-all duration-150",
         isActive
-          ? "bg-brand-primary-50 font-semibold text-brand-primary-500"
-          : "text-surface-600 hover:bg-[#F7F8FA] hover:text-surface-900"
+          ? "bg-brand-primary-50 font-semibold text-brand-primary-500 dark:bg-brand-primary-950/40"
+          : "text-surface-700 hover:bg-surface-100 hover:text-surface-900 dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:text-surface-50"
       )}
     >
       {/* Icon */}
@@ -161,7 +161,7 @@ function SidebarNavItem({
             "h-[18px] w-[18px] shrink-0 transition-colors duration-150",
             isActive
               ? "text-brand-primary-500"
-              : "text-surface-400 group-hover:text-surface-600"
+              : "text-surface-500 group-hover:text-surface-700 dark:text-surface-400 dark:group-hover:text-surface-200"
           )}
           strokeWidth={isActive ? 2.2 : 1.8}
         />
@@ -197,7 +197,7 @@ function SidebarNavItem({
 function SidebarSectionLabel({ label }: { label: string }) {
   return (
     <div className="px-3.5 pb-1.5 pt-5">
-      <span className="text-[10px] font-semibold uppercase tracking-[1.5px] text-surface-400">
+      <span className="text-[10px] font-semibold uppercase tracking-[1.5px] text-surface-600 dark:text-surface-400">
         {label}
       </span>
     </div>
@@ -211,10 +211,10 @@ function SidebarUserCard() {
   const roleLabel = ROLE_LABELS[user?.role ?? "user"] ?? "KI-Enthusiast";
 
   return (
-    <div className="border-t border-surface-200 p-4">
+    <div className="border-t border-surface-200 p-4 dark:border-surface-800">
       <Link
         href="/profile"
-        className="flex items-center gap-3 rounded-[10px] bg-[#F7F8FA] px-3 py-2.5 transition-colors duration-150 hover:bg-surface-200"
+        className="flex items-center gap-3 rounded-[10px] bg-surface-100 px-3 py-2.5 transition-colors duration-150 hover:bg-surface-200 dark:bg-surface-900 dark:hover:bg-surface-800"
       >
         {/* Avatar */}
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-brand-gradient">
@@ -225,10 +225,10 @@ function SidebarUserCard() {
 
         {/* User Info */}
         <div className="flex flex-1 flex-col overflow-hidden">
-          <span className="truncate text-[13px] font-semibold text-surface-900">
+          <span className="truncate text-[13px] font-semibold text-surface-900 dark:text-surface-50">
             {isLoaded ? displayName : "\u00A0"}
           </span>
-          <span className="text-[11px] text-surface-500">
+          <span className="text-[11px] text-surface-600 dark:text-surface-400">
             {isLoaded ? (
               <>Level {level} &middot; {roleLabel}</>
             ) : (
@@ -254,7 +254,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className="sticky top-0 z-sticky flex h-screen w-[260px] shrink-0 flex-col border-r border-[#E5E7EB] bg-white"
+      className="sticky top-0 z-sticky flex h-screen w-[260px] shrink-0 flex-col border-r border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-950"
       role="navigation"
       aria-label="Hauptnavigation"
     >

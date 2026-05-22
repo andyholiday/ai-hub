@@ -67,7 +67,7 @@ export function MobileNav() {
     <nav
       className={cn(
         "fixed inset-x-0 bottom-0 z-fixed",
-        "border-t border-surface-200 bg-white/95 backdrop-blur-lg",
+        "border-t border-surface-200 bg-white/95 backdrop-blur-lg dark:border-surface-800 dark:bg-surface-950/95",
         "pb-[env(safe-area-inset-bottom)]",
         "lg:hidden"
       )}
@@ -93,14 +93,14 @@ export function MobileNav() {
                   "min-w-[56px]",
                   isActive
                     ? "text-brand-primary-500"
-                    : "text-surface-400 active:text-surface-600"
+                    : "text-surface-600 active:text-surface-800 dark:text-surface-400 dark:active:text-surface-200"
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
                 <Icon
                   className={cn(
                     "h-5 w-5 transition-colors duration-150",
-                    isActive ? "text-brand-primary-500" : "text-surface-400"
+                    isActive ? "text-brand-primary-500" : "text-surface-600 dark:text-surface-400"
                   )}
                   strokeWidth={isActive ? 2.2 : 1.8}
                 />

@@ -9,6 +9,7 @@ import {
   apiSuccess,
   apiInternalError,
 } from "@/lib/api/response";
+import { requireAuth } from "@/lib/api/require-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +19,10 @@ export const dynamic = 'force-dynamic';
 // ---------------------------------------------------------------------------
 
 export async function GET(req: NextRequest) {
+  // Require authentication — consistent with all sibling gamification routes.
+  const auth = await requireAuth(req);
+  if ("response" in auth) return auth.response;
+
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");

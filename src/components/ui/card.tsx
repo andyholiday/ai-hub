@@ -63,7 +63,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         ref={ref}
         className={cn(
           // Base
-          "relative rounded-[14px] border border-surface-200 bg-white",
+          "relative rounded-[14px] border border-surface-200 bg-white dark:border-surface-700 dark:bg-surface-900",
           "shadow-card",
           "transition-all duration-300 ease-out",
           // Accent top border
@@ -106,12 +106,12 @@ export const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
       >
         <div className="min-w-0 flex-1">
           {title && (
-            <h3 className="truncate font-heading text-title font-semibold text-surface-900">
+            <h3 className="truncate font-heading text-title font-semibold text-surface-900 dark:text-surface-50">
               {title}
             </h3>
           )}
           {subtitle && (
-            <p className="mt-0.5 text-body-sm text-surface-500">
+            <p className="mt-0.5 text-body-sm text-surface-600 dark:text-surface-400">
               {subtitle}
             </p>
           )}
@@ -156,7 +156,7 @@ export const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
         ref={ref}
         className={cn(
           "mt-4 flex items-center gap-3",
-          bordered && "border-t border-surface-200 pt-4",
+          bordered && "border-t border-surface-200 pt-4 dark:border-surface-700",
           className
         )}
         {...props}
