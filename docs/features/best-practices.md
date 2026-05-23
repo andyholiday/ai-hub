@@ -46,6 +46,6 @@ Nutzer finden praxiserprobte Antworten auf konkrete KI-Fragen — ohne lange zu 
 | Semantic Search (hybrid) | Live (Feature-Flag `hybrid-search` aktiv) |
 | Auto-Tagging | Live |
 | Neuen Artikel erstellen | Live |
-| RLS (nur eigene Entwuerfe sichtbar, Fremde nur published) | Live (Migration 00026 behebt RLS-Leak) |
+| RLS (nur eigene Entwuerfe sichtbar, Fremde nur published) | Live (Migration 00036 behebt RLS-Leak) |
 | Kommentare auf Best-Practice-Artikeln | Nicht live |
 | Admin-Moderations-Workflow (Entwurf → Published) | Via Admin Content-API (`/api/admin/content`) |

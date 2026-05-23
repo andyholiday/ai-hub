@@ -29,8 +29,8 @@ Anstatt nur auf das Trainingswissen des LLM zu vertrauen, liefert der Orb Antwor
 | Hybrid-Search-API | `src/app/api/search/hybrid/route.ts` (POST) |
 | Chat-API (RAG-Integration) | `src/app/api/ai/chat/route.ts` |
 | Embedding-Service | `src/lib/ai/embeddings.ts` (OpenAI `text-embedding-3-small`, 1536-d) |
-| SQL-Funktion | `hybrid_search_best_practices` RPC (Migration 00021 + 00026) |
-| RLS-Sicherheit | `caller_id` wird an die RPC uebergeben; nur `status='published'` oder eigene Zeilen werden zurueckgegeben (Migration 00026 behebt den RLS-Leak aus dem Audit) |
+| SQL-Funktion | `hybrid_search_best_practices` RPC (Migration 00021 + 00036) |
+| RLS-Sicherheit | `caller_id` wird an die RPC uebergeben; nur `status='published'` oder eigene Zeilen werden zurueckgegeben (Migration 00036 behebt den RLS-Leak aus dem Audit) |
 | Telemetrie | Eintrag in `ai_call_logs` (fire-and-forget) |
 
 **Suchalgorithmus:** Reciprocal Rank Fusion (RRF) kombiniert tsvector-Volltextranking (BM25-aequivalent) und pgvector Cosinus-Aehnlichkeit. Bei Embedding-Fehler Fallback auf reinen Volltext (`semantic_weight=0`).
@@ -50,7 +50,7 @@ Feature-Guard: Feature-Flag "hybrid-search" muss aktiv sein (defaultEnabled: tru
 | Aspekt | Stand |
 |--------|-------|
 | Hybrid-Search-Endpoint | Vollstaendig live |
-| RLS-Schutz (caller_id) | Behoben in Migration 00026 |
+| RLS-Schutz (caller_id) | Behoben in Migration 00036 |
 | Chat-RAG-Integration | Live — `buildRagContext()` wird bei jedem Chat-Request aufgerufen (Task 5 in `route.ts:377`); Top-5 Best-Practice-Ergebnisse werden dem System-Prompt vorangestellt |
 | Corpus-Umfang | Aktuell nur `best_practices`-Tabelle; Community-Posts, Kurse nicht indexiert |
 | Embedding bei Privacy-Mode | Privacy-Mode leitet zum lokalen 384-d-Index um (inkompatibel mit dem 1536-d pgvector-Index — keine Cross-Mode-Suche) |

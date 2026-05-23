@@ -58,7 +58,7 @@ export async function enforceBudget(
 
   const admin = createAdminClient();
 
-  // Cast to `any` because the generated Database types predate migration 00025.
+  // Cast to `any` because the generated Database types predate migration 00035.
   // Once `supabase gen types typescript` is re-run after applying the migration,
   // the cast can be removed and the RPC will be fully typed.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types stale pre-migration

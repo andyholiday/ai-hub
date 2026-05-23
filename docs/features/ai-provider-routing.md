@@ -31,7 +31,7 @@ Wenn `request.privacyMode === true`, wird die Fallback-Chain uebersprungen und z
 
 Ein heuristisches Gate prueft vor dem eigentlichen LLM-Call, ob die Anfrage komplex genug ist, um einen teuren API-Call zu rechtfertigen. Einfache Anfragen werden kurzgeschlossen. Aktuell `defaultEnabled: false`.
 
-### Budget-Cap (Migration 00025)
+### Budget-Cap (Migration 00035)
 
 Race-freie atomare Budget-Reservierung via `check_and_reserve_ai_budget()` PostgreSQL-RPC. Bei Ueberschreitung: HTTP 429. Bei >= 80% des Limits: `softCap=true` (degradiert auf groq/llama). Wiring ist live (`route.ts:300`). Ausstehend: Abgleich tatsaechlicher vs. geschaetzter Kosten nach Abschluss des Requests.
 
@@ -46,7 +46,7 @@ Jeder AI-Call schreibt einen fire-and-forget Eintrag in `ai_cost_log` (provider,
 | Basis-Provider | `src/lib/ai/providers/base.ts` |
 | Konfiguration | `src/lib/ai/config.ts` |
 | Types | `src/lib/ai/types.ts` |
-| Budget-RPC | `supabase/migrations/00025_ai_budget_cap.sql` |
+| Budget-RPC | `supabase/migrations/00035_ai_budget_cap.sql` |
 | C2PA-Audit-Log | `supabase/migrations/00024_audit_logs.sql` |
 | Admin-Konfiguration | `src/app/(admin)/admin/ai-config/page.tsx` |
 | DB-Tabellen | `ai_providers`, `ai_cost_log`, `ai_budget_reservations`, `audit_logs` |
@@ -59,7 +59,7 @@ Jeder AI-Call schreibt einen fire-and-forget Eintrag in `ai_cost_log` (provider,
 | Privacy-Mode → Mistral EU | Live (ADR-013) |
 | Streaming + non-Streaming | Live |
 | Kosten-Logging | Live (fire-and-forget) |
-| Budget-Cap-Schema | Live (Migration 00025) |
+| Budget-Cap-Schema | Live (Migration 00035) |
 | Budget-Cap-Enforcement in der Chat-Route | Live — `enforceBudget()` bei `route.ts:300`; 429 bei Ueberschreitung, Soft-Cap (>=80%) degradiert auf groq; Fail-OPEN bei RPC-Ausfall ist bewusster Availability-Tradeoff; ausstehend: Abgleich tatsaechlicher vs. geschaetzter Kosten nach Abschluss |
 | LLM-Gate | Gebaut, Feature-Flag `defaultEnabled: false` |
 | Provider-Keys aus DB/Vault | Live via `getAIRouterWithDBKeys()` fuer den normalen Chat-Pfad |

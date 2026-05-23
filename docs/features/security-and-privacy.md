@@ -39,7 +39,7 @@ Nutzer koennen sicher sein, dass ihre Daten nicht von anderen Nutzern lesbar sin
 - 32 Tabellen mit aktiviertem RLS; 50+ Policies.
 - Nutzer lesen und schreiben nur eigene Daten.
 - Self-Vote-XP verhindert durch DB-Constraint (`post_likes`).
-- Hybrid-Search gibt nur `status='published'`-Zeilen oder eigene Zeilen zurueck (Migration 00026 behebt den RLS-Leak aus dem Audit).
+- Hybrid-Search gibt nur `status='published'`-Zeilen oder eigene Zeilen zurueck (Migration 00036 behebt den RLS-Leak aus dem Audit).
 - Provider-API-Keys in Supabase Vault hinter SECURITY DEFINER RPC — nie im Client-Bundle.
 
 ### 5. Content-Sicherheit
@@ -49,7 +49,7 @@ Nutzer koennen sicher sein, dass ihre Daten nicht von anderen Nutzern lesbar sin
 
 ### 6. Budget-Cap
 
-- Atomare Budget-Reservierung via `check_and_reserve_ai_budget()` RPC (Migration 00025).
+- Atomare Budget-Reservierung via `check_and_reserve_ai_budget()` RPC (Migration 00035).
 - Race-free Design: Postgres-Row-Lock verhindert TOCTOU-Rennbedingung.
 - Wiring live: `enforceBudget()` in `route.ts:300`. Ausstehend: Abgleich tatsaechlicher vs. geschaetzter Kosten nach Request-Abschluss (bewusster Tradeoff, kein Bug).
 
@@ -83,9 +83,9 @@ Nutzer koennen sicher sein, dass ihre Daten nicht von anderen Nutzern lesbar sin
 | Rate-Limiting | `src/lib/api/rate-limit.ts` (Upstash) |
 | DOMPurify | `src/lib/utils/sanitize.ts` |
 | RLS-Policies | `supabase/migrations/00001_initial_schema.sql` + folgende Migrationen |
-| Budget-Cap RPC | `supabase/migrations/00025_ai_budget_cap.sql` |
+| Budget-Cap RPC | `supabase/migrations/00035_ai_budget_cap.sql` |
 | Audit-Logs Schema | `supabase/migrations/00024_audit_logs.sql` |
-| Hybrid-Search RLS-Fix | `supabase/migrations/00026_fix_hybrid_search_visibility.sql` |
+| Hybrid-Search RLS-Fix | `supabase/migrations/00036_fix_hybrid_search_visibility.sql` |
 | Erasure | `src/app/api/user/erasure/route.ts` |
 
 ## Status & Grenzen

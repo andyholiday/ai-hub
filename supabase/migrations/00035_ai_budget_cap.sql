@@ -1,6 +1,6 @@
 -- =============================================================================
 -- AI Hub - Per-User Monthly Budget Cap (Race-Free)
--- Version: 00025
+-- Version: 00035
 -- Date: 2026-05-22
 -- Description: Atomic budget enforcement via row-level lock on a per-user/month
 --              reservation row. Prevents the TOCTOU race inherent in plain
@@ -173,7 +173,7 @@ GRANT SELECT, INSERT, UPDATE ON public.ai_budget_reservations TO service_role;
 GRANT SELECT ON public.ai_budget_reservations TO authenticated;
 
 COMMENT ON TABLE public.ai_budget_reservations IS
-  'Per-user/month running cost accumulator for AI budget cap enforcement (ADR: see 00025 header).';
+  'Per-user/month running cost accumulator for AI budget cap enforcement (ADR: see 00035 header).';
 
 COMMENT ON FUNCTION public.check_and_reserve_ai_budget(uuid, numeric, numeric) IS
   'Atomically checks and reserves estimated AI cost. Returns (allowed, used_ratio). '
