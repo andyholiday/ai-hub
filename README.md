@@ -1,4 +1,66 @@
 <p align="center">
+  <img src="docs/images/header-banner.svg" alt="AI Hub Banner — App-Name, Tagline und stilisierter KI-Orb" width="900"/>
+</p>
+
+<h1 align="center">AI Hub</h1>
+
+<p align="center">
+  <strong>Deine KI-Community-Plattform mit eingebautem KI-Begleiter</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Build-passing-brightgreen" alt="Build passing"/>
+  <img src="https://img.shields.io/badge/Tests-643%20bestanden-brightgreen" alt="643 Tests bestanden"/>
+  <img src="https://img.shields.io/badge/Lizenz-Proprietary-lightgrey" alt="Lizenz"/>
+  <img src="https://img.shields.io/badge/Next.js-14.2-black" alt="Next.js 14.2"/>
+  <img src="https://img.shields.io/badge/TypeScript-5.6-3178c6" alt="TypeScript 5.6"/>
+  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3fcf8e" alt="Supabase"/>
+  <img src="https://img.shields.io/badge/React-18.3-61dafb" alt="React 18.3"/>
+</p>
+
+---
+
+**Was ist AI Hub?**
+AI Hub vereint Wissensaustausch, strukturiertes Lernen, KI-Werkzeuge und Gamification
+zu einer lebendigen Community-Plattform. Im Zentrum steht der **Cosmos Companion** — ein
+animierter KI-Begleiter (der Orb), der auf jeder Dashboard-Seite mitschwebt, RAG-gestuetzte
+Antworten aus der Best-Practices-Datenbank liefert und per Klick ein eingebettetes Chat-Panel
+oeffnet. Multi-Provider AI-Routing (Gemini, OpenAI, Claude, Copilot) mit konfigurierbarer
+Fallback-Chain sorgt fuer Verfuegbarkeit ohne Vendor-Lock-in.
+
+**Mehrwert fuer Teams.**
+Kurse, Lernpfade und Quiz-Module vermitteln KI-Kompetenz systematisch. Das Community Forum
+und das Idea Board foerdern Wissensaustausch und KI-Ideenentwicklung. Ein XP- und
+Achievements-System (7 Levels, 20 Achievements, 12 Badges, Streaks) macht Lernfortschritt
+sichtbar und belohnend.
+
+**Warum besonders?**
+Privacy-Mode leitet alle KI-Anfragen zwingend auf Mistral EU (Frankreich) um und fuehrt
+Suche vollstaendig im Browser durch (384-d lokale Embeddings, kein Netzwerk-Request). Admins
+steuern Provider, Feature-Flags und API-Kosten ohne Code-Deployment. Alle 32 Datenbanktabellen
+sind mit Row-Level-Security abgesichert; Provider-API-Keys liegen in Supabase Vault (pgsodium).
+
+<p align="center">
+  <a href="docs/SHOWCASE.md"><strong>Ausfuehrliche Praesentation hier</strong></a>
+  &nbsp;·&nbsp;
+  <a href="docs/AI-HUB-Overview.html"><strong>User-Sicht (HTML)</strong></a>
+</p>
+
+---
+
+<!-- Screenshots (Platzhalter bis Deployment) -->
+<!--
+<p align="center">
+  <img src="docs/images/dashboard.png" alt="Dashboard mit XP-Fortschritt und Empfehlungen" width="700"/>
+</p>
+<p align="center">
+  <img src="docs/images/orb-chat.png" alt="AI Orb mit geoeffnetem Chat-Panel" width="700"/>
+</p>
+-->
+
+---
+
+<p align="center">
   <img src="public/logo.svg" alt="AI Hub Logo" width="80" />
 </p>
 
