@@ -20,7 +20,7 @@ test.describe('Orb Bubble — Spike Flow', () => {
   });
 
   test('Bubble erscheint nach 5s und ist per ESC dismissbar', async ({ page }) => {
-    await page.goto('/dashboard/best-practices');
+    await page.goto('/best-practices');
 
     // Bubble muss sichtbar sein (role="status" mit aria-live)
     const bubble = page.getByRole('status');
@@ -32,7 +32,7 @@ test.describe('Orb Bubble — Spike Flow', () => {
   });
 
   test('Nach Dismiss: Bubble erscheint nach Reload nicht mehr (Session-Cap)', async ({ page }) => {
-    await page.goto('/dashboard/best-practices');
+    await page.goto('/best-practices');
 
     const bubble = page.getByRole('status');
     await expect(bubble).toBeVisible({ timeout: 2_000 });

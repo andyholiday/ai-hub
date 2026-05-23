@@ -39,6 +39,7 @@ export const updateProviderSchema = z.object({
     .optional(),
   fallback_provider_id: z.string().uuid("Invalid fallback provider ID").nullable().optional(),
   monthly_budget_limit: z.number().min(0).nullable().optional(),
+  api_endpoint: z.string().url("api_endpoint must be a valid URL").nullable().optional(),
 });
 
 export type UpdateProviderInput = z.infer<typeof updateProviderSchema>;
@@ -102,3 +103,28 @@ export const updateFeatureSchema = z.object({
 });
 
 export type UpdateFeatureInput = z.infer<typeof updateFeatureSchema>;
+
+// ---------------------------------------------------------------------------
+// User Management
+// ---------------------------------------------------------------------------
+
+/**
+ * Allowed role values — mirrors the Postgres user_role enum:
+ * CREATE TYPE user_role AS ENUM ('user', 'moderator', 'admin', 'super_admin');
+ */
+export const userRoleEnum = z.enum(["user", "moderator", "admin", "super_admin"]);
+
+export type UserRole = z.infer<typeof userRoleEnum>;
+
+/**
+ * POST /api/admin/users - Create a new user
+ */
+export const createUserSchema = z.object({
+  email: z.string().email("Invalid email"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  full_name: z.string().min(1, "full_name is required"),
+  role: userRoleEnum.optional(),
+  is_approved: z.boolean().optional(),
+});
+
+export type CreateUserInput = z.infer<typeof createUserSchema>;

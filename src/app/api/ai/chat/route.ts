@@ -20,11 +20,14 @@ import { hybridSearchBestPractices } from "@/lib/search/hybrid-search";
 import { getFeature } from "@/lib/features/feature-registry";
 import { getUserFeaturePrefs } from "@/lib/features/user-prefs";
 import { SYSTEM_PROMPTS } from "@/lib/ai/prompts/system";
+import { AI_HUB_SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
+import { chatRequestSchema, type ChatRequestBody } from "@/lib/validators/chat";
+import { apiValidationError } from "@/lib/api/response";
 
 export const dynamic = 'force-dynamic';
 
 // ---------------------------------------------------------------------------
-// Input validation schema (Task 2)
+// Route-level validation caps (external chatRequestSchema remains source of truth)
 // ---------------------------------------------------------------------------
 
 const MAX_MESSAGES = 50;
@@ -32,50 +35,65 @@ const MAX_TOTAL_CONTENT_BYTES = 100_000; // 100 KB
 const MAX_CLIENT_TEMPERATURE = 1.0;
 const MAX_CLIENT_MAX_TOKENS = 4096;
 
-const messageSchema = z.object({
-  id: z.string().optional(),
-  // Task 1: role:"system" from client is forbidden — stripped before reaching the LLM.
-  // We accept only "user" and "assistant" here; system messages are injected server-side.
-  role: z.enum(["user", "assistant"], {
-    errorMap: () => ({
-      message: 'Invalid message role: only "user" and "assistant" are accepted from clients',
-    }),
-  }),
-  content: z.string().min(1, "Message content must not be empty"),
-});
+// "mistral-eu" is the internal privacy-mode provider, not a valid client selection.
+const KNOWN_PROVIDERS = ["gemini", "claude", "openai", "copilot", "groq", "mistral", "openrouter"] as const;
 
-// Fix 3b: Validate provider against the known enum; reject unknowns with 400.
-// "mistral-eu" is the internal privacy-mode provider — not a valid client selection.
-const KNOWN_PROVIDERS = ["gemini", "claude", "openai", "copilot", "groq", "mistral"] as const;
+function totalContentBytes(messages: Array<{ content: string }>): number {
+  return messages.reduce(
+    (sum, m) => sum + new TextEncoder().encode(m.content).length,
+    0,
+  );
+}
 
-const chatRequestSchema = z.object({
-  messages: z
-    .array(messageSchema)
-    .min(1, "messages array must not be empty")
-    .max(MAX_MESSAGES, `messages array must not exceed ${MAX_MESSAGES} items`),
-  context: z.record(z.unknown()).optional(),
-  provider: z.enum(KNOWN_PROVIDERS, {
-    errorMap: () => ({
+const chatRequestRouteSchema = chatRequestSchema.superRefine((body, ctx) => {
+  if (body.messages.length > MAX_MESSAGES) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["messages"],
+      message: `messages array must not exceed ${MAX_MESSAGES} items`,
+    });
+  }
+
+  if (totalContentBytes(body.messages) > MAX_TOTAL_CONTENT_BYTES) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["messages"],
+      message: `Total message content exceeds ${MAX_TOTAL_CONTENT_BYTES / 1000} KB limit`,
+    });
+  }
+
+  if (body.provider && !(KNOWN_PROVIDERS as readonly string[]).includes(body.provider)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["provider"],
       message: `Invalid provider: must be one of ${KNOWN_PROVIDERS.join(", ")}`,
-    }),
-  }).optional(),
-  model: z.string().optional(),
-  temperature: z
-    .number()
-    .min(0)
-    .max(MAX_CLIENT_TEMPERATURE)
-    .optional(),
-  maxTokens: z
-    .number()
-    .int()
-    .min(1)
-    .max(MAX_CLIENT_MAX_TOKENS)
-    .optional(),
-  stream: z.boolean().optional(),
-  sessionId: z.string().uuid().optional(),
-});
+    });
+  }
 
-type ChatRequestBody = z.infer<typeof chatRequestSchema>;
+  if (body.temperature !== undefined && body.temperature > MAX_CLIENT_TEMPERATURE) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["temperature"],
+      message: `temperature must be less than or equal to ${MAX_CLIENT_TEMPERATURE}`,
+    });
+  }
+
+  if (body.maxTokens !== undefined && body.maxTokens > MAX_CLIENT_MAX_TOKENS) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["maxTokens"],
+      message: `maxTokens must be less than or equal to ${MAX_CLIENT_MAX_TOKENS}`,
+    });
+  }
+
+  if (body.sessionId !== undefined && !z.string().uuid().safeParse(body.sessionId).success) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["sessionId"],
+      message: "sessionId must be a valid UUID",
+    });
+  }
+});
 
 // ---------------------------------------------------------------------------
 // RAG: build context block from hybrid search results (Task 5)
@@ -233,35 +251,24 @@ export async function POST(req: NextRequest): Promise<Response> {
       );
     }
 
-    // --- Task 2: Zod validation + caps ---
+    // --- Parse and validate request body (F03: Zod safeParse) ---
     let rawBody: unknown;
     try {
       rawBody = await req.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-
-    const parsed = chatRequestSchema.safeParse(rawBody);
-    if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.errors.map((e) => e.message).join("; ") },
+        { data: null, error: { code: "INVALID_JSON", message: "Invalid JSON body" } },
         { status: 400 },
       );
     }
 
+    const parsed = chatRequestRouteSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return apiValidationError(parsed.error);
+    }
     const body: ChatRequestBody = parsed.data;
 
-    // Additional size guard: total content bytes
-    const totalContentSize = body.messages.reduce(
-      (sum, m) => sum + new TextEncoder().encode(m.content).length,
-      0,
-    );
-    if (totalContentSize > MAX_TOTAL_CONTENT_BYTES) {
-      return NextResponse.json(
-        { error: `Total message content exceeds ${MAX_TOTAL_CONTENT_BYTES / 1000} KB limit` },
-        { status: 400 },
-      );
-    }
+    const totalContentSize = totalContentBytes(body.messages);
 
     // --- Task 1: system messages already rejected by schema; build ChatMessage[] ---
     const messages: ChatMessage[] = body.messages.map((m, i) => ({
@@ -273,13 +280,9 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     // --- Task 4: Cost estimation + budget enforcement ---
     // Fix 3a: Include server system prompt chars in the input estimate so we
-    // don't under-reserve when a large RAG block is prepended.  The RAG block
-    // is not yet built at this point so we use SYSTEM_PROMPTS.MENTOR_DEFAULT
-    // plus the RAG budget ceiling (RAG_MAX_CHARS ≈ 800 tokens) as an upper bound.
-    // Output uses the ACTUAL requested maxTokens (or the schema ceiling) so we
-    // don't under-reserve for clients that pass a high maxTokens value.
+    // don't under-reserve when a large RAG block is prepended.
     const SERVER_PROMPT_CHARS =
-      SYSTEM_PROMPTS.MENTOR_DEFAULT.length + RAG_MAX_CHARS; // rough upper bound
+      AI_HUB_SYSTEM_PROMPT.length + RAG_MAX_CHARS; // rough upper bound
     const estInputTokens = Math.ceil(
       (totalContentSize + SERVER_PROMPT_CHARS) / 4,
     );
@@ -313,7 +316,6 @@ export async function POST(req: NextRequest): Promise<Response> {
       }
     } catch (err) {
       // Fail-open: if budget RPC is unavailable, allow the request through.
-      // TODO(Wave-5): configurable fail-open/fail-closed policy via env var.
       console.error("[chat] budget enforcement failed (fail-open):", err instanceof Error ? err.message : err);
     }
 
@@ -382,8 +384,8 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     // Compose the server-side system prompt (RAG context prepended when present)
     const systemPrompt = ragContext
-      ? ragContext + SYSTEM_PROMPTS.MENTOR_DEFAULT
-      : SYSTEM_PROMPTS.MENTOR_DEFAULT;
+      ? ragContext + AI_HUB_SYSTEM_PROMPT
+      : AI_HUB_SYSTEM_PROMPT;
 
     const router = await getAIRouterWithDBKeys();
 
@@ -391,6 +393,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (body.stream !== false) {
       return handleStreamingResponse(router, {
         messages,
+        // Server-injected Mentor-Persona (NOP-07). Client-supplied system
+        // prompts are rejected earlier in the request-validation step.
         systemPrompt,
         context: body.context,
         provider: effectiveProvider,
@@ -425,13 +429,29 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("[/api/ai/chat] Error:", error);
+    const logId = crypto.randomUUID();
+    console.error("[/api/ai/chat] Error:", { logId, error });
 
-    const message =
+    const rawMessage =
       error instanceof Error ? error.message : "Internal server error";
-    const status = isRateLimitError(message) ? 429 : 500;
+    const status = isRateLimitError(rawMessage) ? 429 : 500;
 
-    return NextResponse.json({ error: message }, { status });
+    // Sanitize: never expose raw provider error text to the client.
+    const publicMessage = isRateLimitError(rawMessage)
+      ? "Der KI-Dienst ist gerade ausgelastet. Bitte versuche es gleich erneut."
+      : "Die KI-Antwort konnte nicht erzeugt werden.";
+
+    return NextResponse.json(
+      {
+        data: null,
+        error: {
+          code: isRateLimitError(rawMessage) ? "AI_PROVIDER_RATE_LIMITED" : "AI_PROVIDER_FAILED",
+          message: publicMessage,
+          logId,
+        },
+      },
+      { status },
+    );
   }
 }
 
@@ -473,24 +493,33 @@ function handleStreamingResponse(
         }
       }
 
+      const initialProvider = requestWithAbort.privacyMode
+        ? "mistral-eu"
+        : requestWithAbort.provider ?? null;
+      const initialModel = requestWithAbort.model ?? null;
+
       try {
         let totalTokens: number | undefined;
         let provider: string | undefined;
         let model: string | undefined;
         let assistantContent = "";
 
-        // Erstes Chunk-Event: sessionId + userMessageDbId mitschicken (ADR-005)
-        if (sessionId) {
-          const metaEvent = JSON.stringify({
-            content: "",
-            isComplete: false,
-            metadata: {
-              sessionId,
-              userMessageId: userMessageDbId ?? "",
-            },
-          });
-          safeEnqueue(encoder.encode(`data: ${metaEvent}\n\n`));
-        }
+        // Erstes Chunk-Event: provider/model plus session metadata. The meta
+        // helper is intentionally first so clients receive it even if the provider fails.
+        const metaEvent = JSON.stringify({
+          type: "meta",
+          provider: initialProvider,
+          model: initialModel,
+          content: "",
+          isComplete: false,
+          metadata: {
+            provider: initialProvider,
+            model: initialModel,
+            sessionId: sessionId ?? null,
+            userMessageId: userMessageDbId ?? "",
+          },
+        });
+        safeEnqueue(encoder.encode(`data: ${metaEvent}\n\n`));
 
         for await (const chunk of router.chatStream(requestWithAbort)) {
           // Akkumuliere Text-Content fuer Persistenz (ADR-005)
@@ -537,17 +566,19 @@ function handleStreamingResponse(
         }
 
         // C2PA Audit-Log nach Stream-Ende (ADR-012, Pattern P4.3, fire-and-forget)
-        // Fix 1: Use the privacyMode resolved from user_feature_prefs (captured in closure).
         if (provider && model && assistantContent) {
           void (async () => {
             try {
+              const resolvedPrivacyMode = requestWithAbort.privacyMode ?? false;
+              if (resolvedPrivacyMode) return;
+
               const { createAdminClient } = await import("@/lib/supabase/admin");
               const adminClient = createAdminClient();
               const manifest = await buildManifest({
                 modelId: model,
                 provider,
                 region: process.env.AI_REGION ?? "eu-west-1",
-                privacyMode: requestWithAbort.privacyMode ?? false,
+                privacyMode: resolvedPrivacyMode,
                 content: assistantContent,
                 userId,
               });
@@ -556,7 +587,7 @@ function handleStreamingResponse(
                 modelId: model,
                 provider,
                 region: process.env.AI_REGION ?? "eu-west-1",
-                privacyMode: requestWithAbort.privacyMode ?? false,
+                privacyMode: resolvedPrivacyMode,
                 content: assistantContent,
                 manifest,
               });
@@ -573,10 +604,23 @@ function handleStreamingResponse(
         streamClosed = true;
         controller.close();
       } catch (error) {
-        const message =
+        const logId = crypto.randomUUID();
+        const rawMessage =
           error instanceof Error ? error.message : "Stream error";
-        const errorData = JSON.stringify({ error: message });
-        // Fix 5: Guard enqueue in the catch path — stream may already be closed.
+        // Log raw error server-side; never forward provider internals to client.
+        console.error("[/api/ai/chat] Stream error:", { logId, error });
+        const publicMessage = isRateLimitError(rawMessage)
+          ? "Der KI-Dienst ist gerade ausgelastet. Bitte versuche es gleich erneut."
+          : "Die KI-Antwort konnte nicht erzeugt werden.";
+        const errorData = JSON.stringify({
+          error: {
+            code: isRateLimitError(rawMessage)
+              ? "AI_PROVIDER_RATE_LIMITED"
+              : "AI_PROVIDER_FAILED",
+            message: publicMessage,
+            logId,
+          },
+        });
         safeEnqueue(encoder.encode(`data: ${errorData}\n\n`));
         if (!streamClosed) {
           streamClosed = true;

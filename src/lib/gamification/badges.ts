@@ -23,6 +23,7 @@ interface UserStats {
   streakDays: number;
   level: number;
   xp: number;
+  onboardingCompleted: boolean;
 }
 
 interface BadgeCriterion {
@@ -32,6 +33,10 @@ interface BadgeCriterion {
 
 const BADGE_CRITERIA: BadgeCriterion[] = [
   // --- Achievement Badges ---
+  {
+    badgeKey: "first-steps",
+    check: (stats) => stats.onboardingCompleted,
+  },
   {
     badgeKey: "first-post",
     check: (stats) => stats.totalPosts >= 1,
@@ -175,7 +180,7 @@ async function getUserStats(
   // Fetch profile
   const { data: profile } = await supabase
     .from("profiles")
-    .select("level, xp, streak_days")
+    .select("level, xp, streak_days, onboarding_completed")
     .eq("id", userId)
     .single();
 
@@ -217,5 +222,6 @@ async function getUserStats(
     streakDays: profile.streak_days,
     level: profile.level,
     xp: profile.xp,
+    onboardingCompleted: profile.onboarding_completed ?? false,
   };
 }

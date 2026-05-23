@@ -95,16 +95,22 @@ const panelVariants = {
 // Component
 // ---------------------------------------------------------------------------
 export function ChatSplitView() {
-    const { minimize, pageContext, orbState } = useOrb();
+    const { minimize, pageContext, orbState, setOrbState } = useOrb();
 
-    // ADR-005 persistence: useOrbChat manages messages + sessionId + streaming.
-    // The sessionId is sent to /api/ai/chat so the server persists the session.
-    const { messages, sendMessage, isStreaming } = useOrbChat();
+    // ADR-005 persistence: useOrbChat manages messages + sessionId + streaming
+    // + transient error. The sessionId is sent to /api/ai/chat so the server
+    // persists the session.
+    const { messages, sendMessage, isStreaming, error } = useOrbChat();
 
     const [inputValue, setInputValue] = useState("");
     const [isFullscreen, setIsFullscreen] = useState(false);
     const chatEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Sync orb animation state with streaming
+    useEffect(() => {
+        setOrbState(isStreaming ? "thinking" : "idle");
+    }, [isStreaming, setOrbState]);
 
     // Auto-scroll
     useEffect(() => {
@@ -127,17 +133,17 @@ export function ChatSplitView() {
     }, [minimize]);
 
     // Handle send message
-    const handleSend = useCallback(async () => {
+    const handleSend = useCallback(() => {
         const trimmed = inputValue.trim();
-        if (!trimmed) return;
+        if (!trimmed || isStreaming) return;
         setInputValue("");
-        await sendMessage(trimmed);
-    }, [inputValue, sendMessage]);
+        void sendMessage(trimmed);
+    }, [inputValue, isStreaming, sendMessage]);
 
     // Handle quick action
     const handleQuickAction = useCallback(
-        async (action: string) => {
-            await sendMessage(action);
+        (action: string) => {
+            void sendMessage(action);
         },
         [sendMessage],
     );
@@ -283,14 +289,22 @@ export function ChatSplitView() {
                         <ChatMessage
                             key={message.id}
                             message={{
-                                ...message,
-                                // useOrbChat uses "assistant"; ChatMessage expects "ai"
-                                role: message.role === "assistant" ? "ai" : message.role,
+                                id: message.id,
+                                // Mapping: hook uses "assistant", ChatMessage expects "ai"
+                                role: message.role === "assistant" ? "ai" : "user",
+                                content: message.content,
+                                timestamp: message.timestamp,
                             }}
                         />
                     ))}
 
                     {isStreaming && <TypingIndicator />}
+
+                    {error && (
+                        <p className="px-5 py-2 text-xs text-red-500" role="alert">
+                            {error}
+                        </p>
+                    )}
 
                     <div ref={chatEndRef} />
                 </div>
@@ -342,8 +356,8 @@ export function ChatSplitView() {
 
                         <button
                             type="button"
-                            onClick={() => void handleSend()}
-                            disabled={!inputValue.trim()}
+                            onClick={handleSend}
+                            disabled={!inputValue.trim() || isStreaming}
                             className={cn(
                                 "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
                                 "bg-gradient-to-r from-brand-primary-500 to-brand-primary-600 text-white",

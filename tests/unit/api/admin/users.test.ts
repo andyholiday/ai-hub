@@ -200,3 +200,137 @@ describe("GET /api/admin/users — Fallback-Logik", () => {
         expect(fallbackCalls.length).toBeGreaterThan(0);
     });
 });
+
+// ---------------------------------------------------------------------------
+// POST /api/admin/users — createUserSchema Validierung (F06)
+// ---------------------------------------------------------------------------
+
+function buildPostMock(createUserResult: { data: { user: { id: string } | null }; error: { message: string } | null }) {
+    return {
+        auth: {
+            admin: {
+                createUser: vi.fn().mockResolvedValue(createUserResult),
+                listUsers: vi.fn().mockResolvedValue({ data: { users: [] }, error: null }),
+            },
+        },
+        from: vi.fn().mockReturnValue({
+            update: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+    };
+}
+
+function makePostRequest(body: unknown): NextRequest {
+    return new NextRequest("http://localhost/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+}
+
+describe("POST /api/admin/users — role enum Validierung", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        vi.resetModules();
+    });
+
+    it("lehnt unbekannte role ab (z.B. god_mode) mit 400", async () => {
+        const mock = buildPostMock({ data: { user: { id: "new-user" } }, error: null });
+        (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(mock);
+
+        const { POST } = await import("@/app/api/admin/users/route");
+        const res = await POST(makePostRequest({
+            email: "test@example.com",
+            password: "secret123",
+            full_name: "Test User",
+            role: "god_mode",
+        }));
+
+        expect(res.status).toBe(400);
+        const body = await res.json();
+        expect(body.error).not.toBeNull();
+        expect(mock.auth.admin.createUser).not.toHaveBeenCalled();
+    });
+
+    it("akzeptiert alle erlaubten role-Werte", async () => {
+        const allowedRoles = ["user", "moderator", "admin", "super_admin"] as const;
+
+        for (const role of allowedRoles) {
+            vi.clearAllMocks();
+            vi.resetModules();
+
+            const mock = buildPostMock({ data: { user: { id: "new-user" } }, error: null });
+            (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(mock);
+
+            const { POST } = await import("@/app/api/admin/users/route");
+            const res = await POST(makePostRequest({
+                email: "test@example.com",
+                password: "secret123",
+                full_name: "Test User",
+                role,
+            }));
+
+            expect(res.status, `role '${role}' sollte akzeptiert werden`).toBe(200);
+        }
+    });
+
+    it("akzeptiert gueltigen Body ohne role-Feld", async () => {
+        const mock = buildPostMock({ data: { user: { id: "new-user" } }, error: null });
+        (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(mock);
+
+        const { POST } = await import("@/app/api/admin/users/route");
+        const res = await POST(makePostRequest({
+            email: "test@example.com",
+            password: "secret123",
+            full_name: "Test User",
+        }));
+
+        expect(res.status).toBe(200);
+    });
+
+    it("lehnt fehlende Pflichtfelder (email) mit 400 ab", async () => {
+        const mock = buildPostMock({ data: { user: { id: "new-user" } }, error: null });
+        (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(mock);
+
+        const { POST } = await import("@/app/api/admin/users/route");
+        const res = await POST(makePostRequest({
+            password: "secret123",
+            full_name: "Test User",
+        }));
+
+        expect(res.status).toBe(400);
+        const body = await res.json();
+        expect(body.error).not.toBeNull();
+        expect(mock.auth.admin.createUser).not.toHaveBeenCalled();
+    });
+
+    it("lehnt ungueltige Email-Adresse mit 400 ab", async () => {
+        const mock = buildPostMock({ data: { user: { id: "new-user" } }, error: null });
+        (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(mock);
+
+        const { POST } = await import("@/app/api/admin/users/route");
+        const res = await POST(makePostRequest({
+            email: "not-an-email",
+            password: "secret123",
+            full_name: "Test User",
+        }));
+
+        expect(res.status).toBe(400);
+        expect(mock.auth.admin.createUser).not.toHaveBeenCalled();
+    });
+
+    it("lehnt zu kurzes Passwort (< 8 Zeichen) mit 400 ab", async () => {
+        const mock = buildPostMock({ data: { user: { id: "new-user" } }, error: null });
+        (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(mock);
+
+        const { POST } = await import("@/app/api/admin/users/route");
+        const res = await POST(makePostRequest({
+            email: "test@example.com",
+            password: "short",
+            full_name: "Test User",
+        }));
+
+        expect(res.status).toBe(400);
+        expect(mock.auth.admin.createUser).not.toHaveBeenCalled();
+    });
+});

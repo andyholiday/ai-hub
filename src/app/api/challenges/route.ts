@@ -10,8 +10,9 @@ import {
   apiInternalError,
   apiValidationError,
 } from "@/lib/api/response";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { listChallengesQuerySchema } from "@/lib/validators/challenges";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +36,9 @@ export async function GET(req: NextRequest) {
     }
 
     const { status } = parsed.data;
-    const supabase = createAdminClient();
+    // Cast: createServerClient<Database> and createClient<Database> both return
+    // SupabaseClient<Database>; the cast aligns the generic for tsc.
+    const supabase = auth.supabase as unknown as SupabaseClient<Database>;
 
     // ----- Fetch challenges based on status filter -----
     let challengeQuery = supabase

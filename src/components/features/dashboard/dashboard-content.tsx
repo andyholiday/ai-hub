@@ -11,7 +11,6 @@ import {
   XpProgress,
   RecommendationSection,
   ActivityFeed,
-  MentorMini,
   ChallengesCard,
   LeaderboardMini,
   RecentAchievements,
@@ -68,7 +67,6 @@ function DashboardContentInner() {
           <aside className="flex flex-col gap-5">
             <DashboardStreak />
             <RecentAchievements />
-            <MentorMini />
             <ChallengesCard />
             <LeaderboardMini />
           </aside>

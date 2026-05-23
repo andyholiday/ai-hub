@@ -89,6 +89,7 @@ const PROVIDER_DISPLAY_META: Record<
   copilot: { icon: "\uD83D\uDD37", iconBg: "#F3E5F5" },
   groq: { icon: "\u26A1", iconBg: "#FFF8E1" },
   mistral: { icon: "\uD83C\uDF0A", iconBg: "#E0F2F1" },
+  openrouter: { icon: "\uD83D\uDD00", iconBg: "#EDE7F6" },
 };
 
 const DEFAULT_ICON = { icon: "\uD83E\uDD16", iconBg: "#F5F5F5" };
@@ -160,7 +161,7 @@ function mapProviderToCard(p: AIProviderRow, allProviders: AIProviderRow[]): Pro
     name: p.display_name,
     icon: meta.icon,
     iconBg: meta.iconBg,
-    endpoint: p.api_endpoint,
+    endpoint: p.api_endpoint ?? "",
     model: p.model,
     apiKeyMasked: p.api_key_encrypted ?? "Nicht hinterlegt",
     temperature: p.temperature,
@@ -288,6 +289,7 @@ export interface AdminDataState {
 
   // --- Prompts ---
   prompts: SystemPromptItem[];
+  promptRows: SystemPromptRow[];
   promptsLoading: boolean;
   promptsError: string | null;
 
@@ -680,6 +682,7 @@ export function useAdminData(): AdminDataState {
 
     // Prompts
     prompts,
+    promptRows,
     promptsLoading,
     promptsError,
 

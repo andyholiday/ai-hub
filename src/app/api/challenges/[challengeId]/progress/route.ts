@@ -1,9 +1,15 @@
 // =============================================================================
 // Challenge Progress API
-// PATCH /api/challenges/[challengeId]/progress - Update user progress
+// PATCH /api/challenges/[challengeId]/progress - Report a server-known event
+//
+// Task 11 hardening:
+// - Accepts event-based body instead of arbitrary { progress: number }
+// - Server maps event → progress increment (client cannot self-award 100)
+// - One-time XP via challenge_completions upsert with ignoreDuplicates=true
 // =============================================================================
 
 import { NextRequest } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireAuth } from "@/lib/api/require-auth";
 import {
   apiSuccess,
@@ -13,10 +19,22 @@ import {
   apiValidationError,
 } from "@/lib/api/response";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Database } from "@/lib/supabase/types";
 import { updateProgressSchema } from "@/lib/validators/challenges";
 import { awardXP } from "@/lib/gamification/xp";
 
 export const dynamic = 'force-dynamic';
+
+// ---------------------------------------------------------------------------
+// Server-side event → progress-increment mapping
+// Each event type advances progress by a fixed, server-controlled amount.
+// ---------------------------------------------------------------------------
+
+const EVENT_INCREMENT: Record<string, number> = {
+  lesson_completed: 33,
+  step_done: 10,
+  quiz_passed: 34,
+};
 
 // ---------------------------------------------------------------------------
 // Route context type
@@ -27,7 +45,7 @@ type RouteContext = {
 };
 
 // ---------------------------------------------------------------------------
-// PATCH - Update progress on a challenge
+// PATCH - Report a server-known progress event for a challenge
 // ---------------------------------------------------------------------------
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
@@ -44,8 +62,13 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       return apiValidationError(parsed.error);
     }
 
-    const { progress } = parsed.data;
-    const supabase = createAdminClient();
+    const { eventType } = parsed.data;
+    const increment = EVENT_INCREMENT[eventType] ?? 10;
+    // User-context for queries/updates on user-owned data (RLS enforced).
+    // Admin-client only retained for `challenge_completions` upsert (no user
+    // INSERT policy) and `awardXP` (service_role RPC).
+    const supabase = auth.supabase as unknown as SupabaseClient<Database>;
+    const admin = createAdminClient();
 
     // Check if user has joined this challenge
     const { data: userChallenge, error: fetchError } = await supabase
@@ -64,18 +87,18 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       return apiBadRequest("Diese Challenge wurde bereits abgeschlossen");
     }
 
-    // Build the update payload
+    // Server caps progress: client cannot push beyond server-computed value
+    const newProgress = Math.min(100, (userChallenge.progress ?? 0) + increment);
+
     const updatePayload: {
       progress: number;
       completed_at?: string;
-    } = { progress };
+    } = { progress: newProgress };
 
-    // If progress reaches 100, mark as completed
-    if (progress === 100) {
+    if (newProgress === 100) {
       updatePayload.completed_at = new Date().toISOString();
     }
 
-    // Update the progress
     const { data: updated, error: updateError } = await supabase
       .from("user_challenges")
       .update(updatePayload)
@@ -88,10 +111,9 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       return apiInternalError(updateError.message);
     }
 
-    // Award XP if challenge completed
+    // One-time XP award via challenge_completions (Task 11)
     let xpResult = null;
-    if (progress === 100) {
-      // Fetch the challenge to get XP reward amount
+    if (newProgress === 100) {
       const { data: challenge } = await supabase
         .from("challenges")
         .select("xp_reward, title")
@@ -99,26 +121,43 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         .single();
 
       if (challenge) {
-        xpResult = await awardXP(
-          supabase,
-          auth.userId,
-          `challenge_completed:${challengeId}`,
-          challenge.xp_reward
-        );
+        // Upsert with ignoreDuplicates=true ensures XP is awarded exactly once.
+        // Service-role: challenge_completions has no user-INSERT RLS policy.
+        const { data: insertedRows, error: insertError } = await admin
+          .from("challenge_completions")
+          .upsert(
+            { user_id: auth.userId, challenge_id: challengeId, xp_awarded: challenge.xp_reward },
+            { onConflict: "user_id,challenge_id", ignoreDuplicates: true }
+          )
+          .select("user_id");
 
-        // Create a completion notification
-        await supabase.from("notifications").insert({
-          user_id: auth.userId,
-          type: "challenge",
-          title: "Challenge abgeschlossen!",
-          message: `Du hast die Challenge "${challenge.title}" erfolgreich abgeschlossen und ${challenge.xp_reward} XP verdient!`,
-          link: `/challenges/${challengeId}`,
-        });
+        if (insertError) {
+          return apiInternalError(insertError.message);
+        }
+
+        if ((insertedRows ?? []).length > 0) {
+          // awardXP uses the `award_xp` RPC (service_role only).
+          xpResult = await awardXP(
+            admin,
+            auth.userId,
+            `challenge_completed:${challengeId}`,
+            challenge.xp_reward
+          );
+
+          // notifications_insert_service policy permits user_id = auth.uid().
+          await supabase.from("notifications").insert({
+            user_id: auth.userId,
+            type: "challenge",
+            title: "Challenge abgeschlossen!",
+            message: `Du hast die Challenge "${challenge.title}" erfolgreich abgeschlossen und ${challenge.xp_reward} XP verdient!`,
+            link: `/challenges/${challengeId}`,
+          });
+        }
       }
     }
 
     return apiSuccess({
-      progress: updated?.progress ?? progress,
+      progress: updated?.progress ?? newProgress,
       completedAt: updated?.completed_at ?? null,
       xpAwarded: xpResult
         ? { newXP: xpResult.newXP, newLevel: xpResult.newLevel, leveledUp: xpResult.leveledUp }

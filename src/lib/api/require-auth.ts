@@ -6,7 +6,9 @@
 // SECURITY:
 // - Uses getUser() to validate the JWT server-side via an Auth API round-trip.
 //   This prevents session-spoofing via a tampered cookie.
-// - Reads user role from JWT app_metadata instead of a separate DB query.
+// - ADR-016 Mismatch-Guard: DB is source of truth for role. After JWT validation
+//   a lightweight DB read on profiles.role detects stale-JWT scenarios. On
+//   mismatch the DB role wins; on DB error the JWT role is used as fallback.
 // =============================================================================
 
 import { NextRequest, NextResponse } from "next/server";
@@ -49,9 +51,36 @@ export interface AuthError {
 export async function requireAuth(
   req: NextRequest,
 ): Promise<AuthResult | AuthError> {
+  // Guard: if Supabase env vars are missing on a Vercel deployment (preview or
+  // production), createServerClient would throw a synchronous error and produce
+  // a 500. Detect this case early and return 503 with a clear message instead.
+  // The guard is scoped to Vercel environments (process.env.VERCEL is set by
+  // Vercel automatically) so it does not affect local dev or test runs where
+  // env vars may intentionally be absent.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (process.env.VERCEL && (!supabaseUrl || !supabaseAnonKey)) {
+    console.error(
+      "[require-auth] NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not set. " +
+        "Configure these env vars in Vercel Dashboard → Settings → Environment Variables.",
+    );
+    return {
+      response: NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: "SERVICE_UNAVAILABLE",
+            message: "Authentication service is not configured.",
+          },
+        },
+        { status: 503 },
+      ),
+    };
+  }
+
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl ?? "",
+    supabaseAnonKey ?? "",
     {
       cookies: {
         get(name: string) {
@@ -64,10 +93,21 @@ export async function requireAuth(
   );
 
   // --- Validate user via Auth API (server-side JWT verification) ---
-  const {
-    data: { user },
-    error: sessionError,
-  } = await supabase.auth.getUser();
+  // RESILIENCE: a corrupted auth cookie (e.g. access_token containing newlines)
+  // makes @supabase/ssr throw synchronously in Headers.append. Catch it so the
+  // route returns a clean 401 instead of bubbling up as an unhandled rejection.
+  let user: Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"] = null;
+  let sessionError: Awaited<ReturnType<typeof supabase.auth.getUser>>["error"] = null;
+  try {
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+    sessionError = result.error;
+  } catch (err) {
+    console.warn(
+      "[require-auth] Failed to resolve Supabase session (corrupted cookie?):",
+      err instanceof Error ? err.message : err,
+    );
+  }
 
   if (sessionError || !user) {
     return {
@@ -84,8 +124,38 @@ export async function requireAuth(
     };
   }
 
-  // --- Read role from JWT app_metadata (no DB query) ---
-  const role = (user.app_metadata?.role ?? "user") as AuthResult["role"];
+  // --- ADR-016 Mismatch-Guard: DB is source of truth for role ---
+  // A lightweight profiles.role read detects stale-JWT scenarios (e.g. role
+  // was changed in DB but the user hasn't refreshed their token yet).
+  // On mismatch: DB wins, log warning. On DB error: fall back to JWT, no 500.
+  const jwtRole = (user.app_metadata?.role ?? "user") as AuthResult["role"];
+
+  let role = jwtRole;
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const dbRole = (profile as { role: string } | null)?.role as
+      | AuthResult["role"]
+      | undefined;
+
+    if (dbRole !== undefined && dbRole !== jwtRole) {
+      console.warn(
+        `[require-auth] Role mismatch for user ${user.id}: jwt=${jwtRole} db=${dbRole} — trusting DB`,
+      );
+      role = dbRole;
+    } else if (dbRole !== undefined) {
+      role = dbRole;
+    }
+  } catch (dbErr) {
+    console.warn(
+      `[require-auth] DB role lookup failed for user ${user.id}, falling back to JWT role:`,
+      dbErr instanceof Error ? dbErr.message : dbErr,
+    );
+  }
 
   return {
     userId: user.id,

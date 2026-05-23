@@ -115,8 +115,8 @@ export async function POST(req: NextRequest) {
       .update({ ai_evaluation_score: evaluation.overallScore })
       .eq("id", postId);
 
-    // --- Award XP for evaluation submission (fire-and-forget) ---
-    awardXP(supabase, auth.userId, "idea_evaluated", 30).then(() =>
+    // --- Award XP for evaluation submission (fire-and-forget) — M-06 idempotency key ---
+    awardXP(supabase, auth.userId, "idea_evaluated", 30, `idea_eval:${postId}`).then(() =>
       checkAndAwardBadges(supabase, auth.userId),
     );
 

@@ -12,6 +12,7 @@ import {
   apiValidationError,
   apiNotFound,
 } from "@/lib/api/response";
+import { rateLimit } from "@/lib/api/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateProviderSchema } from "@/lib/validators/admin";
 import { invalidateProviderKeyCache } from "@/lib/ai/provider-keys";
@@ -38,6 +39,11 @@ export async function GET(req: NextRequest) {
     const auth = await requireAdmin(req);
     if ("response" in auth) return auth.response;
 
+    const rl = await rateLimit(req, "admin", auth.userId);
+    if (!rl.success) {
+      return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
+    }
+
     const supabase = createAdminClient();
 
     const { data: providers, error } = await supabase
@@ -48,7 +54,8 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: true });
 
     if (error) {
-      return apiInternalError(error.message);
+      console.error("[admin/providers] fetch ai_providers:", error);
+      return apiInternalError("Interner Fehler");
     }
 
     // Mask api_key_encrypted for the response - never send raw keys to the client
@@ -71,6 +78,11 @@ export async function PUT(req: NextRequest) {
   try {
     const auth = await requireAdmin(req);
     if ("response" in auth) return auth.response;
+
+    const rl = await rateLimit(req, "admin", auth.userId);
+    if (!rl.success) {
+      return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
+    }
 
     const body: unknown = await req.json();
     const parsed = updateProviderSchema.safeParse(body);
@@ -95,19 +107,17 @@ export async function PUT(req: NextRequest) {
         return apiNotFound("Provider not found");
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC not yet in generated types (run `supabase gen types` after migration 00014)
-      const { data: vaultUuid, error: vaultError } = await (supabase.rpc as any)(
+      const { data: vaultUuid, error: vaultError } = await supabase.rpc(
         "upsert_provider_vault_key",
         {
           p_provider_key: existing.provider_key,
           p_api_key: incomingApiKey,
         },
-      ) as { data: string | null; error: { message: string } | null };
+      );
 
       if (vaultError || !vaultUuid) {
-        return apiInternalError(
-          vaultError?.message ?? "Failed to store key in Vault",
-        );
+        console.error("[admin/providers] upsert_provider_vault_key:", vaultError);
+        return apiInternalError("Interner Fehler");
       }
 
       // Write the vault UUID into the column (never the plaintext key)
@@ -138,7 +148,8 @@ export async function PUT(req: NextRequest) {
       if (error.code === "PGRST116") {
         return apiNotFound("Provider not found");
       }
-      return apiInternalError(error.message);
+      console.error("[admin/providers] update ai_providers:", error);
+      return apiInternalError("Interner Fehler");
     }
 
     // Mask the key before returning

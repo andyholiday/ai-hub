@@ -25,8 +25,8 @@ async function logCall(
     // ai_call_logs ist in Migration 00021 definiert aber noch nicht in den
     // generierten Typen (types.generated.ts) — daher `as never` Casts.
     await (admin.from as (t: string) => ReturnType<typeof admin.from>)('ai_call_logs')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table not yet in generated types
-      .insert({ user_id: userId, feature: 'search', call_type: callType, provider } as any);
+      // TODO: regen types.generated after manual migration for ai_call_logs (00021)
+      .insert({ user_id: userId, feature: 'search', call_type: callType, provider } as unknown as Parameters<ReturnType<typeof admin.from>['insert']>[0]);
   } catch (err) {
     console.warn('[hybrid-search] telemetry insert failed:', err instanceof Error ? err.message : err);
   }

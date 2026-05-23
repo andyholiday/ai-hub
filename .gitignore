@@ -60,6 +60,7 @@ supabase/.keys/
 test-results/
 playwright-report/
 playwright/.cache/
+tests/e2e/.auth/
 
 # ---------------------------------------------------------------------------
 # Debug Logs
@@ -116,6 +117,12 @@ Desktop.ini
 # Test scripts with potential secrets
 # ---------------------------------------------------------------------------
 test-*.mjs
+
+# ---------------------------------------------------------------------------
+# Dev-only admin utility scripts (C-02: removed from repo, blocked from re-add)
+# ---------------------------------------------------------------------------
+set-admin.mjs
+update-gemini-key.mjs
 
 # ---------------------------------------------------------------------------
 # Misc

@@ -63,6 +63,32 @@ describe("rateLimitHeaders", () => {
 });
 
 // ---------------------------------------------------------------------------
+// rateLimit - Preview environment: NODE_ENV=production but VERCEL_ENV=preview
+// Must NOT throw even when Upstash vars are missing.
+// ---------------------------------------------------------------------------
+
+describe("rateLimit - Vercel preview env (VERCEL_ENV=preview, no Upstash)", () => {
+  it("does not throw and returns success when VERCEL_ENV is preview", async () => {
+    const origVercelEnv = process.env.VERCEL_ENV;
+    process.env.VERCEL_ENV = "preview";
+
+    const { rateLimit } = await import("@/lib/api/rate-limit");
+    // Use a unique IP so the in-memory counter does not bleed into other tests
+    const mockRequest = {
+      headers: new Headers({ "x-forwarded-for": "192.0.2.1" }),
+    } as unknown as Parameters<typeof rateLimit>[0];
+
+    // Must not throw regardless of missing Upstash vars
+    await expect(rateLimit(mockRequest, "api")).resolves.toMatchObject({
+      success: true,
+    });
+
+    if (origVercelEnv !== undefined) process.env.VERCEL_ENV = origVercelEnv;
+    else delete process.env.VERCEL_ENV;
+  });
+});
+
+// ---------------------------------------------------------------------------
 // rateLimit - Graceful Degradation (no Upstash env vars)
 // ---------------------------------------------------------------------------
 

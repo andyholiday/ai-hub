@@ -45,6 +45,8 @@ export interface UseOrbChatReturn {
   startNewSession: () => void;
   isStreaming: boolean;
   error: string | null;
+  /** true wenn der Server sessionId: null gesendet hat — Persistenz nicht verfuegbar */
+  persistenceDegraded: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -69,6 +71,7 @@ export function useOrbChat(options?: UseOrbChatOptions): UseOrbChatReturn {
   const hasMore = false;
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [persistenceDegraded, setPersistenceDegraded] = useState(false);
 
   // ---------------------------------------------------------------------------
   // loadMore — laedt aeltere Nachrichten (Seite 2+)
@@ -126,10 +129,20 @@ export function useOrbChat(options?: UseOrbChatOptions): UseOrbChatReturn {
         });
 
         if (!res.ok) {
+          // Parse both error shapes: legacy string and new { code, message }
           const errJson = (await res.json().catch(() => ({}))) as {
-            error?: string;
+            error?: string | { code?: string; message?: string };
           };
-          throw new Error(errJson.error ?? `API-Fehler: ${res.status}`);
+          const errField = errJson.error;
+          let userMessage: string;
+          if (typeof errField === "string") {
+            userMessage = errField;
+          } else if (errField && typeof errField === "object" && errField.message) {
+            userMessage = errField.message;
+          } else {
+            userMessage = `Anfrage fehlgeschlagen (${res.status})`;
+          }
+          throw new Error(userMessage);
         }
 
         // Optimistic-ID als bestaetigt markieren (entfernt isOptimistic-Flag)
@@ -142,9 +155,9 @@ export function useOrbChat(options?: UseOrbChatOptions): UseOrbChatReturn {
         // Streaming-Placeholder einfuegen
         setMessages((prev) => [...prev, streamingMsg]);
 
-        // Stream lesen
+        // Stream lesen — Fehler hier landen im catch-Block und bereinigen beide Bubbles
         const reader = res.body?.getReader();
-        if (!reader) throw new Error("Kein ReadableStream");
+        if (!reader) throw new Error("Stream nicht verfügbar");
 
         const decoder = new TextDecoder();
         let buffer = "";
@@ -174,9 +187,15 @@ export function useOrbChat(options?: UseOrbChatOptions): UseOrbChatReturn {
                 };
               };
 
-              if (chunk.metadata?.sessionId && !newSessionId) {
-                newSessionId = chunk.metadata.sessionId;
-                setSessionId(newSessionId);
+              if (chunk.metadata && "sessionId" in chunk.metadata && !newSessionId) {
+                if (chunk.metadata.sessionId) {
+                  newSessionId = chunk.metadata.sessionId;
+                  setSessionId(newSessionId);
+                  setPersistenceDegraded(false);
+                } else {
+                  // Server signalisiert: sessionId = null → Persistenz nicht verfuegbar
+                  setPersistenceDegraded(true);
+                }
               }
               if (chunk.metadata?.userMessageId && !userDbId) {
                 userDbId = chunk.metadata.userMessageId;
@@ -236,5 +255,6 @@ export function useOrbChat(options?: UseOrbChatOptions): UseOrbChatReturn {
     startNewSession,
     isStreaming,
     error,
+    persistenceDegraded,
   };
 }

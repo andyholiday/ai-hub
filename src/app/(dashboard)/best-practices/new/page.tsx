@@ -6,11 +6,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
   Eye,
-  Save,
   Send,
   X,
   Plus,
@@ -26,29 +26,46 @@ import {
   categoryConfig,
   type BestPracticeCategory,
 } from "@/components/features/best-practices";
-
-// -----------------------------------------------------------------------------
-// Types
-// -----------------------------------------------------------------------------
-
-interface FormData {
-  title: string;
-  category: BestPracticeCategory | "";
-  content: string;
-  tags: string[];
-}
+import { createBestPracticeSchema } from "@/lib/validators/best-practice";
+import { useAuth } from "@/hooks/use-auth";
 
 // -----------------------------------------------------------------------------
 // Category Options for Select
+// Maps UI display values to DB category slugs used by the API
 // -----------------------------------------------------------------------------
 
-const categoryOptions: { value: BestPracticeCategory; label: string }[] = [
-  { value: "prompt-engineering", label: "Prompt Engineering" },
-  { value: "ki-tools", label: "KI-Tools" },
-  { value: "automatisierung", label: "Automatisierung" },
-  { value: "datenanalyse", label: "Datenanalyse" },
-  { value: "ki-ethik", label: "KI-Ethik" },
+const categoryOptions: {
+  uiValue: BestPracticeCategory;
+  dbValue: string;
+  label: string;
+}[] = [
+  { uiValue: "prompt-engineering", dbValue: "prompt_engineering", label: "Prompt Engineering" },
+  { uiValue: "ki-tools", dbValue: "ai_tools", label: "KI-Tools" },
+  { uiValue: "automatisierung", dbValue: "automation", label: "Automatisierung" },
+  { uiValue: "datenanalyse", dbValue: "data_analysis", label: "Datenanalyse" },
+  { uiValue: "ki-ethik", dbValue: "ai_ethics", label: "KI-Ethik" },
 ];
+
+const DB_TO_UI_CATEGORY: Record<string, BestPracticeCategory> = {
+  prompt_engineering: "prompt-engineering",
+  ai_tools: "ki-tools",
+  automation: "automatisierung",
+  data_analysis: "datenanalyse",
+  ai_ethics: "ki-ethik",
+};
+
+// -----------------------------------------------------------------------------
+// Form State Type
+// -----------------------------------------------------------------------------
+
+interface FormState {
+  title: string;
+  dbCategory: string;
+  summary: string;
+  content: string;
+  tags: string[];
+  status: "draft" | "published";
+}
 
 // -----------------------------------------------------------------------------
 // Tag Input Sub-component
@@ -116,7 +133,11 @@ function TagInput({
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={addTag}
-          placeholder={tags.length === 0 ? "Tags hinzufuegen (Enter zum Bestaetigen)" : "Weiterer Tag..."}
+          placeholder={
+            tags.length === 0
+              ? "Tags hinzufuegen (Enter zum Bestaetigen)"
+              : "Weiterer Tag..."
+          }
           className="min-w-[120px] flex-1 border-none bg-transparent text-body-sm text-surface-900 outline-none placeholder:text-surface-400"
         />
       </div>
@@ -128,26 +149,109 @@ function TagInput({
 }
 
 // -----------------------------------------------------------------------------
+// Field Error Helper
+// -----------------------------------------------------------------------------
+
+interface FieldErrors {
+  title?: string;
+  category?: string;
+  summary?: string;
+  content?: string;
+  tags?: string;
+  status?: string;
+  general?: string;
+}
+
+// -----------------------------------------------------------------------------
 // Page Component
 // -----------------------------------------------------------------------------
 
 export default function NewBestPracticePage() {
-  const [formData, setFormData] = useState<FormData>({
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const [form, setForm] = useState<FormState>({
     title: "",
-    category: "",
+    dbCategory: "",
+    summary: "",
     content: "",
     tags: [],
+    status: "draft",
   });
   const [showPreview, setShowPreview] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
-  const updateField = <K extends keyof FormData>(field: K, value: FormData[K]) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    // Clear the error for this field on change
+    if (field in fieldErrors) {
+      setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
   };
 
-  const isValid =
-    formData.title.trim() !== "" &&
-    formData.category !== "" &&
-    formData.content.trim() !== "";
+  const handleSubmit = async (statusOverride?: "draft" | "published") => {
+    const submitStatus = statusOverride ?? form.status;
+
+    // Client-side validation via shared Zod schema
+    const parsed = createBestPracticeSchema.safeParse({
+      title: form.title,
+      summary: form.summary,
+      content: form.content,
+      category: form.dbCategory || "other",
+      tags: form.tags,
+      status: submitStatus,
+    });
+
+    if (!parsed.success) {
+      const errors: FieldErrors = {};
+      for (const issue of parsed.error.issues) {
+        const path = issue.path[0] as string | undefined;
+        if (path === "title") errors.title = issue.message;
+        else if (path === "summary") errors.summary = issue.message;
+        else if (path === "content") errors.content = issue.message;
+        else if (path === "category") errors.category = issue.message;
+        else if (path === "tags") errors.tags = issue.message;
+        else errors.general = issue.message;
+      }
+      setFieldErrors(errors);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFieldErrors({});
+
+    try {
+      const res = await fetch("/api/best-practices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+
+      const json = await res.json();
+
+      if (json.error) {
+        // API-Validierungsfehler: Felder einzeln setzen wenn moeglich
+        setFieldErrors({ general: json.error.message ?? "Fehler beim Erstellen." });
+        return;
+      }
+
+      // Erfolg: zur neuen Detail-Seite navigieren
+      router.push(`/best-practices/${json.data.id}`);
+    } catch {
+      setFieldErrors({ general: "Verbindungsfehler. Bitte erneut versuchen." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const previewUiCategory: BestPracticeCategory | null =
+    form.dbCategory ? (DB_TO_UI_CATEGORY[form.dbCategory] ?? null) : null;
+
+  const isFormValid =
+    form.title.trim().length >= 5 &&
+    form.dbCategory !== "" &&
+    form.content.trim().length >= 50;
 
   return (
     <div className="animate-fade-in">
@@ -179,14 +283,26 @@ export default function NewBestPracticePage() {
         <div className="min-w-0 flex-1">
           <Card noPadding>
             <div className="space-y-6 p-6 sm:p-8">
+              {/* General Error Banner */}
+              {fieldErrors.general && (
+                <div className="rounded-xl border border-error bg-error-light px-4 py-3">
+                  <p className="text-body-sm text-error-dark">{fieldErrors.general}</p>
+                </div>
+              )}
+
               {/* Title */}
-              <Input
-                label="Titel"
-                placeholder="z.B. Die besten ChatGPT-Prompts fuer Marketing"
-                value={formData.title}
-                onChange={(e) => updateField("title", e.target.value)}
-                size="lg"
-              />
+              <div className="flex flex-col gap-1.5">
+                <Input
+                  label="Titel"
+                  placeholder="z.B. Die besten ChatGPT-Prompts fuer Marketing"
+                  value={form.title}
+                  onChange={(e) => updateField("title", e.target.value)}
+                  size="lg"
+                />
+                {fieldErrors.title && (
+                  <p className="text-caption text-error">{fieldErrors.title}</p>
+                )}
+              </div>
 
               {/* Category Select */}
               <div className="flex flex-col gap-1.5">
@@ -198,27 +314,56 @@ export default function NewBestPracticePage() {
                 </label>
                 <select
                   id="category-select"
-                  value={formData.category}
-                  onChange={(e) =>
-                    updateField("category", e.target.value as BestPracticeCategory | "")
-                  }
+                  value={form.dbCategory}
+                  onChange={(e) => updateField("dbCategory", e.target.value)}
                   className={cn(
                     "h-10 w-full rounded-[10px] border border-surface-300 bg-white px-3.5",
                     "text-body text-surface-900",
                     "transition-all duration-200 ease-out",
                     "focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20",
-                    !formData.category && "text-surface-400"
+                    !form.dbCategory && "text-surface-400"
                   )}
                 >
                   <option value="" disabled>
                     Kategorie waehlen...
                   </option>
                   {categoryOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
+                    <option key={opt.dbValue} value={opt.dbValue}>
                       {opt.label}
                     </option>
                   ))}
                 </select>
+                {fieldErrors.category && (
+                  <p className="text-caption text-error">{fieldErrors.category}</p>
+                )}
+              </div>
+
+              {/* Summary Textarea */}
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="summary-textarea"
+                  className="text-body-sm font-medium text-surface-700"
+                >
+                  Kurzzusammenfassung{" "}
+                  <span className="text-surface-400">(optional)</span>
+                </label>
+                <textarea
+                  id="summary-textarea"
+                  value={form.summary}
+                  onChange={(e) => updateField("summary", e.target.value)}
+                  placeholder="Kurze Beschreibung deiner Best Practice (max. 500 Zeichen)"
+                  rows={3}
+                  maxLength={500}
+                  className={cn(
+                    "w-full resize-y rounded-[10px] border border-surface-300 bg-white px-3.5 py-3",
+                    "text-body text-surface-900 placeholder:text-surface-400",
+                    "transition-all duration-200 ease-out",
+                    "focus:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
+                  )}
+                />
+                {fieldErrors.summary && (
+                  <p className="text-caption text-error">{fieldErrors.summary}</p>
+                )}
               </div>
 
               {/* Content Textarea */}
@@ -231,7 +376,7 @@ export default function NewBestPracticePage() {
                 </label>
                 <textarea
                   id="content-textarea"
-                  value={formData.content}
+                  value={form.content}
                   onChange={(e) => updateField("content", e.target.value)}
                   placeholder="Beschreibe deine Best Practice im Detail. Du kannst Markdown verwenden fuer Formatierungen (## Ueberschriften, **Fett**, `Code`, etc.)."
                   rows={16}
@@ -243,15 +388,23 @@ export default function NewBestPracticePage() {
                   )}
                 />
                 <p className="text-caption text-surface-400">
-                  Markdown-Formatierung wird unterstuetzt
+                  Markdown-Formatierung wird unterstuetzt (mind. 50 Zeichen)
                 </p>
+                {fieldErrors.content && (
+                  <p className="text-caption text-error">{fieldErrors.content}</p>
+                )}
               </div>
 
               {/* Tags */}
-              <TagInput
-                tags={formData.tags}
-                onChange={(tags) => updateField("tags", tags)}
-              />
+              <div className="flex flex-col gap-1">
+                <TagInput
+                  tags={form.tags}
+                  onChange={(tags) => updateField("tags", tags)}
+                />
+                {fieldErrors.tags && (
+                  <p className="text-caption text-error">{fieldErrors.tags}</p>
+                )}
+              </div>
 
               {/* XP Info */}
               <div className="flex items-center gap-3 rounded-xl border border-brand-primary-200 bg-brand-primary-50 p-4">
@@ -266,7 +419,9 @@ export default function NewBestPracticePage() {
             <div className="flex flex-col gap-3 border-t border-surface-200 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
               <Button
                 variant="ghost"
-                iconLeft={<Save />}
+                disabled={isSubmitting || !form.title.trim()}
+                onClick={() => handleSubmit("draft")}
+                isLoading={isSubmitting && form.status === "draft"}
               >
                 Als Entwurf speichern
               </Button>
@@ -283,7 +438,9 @@ export default function NewBestPracticePage() {
                 <Button
                   iconLeft={<Send />}
                   size="lg"
-                  disabled={!isValid}
+                  disabled={!isFormValid || isSubmitting}
+                  isLoading={isSubmitting}
+                  onClick={() => handleSubmit("published")}
                 >
                   Veroeffentlichen
                 </Button>
@@ -296,7 +453,6 @@ export default function NewBestPracticePage() {
         <aside
           className={cn(
             "w-full shrink-0 lg:w-[400px]",
-            // On mobile, show/hide based on toggle
             !showPreview && "hidden lg:block"
           )}
         >
@@ -325,48 +481,52 @@ export default function NewBestPracticePage() {
             >
               <div className="p-5">
                 {/* Category Badge */}
-                {formData.category && (
+                {previewUiCategory && (
                   <div className="mb-3">
                     <Badge
-                      variant={categoryConfig[formData.category].variant}
+                      variant={categoryConfig[previewUiCategory].variant}
                       size="sm"
                       dot
                     >
-                      {categoryConfig[formData.category].label}
+                      {categoryConfig[previewUiCategory].label}
                     </Badge>
                   </div>
                 )}
 
                 {/* Title */}
                 <h3 className="font-heading text-[16px] font-semibold leading-snug text-surface-900">
-                  {formData.title || "Dein Titel erscheint hier..."}
+                  {form.title || "Dein Titel erscheint hier..."}
                 </h3>
 
-                {/* Excerpt (first 150 chars of content) */}
+                {/* Excerpt */}
                 <p className="mt-2 line-clamp-3 text-body-sm leading-relaxed text-surface-500">
-                  {formData.content
-                    ? formData.content.slice(0, 150) +
-                      (formData.content.length > 150 ? "..." : "")
+                  {form.summary || form.content
+                    ? (form.summary || form.content).slice(0, 150) +
+                      ((form.summary || form.content).length > 150 ? "..." : "")
                     : "Dein Inhalt wird hier als Vorschau angezeigt..."}
                 </p>
 
-                {/* Author (demo) */}
+                {/* Author */}
                 <div className="mt-4 flex items-center gap-3">
-                  <Avatar name="Sarah Hoffmann" size="sm" />
+                  <Avatar
+                    name={user?.full_name ?? "Du"}
+                    src={user?.avatar_url ?? null}
+                    size="sm"
+                  />
                   <div>
                     <p className="text-body-sm font-medium text-surface-800">
-                      Sarah Hoffmann
+                      {user?.full_name ?? "Du"}
                     </p>
                     <p className="text-caption text-surface-400">
-                      Digital Marketing &middot; Gerade eben
+                      {user?.department ?? ""} &middot; Gerade eben
                     </p>
                   </div>
                 </div>
 
                 {/* Tags */}
-                {formData.tags.length > 0 && (
+                {form.tags.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    {formData.tags.map((tag) => (
+                    {form.tags.map((tag) => (
                       <span
                         key={tag}
                         className="inline-block rounded-md bg-surface-100 px-2 py-0.5 text-overline font-medium text-surface-500"

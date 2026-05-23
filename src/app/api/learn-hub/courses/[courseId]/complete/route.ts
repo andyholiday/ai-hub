@@ -109,12 +109,13 @@ export async function POST(
       return apiInternalError(updateError.message);
     }
 
-    // Award course XP (fire-and-forget)
+    // Award course XP (fire-and-forget) — M-05 idempotency key
     awardXP(
       supabase,
       auth.userId,
       "course_completed",
       course.xp_reward,
+      `course:${courseId}`,
     ).then(() => {
       checkAndAwardBadges(supabase, auth.userId);
       checkAndUnlockAchievements(supabase, auth.userId).catch(() => {});

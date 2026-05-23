@@ -39,9 +39,30 @@ export default defineConfig({
   // Browser Projects
   // ---------------------------------------------------------------------------
   projects: [
+    // Auth-Setup: laueft einmalig vor allen chromium-Tests
+    {
+      name: "setup",
+      testMatch: /auth\.setup\.ts/,
+    },
+
+    // Haupt-Testlauf mit gespeicherter User-Session
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: "tests/e2e/.auth/user.json",
+      },
+      dependencies: ["setup"],
+    },
+
+    // Admin-Testlauf mit gespeicherter Admin-Session
+    {
+      name: "chromium-admin",
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: "tests/e2e/.auth/admin.json",
+      },
+      dependencies: ["setup"],
     },
   ],
 

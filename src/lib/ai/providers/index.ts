@@ -10,6 +10,7 @@ import { OpenAIProvider } from "./openai";
 import { CopilotProvider } from "./copilot";
 import { GroqProvider } from "./groq";
 import { MistralProvider } from "./mistral";
+import { OpenRouterProvider } from "./openrouter";
 
 // ---------------------------------------------------------------------------
 // Re-exports for convenience
@@ -22,6 +23,7 @@ export { OpenAIProvider } from "./openai";
 export { CopilotProvider } from "./copilot";
 export { GroqProvider } from "./groq";
 export { MistralProvider } from "./mistral";
+export { OpenRouterProvider } from "./openrouter";
 
 // ---------------------------------------------------------------------------
 // Provider Factory
@@ -41,6 +43,7 @@ const PROVIDER_REGISTRY: Record<
   copilot: CopilotProvider,
   groq: GroqProvider,
   mistral: MistralProvider,
+  openrouter: OpenRouterProvider,
 };
 
 /**

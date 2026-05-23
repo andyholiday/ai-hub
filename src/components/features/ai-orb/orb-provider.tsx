@@ -122,7 +122,8 @@ export function OrbProvider({
   const [isExpanded, setIsExpanded] = useState(false);
   const [orbState, setOrbStateInternal] = useState<OrbState>("idle");
   const [pageContext, setPageContext] = useState(initialContext);
-  // Initialize with empty array so the premium welcome screen is shown
+  // messages/addMessage remain here for notification-type messages (e.g. system
+  // alerts). Chat messages are now owned by useOrbChat (ADR-005 consolidation).
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [tooltipText, setTooltipText] = useState(

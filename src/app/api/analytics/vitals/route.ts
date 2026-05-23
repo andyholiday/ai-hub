@@ -9,6 +9,9 @@ import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 
 export const dynamic = "force-dynamic";
 
+// Maximum length for the id field to prevent oversized payloads
+const MAX_ID_LENGTH = 128;
+
 // ---------------------------------------------------------------------------
 // Validation
 // ---------------------------------------------------------------------------
@@ -56,7 +59,7 @@ function isValidPayload(body: unknown): body is VitalPayload {
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  // Rate-limit by IP — anonymous endpoint, so no userId available.
+  // Rate-limit unauthenticated analytics endpoint (anonymous, IP-keyed).
   const rl = await rateLimit(request, "api");
   if (!rl.success) {
     return NextResponse.json(
@@ -75,12 +78,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
+    // F05: truncate id to prevent oversized log entries
+    const safeId = body.id.slice(0, MAX_ID_LENGTH);
+
     // eslint-disable-next-line no-console -- intentional server-side metrics logging
     console.info("[Web Vital]", {
       name: body.name,
       value: Math.round(body.value * 100) / 100,
       rating: body.rating,
-      id: body.id,
+      id: safeId,
       delta: body.delta != null ? Math.round(body.delta * 100) / 100 : undefined,
       navigationType: body.navigationType,
       timestamp: body.timestamp ?? Date.now(),

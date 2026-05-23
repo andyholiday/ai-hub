@@ -12,6 +12,7 @@ import {
   apiNotFound,
   apiValidationError,
 } from "@/lib/api/response";
+import { rateLimit } from "@/lib/api/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateFeatureSchema } from "@/lib/validators/admin";
 
@@ -26,6 +27,11 @@ export async function GET(req: NextRequest) {
     const auth = await requireAdmin(req);
     if ("response" in auth) return auth.response;
 
+    const rl = await rateLimit(req, "admin", auth.userId);
+    if (!rl.success) {
+      return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
+    }
+
     const supabase = createAdminClient();
 
     const { data: features, error } = await supabase
@@ -34,7 +40,8 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: true });
 
     if (error) {
-      return apiInternalError(error.message);
+      console.error("[admin/features] fetch feature_flags:", error);
+      return apiInternalError("Interner Fehler");
     }
 
     return apiSuccess(features ?? []);
@@ -51,6 +58,11 @@ export async function PUT(req: NextRequest) {
   try {
     const auth = await requireAdmin(req);
     if ("response" in auth) return auth.response;
+
+    const rl = await rateLimit(req, "admin", auth.userId);
+    if (!rl.success) {
+      return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
+    }
 
     const body: unknown = await req.json();
     const parsed = updateFeatureSchema.safeParse(body);
@@ -76,7 +88,8 @@ export async function PUT(req: NextRequest) {
       if (error.code === "PGRST116") {
         return apiNotFound("Feature flag not found");
       }
-      return apiInternalError(error.message);
+      console.error("[admin/features] update feature_flags:", error);
+      return apiInternalError("Interner Fehler");
     }
 
     return apiSuccess(feature);

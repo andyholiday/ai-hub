@@ -10,14 +10,17 @@
 // =============================================================================
 
 import { NextRequest } from "next/server";
+import { createHash } from "node:crypto";
 import { requireAuth } from "@/lib/api/require-auth";
 import {
   apiSuccess,
   apiInternalError,
   apiValidationError,
 } from "@/lib/api/response";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, AdminClientConfigError } from "@/lib/supabase/admin";
 import { updateProfileSchema } from "@/lib/validators/profile";
+import { awardCommunityXP, awardXP, XP_ACTIONS } from "@/lib/gamification/xp";
+import { checkAndAwardBadges } from "@/lib/gamification/badges";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,11 +34,22 @@ export async function GET(req: NextRequest) {
     if ("response" in auth) return auth.response;
 
     const supabase = createAdminClient();
+    const userId = auth.userId;
 
     // ---- Tier 1: Try optimized single RPC call (requires migration 00009) ----
     const { data: rawData, error: rpcError } = await supabase.rpc("get_user_profile_data", {
-      target_user_id: auth.userId,
+      target_user_id: userId,
     });
+
+    // C-03: fire-and-forget login streak update (DB function has 20h guard)
+    function fireStreakUpdate(): void {
+      supabase
+        .rpc("update_login_streak", { target_user_id: userId })
+        .then(
+          () => {},
+          (err: unknown) => console.error("[Profile GET] update_login_streak failed:", err),
+        );
+    }
 
     if (!rpcError) {
       const data = rawData as unknown as {
@@ -45,6 +59,7 @@ export async function GET(req: NextRequest) {
       } | null;
 
       if (data?.profile) {
+        fireStreakUpdate();
         return apiSuccess(data);
       }
     }
@@ -90,6 +105,7 @@ export async function GET(req: NextRequest) {
         .eq("user_id", auth.userId)
         .not("completed_at", "is", null);
 
+      fireStreakUpdate();
       return apiSuccess({
         profile,
         badges,
@@ -147,7 +163,10 @@ export async function GET(req: NextRequest) {
         coursesCompleted: 0,
       },
     });
-  } catch {
+  } catch (err) {
+    if (err instanceof AdminClientConfigError) {
+      return apiInternalError(err.message);
+    }
     return apiInternalError();
   }
 }
@@ -164,11 +183,18 @@ export async function DELETE(req: NextRequest) {
 
     const supabase = createAdminClient();
 
+    // F08: hash the client IP for GDPR audit (Art. 30). SHA-256 of the first
+    // entry in x-forwarded-for; null if header is absent.
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const rawIp = forwardedFor ? (forwardedFor.split(",")[0]?.trim() ?? null) : null;
+    const ipHash = rawIp
+      ? createHash("sha256").update(rawIp).digest("hex")
+      : null;
+
     // GDPR Art. 30: write erasure audit entry BEFORE deleting the user.
-    // ip_hash is left NULL — GDPR requires the audit record, not the IP itself.
     const { data: erasureRow, error: insertError } = await supabase
       .from("gdpr_erasure_log")
-      .insert({ user_id: auth.userId })
+      .insert({ user_id: auth.userId, ip_hash: ipHash })
       .select("id")
       .single();
 
@@ -204,7 +230,10 @@ export async function DELETE(req: NextRequest) {
     }
 
     return apiSuccess({ deleted: true });
-  } catch {
+  } catch (err) {
+    if (err instanceof AdminClientConfigError) {
+      return apiInternalError(err.message);
+    }
     return apiInternalError();
   }
 }
@@ -227,6 +256,14 @@ export async function PATCH(req: NextRequest) {
 
     const supabase = createAdminClient();
 
+    // C-05: use maybeSingle() so a missing profile row returns null instead of error.
+    // Also select department for M-03 department-bonus check.
+    const { data: previous } = await supabase
+      .from("profiles")
+      .select("onboarding_completed, department")
+      .eq("id", auth.userId)
+      .maybeSingle();
+
     const { data: updatedProfile, error } = await supabase
       .from("profiles")
       .update({
@@ -241,8 +278,37 @@ export async function PATCH(req: NextRequest) {
       return apiInternalError(error.message);
     }
 
-    return apiSuccess(updatedProfile);
-  } catch {
+    // Award XP and badges for onboarding completion exactly once.
+    // C-05: Guard uses `== null` to handle both null profile row and explicit false.
+    let xp_awarded: Awaited<ReturnType<typeof awardCommunityXP>> = null;
+    let xp_department: Awaited<ReturnType<typeof awardXP>> = null;
+
+    if (
+      parsed.data.onboarding_completed === true &&
+      (previous == null || previous.onboarding_completed === false)
+    ) {
+      xp_awarded = await awardCommunityXP(supabase, auth.userId, "COMPLETE_ONBOARDING");
+      await checkAndAwardBadges(supabase, auth.userId);
+    }
+
+    // M-03: Award department-set bonus exactly once (idempotency handled by DB function).
+    const wasDeptEmpty = previous == null || previous.department == null || previous.department === "";
+    if (parsed.data.department && wasDeptEmpty) {
+      xp_department = await awardXP(
+        supabase,
+        auth.userId,
+        XP_ACTIONS.DEPARTMENT_SET.action,
+        XP_ACTIONS.DEPARTMENT_SET.amount,
+        "department_set",
+      );
+      await checkAndAwardBadges(supabase, auth.userId);
+    }
+
+    return apiSuccess({ ...updatedProfile, xp_awarded, xp_department });
+  } catch (err) {
+    if (err instanceof AdminClientConfigError) {
+      return apiInternalError(err.message);
+    }
     return apiInternalError();
   }
 }

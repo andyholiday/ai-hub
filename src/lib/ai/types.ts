@@ -7,7 +7,7 @@
 // Provider Enum & Model Definitions
 // ---------------------------------------------------------------------------
 
-export type AIProvider = "gemini" | "claude" | "openai" | "copilot" | "groq" | "mistral";
+export type AIProvider = "gemini" | "claude" | "openai" | "copilot" | "groq" | "mistral" | "openrouter";
 
 export interface AIModel {
   id: string;

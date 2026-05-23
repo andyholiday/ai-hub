@@ -10,6 +10,7 @@ import {
   apiInternalError,
   apiValidationError,
 } from "@/lib/api/response";
+import { rateLimit } from "@/lib/api/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { costQuerySchema } from "@/lib/validators/admin";
 
@@ -45,6 +46,11 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await requireAdmin(req);
     if ("response" in auth) return auth.response;
+
+    const rl = await rateLimit(req, "admin", auth.userId);
+    if (!rl.success) {
+      return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
+    }
 
     // Parse query parameters
     const { searchParams } = new URL(req.url);
@@ -98,7 +104,8 @@ export async function GET(req: NextRequest) {
     const { data: costRows, error: costError } = await baseQuery;
 
     if (costError) {
-      return apiInternalError(costError.message);
+      console.error("[admin/costs] fetch ai_cost_log:", costError);
+      return apiInternalError("Interner Fehler");
     }
 
     // --- Fetch provider names for aggregation ---

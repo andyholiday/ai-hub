@@ -7,6 +7,247 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Audit-Fix-Wave 2026-05-14
+
+#### Critical Fixes
+
+- C-01: Admin-Page-Stub konsolidiert — `/admin/page.tsx` nutzt jetzt
+  `ProviderKeyModal`/`ProviderConfigModal`/`SystemPromptModal` statt
+  `window.prompt`. Provider koennen vollstaendig konfiguriert werden. (be4c412)
+- C-02: Dev-Skripte `set-admin.mjs` + `update-gemini-key.mjs` aus Root und
+  `scripts/` entfernt; `.gitignore` aktualisiert. Keine hardcoded Secrets
+  enthalten, daher kein History-Rewrite noetig. (62d3828, fcc15f5)
+- C-03: Login-Streak aktiviert — `update_login_streak` RPC wird im
+  `GET /api/profile` als Fire-and-Forget aufgerufen (Tier 1+2). Streak-Days
+  werden jetzt taeglich aktualisiert. (ff7cd32, 3a28644)
+- C-04: `awardXP` atomarisiert — neue DB-Funktion `award_xp_idempotent` mit
+  ON-CONFLICT-Gate (Migration 00033). Race-Condition fuer Double-Award
+  eliminiert. (ff7cd32)
+- C-05: Profile-null-Guard — `.single()` zu `.maybeSingle()` in
+  `PATCH /api/profile`; neue User ohne profile-row erhalten jetzt
+  Onboarding-XP. (ff7cd32)
+
+#### Major Fixes
+
+- M-01: `api_endpoint` ist jetzt nullable (Migration 00034) — Admin kann
+  Custom-Endpoint zuruecksetzen. (3a28644, be4c412)
+- M-02: Provider-Test gibt klare Fehlermeldung "Kein API-Key hinterlegt"
+  statt stiller Fallback-Maskierung. (be4c412)
+- M-03: Department-Bonus +25 XP idempotent (action `department_set`) — User
+  erhaelt Bonus beim ersten Setzen der Abteilung. (ff7cd32)
+- M-04/05/06: Idempotency-Keys fuer `lesson_completed`, `course_completed`,
+  `idea_evaluated` — kein Double-Award mehr bei Retries. (ff7cd32)
+- M-07: Daily-Cap fail-closed — bei Redis-Fehler aggregiert SQL ueber
+  `xp_log` statt Cap zu umgehen. (ff7cd32)
+- M-08: Rate-Limit Tier `"admin"` (20/min) auf allen `/api/admin/*`-Routes
+  inkl. `providers`. (62d3828, a3150fb)
+- M-09: Webhook `safeEqual()` mit Buffer-byte-Length + try-catch. (62d3828)
+- M-10: Error-Hygiene — keine rohen Supabase-Errors mehr in
+  Admin-Responses. (62d3828, 3a28644)
+- M-11: `requireAuth` mit DB-Mismatch-Guard analog `requireAdmin`. (f79f95e)
+
+#### Minor / Hardening
+
+- m-01: Supabase-Webhook implementiert Welcome-Notification (`type=system`)
+  + Auto-Tag fuer neue Posts. (bf506c7)
+- m-02: Vercel-Cron-Job `0 2 * * *` ruft taeglich
+  `cleanup_expired_chat_messages` auf (GDPR Chat-Retention). (bf506c7)
+- m-03: `require-auth.ts` Coverage 0% auf 94% angehoben. (f79f95e)
+- m-04/05: `as any` aus `mentor/signals` + `hybrid-search` entfernt. (f79f95e)
+- m-06: ESLint-Suppress-Begruendungen ergaenzt. (f79f95e, a3150fb)
+- m-07: Community-XSS-Audit — kein Befund; React-Plain-Text-Rendering.
+  Regression-Tests dokumentieren das. (7056b88)
+- m-08: `ProviderConfigModal` Component-Tests (15) + E2E-Stubs. (7056b88)
+- m-09: Middleware + `require-auth` haerten gegen korruptes Supabase-Auth-Cookie
+  — `supabase.auth.getUser()` warf bei kaputtem `access_token` (z.B. Newlines)
+  oder bei `Invalid Base64-URL`-Decode synchron in `Headers.append`, was als
+  `unhandledRejection` HTTP 500 auf jeder Unterseite ausloeste. `try/catch`
+  treats das jetzt als anonym; Middleware emittiert zusaetzlich `Set-Cookie:
+  max-age=0` fuer alle `sb-*-auth-token`-Cookies, sodass das poisoning-Cookie
+  beim naechsten Request weg ist.
+
+#### Migrations
+
+- `00033_atomic_award_xp.sql` — `award_xp_idempotent` mit ON-CONFLICT-Gate
+- `00034_api_endpoint_nullable.sql` — `ai_providers.api_endpoint DROP NOT NULL`
+
+#### Stats
+
+- 833 Tests (von 725 vor Welle 1, +108)
+- Coverage 35.62% (von ~30%, +5.6 pp)
+- 12 Commits, 0 Critical/Major-Findings offen
+
+---
+
+### Phase 2 — Hardening Wave 2026-05-14
+
+#### Security
+
+- `cron/route.ts` C-01: Bearer-undefined-Bypass geschlossen — ENV-Guard +
+  `crypto.timingSafeEqual` fuer timing-sicheren Token-Vergleich.
+- Migration `00031_fix_audit_logs_policy.sql` C-02: `audit_logs` INSERT-Policy
+  auf `service_role` eingegrenzt (war zuvor PUBLIC zugaenglich).
+- `admin/users/route.ts` C-03: GDPR-Erasure-Audit fuer Admin-initiierte
+  Loeschung ergaenzt (Art. 17/30).
+- `admin/providers/test/route.ts` C-04: Provider-Test-Route nutzt jetzt
+  `getAIRouterWithDBKeys()` — Vault-Keys werden korrekt erkannt.
+- `webhooks/supabase/route.ts` M-03: timing-safe-Compare + ENV-Guard +
+  korrekter `Authorization`-Header ergaenzt.
+- `gamification/badges/route.ts` M-01: `requireAuth` + Session-User-Forcing
+  implementiert — Enumerierungs-Angriff geschlossen.
+- `leaderboard/route.ts` M-02: Optional-Auth + Rate-Limit hinzugefuegt.
+- `lib/api/rate-limit.ts` M-06/Task-16: Hard-Fail in Production wenn
+  Upstash-ENV fehlt — deferred runtime check statt stiller Fallback.
+- `admin/providers/route.ts` + `lib/supabase/types.{ts,generated.ts}` M-04:
+  Supabase-Types regeneriert; `(supabase as any)`-Casts entfernt.
+- Diverse Routes M-07: Admin-Client durch User-Context fuer read-only
+  User-Routes ersetzt (RLS damit aktiv).
+
+#### Added
+
+- Migration `00032_xp_log.sql`: XP-Log-Tabelle mit `idempotency_key` +
+  partiellem UNIQUE-Index fuer race-freie XP-Awards (Task 12).
+- `XP_ACTIONS.COMPLETE_ONBOARDING` (50 XP) und Wiring in `PATCH /api/profile`
+  mit Idempotenz-Guard (Task 5).
+- `first-steps`-Badge-Criterion via `onboardingCompleted` in `badges.ts`
+  (Task 13).
+- `provider-config-modal.tsx`: Vollstaendiges Edit-UI fuer model, max_tokens,
+  top_p, endpoint, temperature, budget (Task 14).
+- Test-Suite erweitert: AI-Chat-Streaming, Provider-Vault-Write,
+  Profile-DELETE, Rate-Limit-Fallback (Task 15).
+- `docs/RUNBOOK-rate-limit.md`: Ops-Anleitung fuer Upstash + Tier-Tabelle
+  (Task 16).
+- `docs/RELEASE-CHECKLIST-openrouter.md`: Verifizierungs-Checkliste fuer
+  OpenRouter-Provider-Release.
+
+#### Fixed
+
+- OpenRouter erscheint nicht im Admin-Panel: Stale-Build verifiziert; Source
+  clean, lokaler Rebuild zeigt OpenRouter. Production-Fix erfordert
+  Vercel-Preview-Env-Check (User-Action erforderlich).
+- XP-Award Daily-Cap-Order: RPC laeuft vor Redis-Increment; Rollback bei
+  RPC-Fehler implementiert (Task 10).
+- `xp.ts` daily-cap Race-Condition auf in-memory tracked.
+- Onboarding-Wizard zeigt jetzt echtes XP-Award-Result mit
+  Level-Up-Banner statt Fake-Toast.
+
+#### Changed
+
+- `XP_ACTIONS` bereinigt — duplizierter `gamification.ts`-Export entfernt;
+  Drift-Risiko eliminiert. `DAILY_LOGIN` / `REFER_USER` bleiben als
+  Feature-TODOs (Task 11 partial).
+
+#### Quality-Gate 2 Follow-up
+
+- `tests/unit/lib/gamification/xp.test.ts` + `badges.test.ts`: 7 neue
+  Critical-Path-Tests (Idempotency, Daily-Cap-Order, 23505-Race,
+  first-steps-Badge) — schliesst F-04 (0% Coverage auf Core-Gamification).
+- `recommendations/route.ts`: `import type` fuer `SupabaseClient` — schliesst
+  F-01 (Value-Import statt Type-Import). 732 Tests passing, tsc + lint clean.
+
+---
+
+### Phase 1/2 — Audit Follow-up Wave 2026-05-13
+
+#### Added
+
+- Migration 00029 + CHECK constraint `ai_providers_provider_key_known` normalisiert
+  `chatgpt`-Row auf `openai` und schuetzt vor erneutem Provider-Key-Drift.
+- `src/lib/api/handle-role-change-response.ts` — client-seitiger Handler fuer
+  `X-Role-Changed: true`-Header; ruft `supabase.auth.refreshSession()` auf
+  (schliesst ADR-016 NOP-01).
+- `scripts/seed-test-users.mjs` — idempotentes Test-User-Seed-Script mit
+  Pagination-Loop, upsert-Logik und Production-Guard.
+- `tests/e2e/auth.setup.ts` — Playwright storageState fuer `user.json` und
+  `admin.json`.
+- `chromium-admin` Playwright-Project mit `storageState: admin.json` und
+  `dependencies: [setup]`.
+- `AdminUsersTab` gemountet in `/admin/users`.
+- Backlog-Link-Stubs fuer `/admin/analytics`, `/admin/content`,
+  `/admin/settings`.
+
+#### Changed
+
+- `ChatSplitView` nutzt `useOrbChat`-Hook fuer Chat-State. `setTimeout`-Mock
+  entfernt; echter SSE-Streaming-Call an `POST /api/ai/chat`.
+
+#### Fixed
+
+- Live-DB-Konsistenz: `chatgpt`-Row in `ai_providers` auf `openai` normalisiert.
+  CHECK-Constraint schuetzt vor weiterem Drift.
+- Defensiver Workaround in `src/lib/ai/provider-keys.ts`:
+  `TODO(audit-task-1)` bleibt offen bis `feature/phase-1-admin-auth-and-challenges`
+  in `main` gemerged ist.
+- Playwright-Seed-Script `retries: 2` in CI (war 1) und
+  `video: 'retain-on-failure'` (fehlte).
+
+#### Security
+
+- `X-Role-Changed`-Client-Refresh schliesst Mismatch-Fenster bei Admin-Role-Change
+  (ADR-016 NOP-01). Siehe
+  [docs/quality/REVIEW-2026-05-13-wave-2.md](docs/quality/REVIEW-2026-05-13-wave-2.md).
+- Playwright-Seed-Script verweigert Ausfuehrung gegen Prod-DB ohne explizites
+  `--allow-production`-Flag oder `SEED_ALLOW_PRODUCTION=1`.
+
+---
+
+### Phase 1/2 — Audit Follow-up (Waves A/B1/B2/C, 2026-05-12)
+
+#### Added
+
+- **ADR-016** — Admin-Role-Source-of-Truth: JWT `app_metadata.role` als
+  Fast-Path-Cache in Middleware; `profiles.role` (DB) als autoritaetive Quelle
+  fuer Admin-API-Mutations. Mismatch-Guard in `requireAdmin()`.
+  Siehe [docs/architecture/adr/ADR-016-admin-role-source-of-truth.md](docs/architecture/adr/ADR-016-admin-role-source-of-truth.md).
+- **Best Practices CRUD-API** — 5 Endpunkte (`GET /`, `POST /`,
+  `GET /[id]`, `PATCH /[id]`, `DELETE /[id]`) in
+  `src/app/api/best-practices/`. Zod-Validierung, RLS-geschuetzt,
+  archived-Transition Admin-only.
+- **Best Practices UI** — Listen-, Detail- und Create-Seiten nutzen die
+  echte API; Demo-Daten entfernt.
+- **`challenge_completions`-Tabelle + RLS** — Migration 00028 sichert
+  One-Time-XP-Award per `PRIMARY KEY (user_id, challenge_id)`. Route-Handler
+  nutzt Upsert mit `ignoreDuplicates: true`.
+
+#### Security
+
+- **JWT/DB-Role-Mismatch-Guard** — `requireAdmin()` vergleicht JWT-Rolle mit
+  `profiles.role`; bei Abweichung wird `403 ROLE_SYNC_REQUIRED` zurueckgegeben
+  und ein Warning geloggt.
+- **`X-Role-Changed`-Header** — `PATCH /api/admin/users` setzt
+  `X-Role-Changed: true` nach erfolgreichem Role-Update als Token-Refresh-Signal
+  fuer den Admin-UI-Client.
+- **PATCH `/api/admin/users` Zod-Validierung** — Verhindert leeren-Role-Bypass;
+  `role` muss einem erlaubten Enum-Wert entsprechen.
+- **Challenge-Progress server-known events** — Body-Schema von
+  `{ progress: number }` auf `{ eventType, entityId }` umgestellt; Client
+  kann keinen beliebigen Fortschrittswert mehr senden.
+- **Best Practices Zugriffschutz** — `archived`-Transition nur fuer Admins;
+  Draft-Visibility nur fuer Eigentuemerins.
+
+#### Changed
+
+- **Challenge-Progress-Body-Schema**: `{ progress: number }` ersetzt durch
+  `{ eventType: string, entityId: string }` — server-seitige Ereigniserkennung
+  statt client-kontrolliertem Fortschrittswert.
+
+#### Fixed
+
+- **Migration 00025** — `preferences`-Spalte existiert nicht in Production;
+  durch `position` ersetzt.
+- **Migration 00028** — `CREATE POLICY IF NOT EXISTS` ist kein gueltiges
+  Postgres-Syntax; ersetzt durch `DROP POLICY IF EXISTS` + `CREATE POLICY`.
+- **19 localStorage-Test-Failures** — `tests/setup.ts`-Polyfill behebt
+  fehlende State-Isolation in Playwright-Tests (`T01`).
+- **`chat/route.ts`** — Doppelter dynamischer Import von `@/lib/supabase/admin`
+  dedupliziert.
+- **`provider-keys.ts`** — `TODO(audit-task-1)`-Marker gesetzt fuer
+  ausstehende Provider-Key-Normalisierung.
+- **Orb-Status-Indicator-Test** — framer-motion-Mock leakt keine
+  `drag`-Props mehr auf DOM-Elemente.
+
+---
+
 ### Security (Phase 0 — Hardening, Merge-Blocker)
 
 - **0.1 Auth-Hardening** — Server-side JWT validation via `getUser()` instead of

@@ -182,7 +182,7 @@ export type Database = {
       }
       ai_providers: {
         Row: {
-          api_endpoint: string
+          api_endpoint: string | null
           api_key_encrypted: string | null
           created_at: string
           display_name: string
@@ -199,7 +199,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          api_endpoint: string
+          api_endpoint?: string | null
           api_key_encrypted?: string | null
           created_at?: string
           display_name: string
@@ -216,7 +216,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          api_endpoint?: string
+          api_endpoint?: string | null
           api_key_encrypted?: string | null
           created_at?: string
           display_name?: string
@@ -392,6 +392,35 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenge_completions: {
+        Row: {
+          challenge_id: string
+          completed_at: string
+          user_id: string
+          xp_awarded: number
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string
+          user_id: string
+          xp_awarded?: number
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string
+          user_id?: string
+          xp_awarded?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_completions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
             referencedColumns: ["id"]
           },
         ]
@@ -1355,6 +1384,43 @@ export type Database = {
           },
         ]
       }
+      // xp_log: added by migration 00032_xp_log.sql
+      // Regenerate via: supabase gen types typescript --project-id <ref>
+      xp_log: {
+        Row: {
+          id: string
+          user_id: string
+          action: string
+          amount: number
+          idempotency_key: string | null
+          awarded_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          action: string
+          amount: number
+          idempotency_key?: string | null
+          awarded_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          action?: string
+          amount?: number
+          idempotency_key?: string | null
+          awarded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xp_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_feature_prefs: {
         Row: {
           id: string
@@ -1460,6 +1526,21 @@ export type Database = {
           leveled_up: boolean
           new_level: number
           new_xp: number
+        }[]
+      }
+      // award_xp_idempotent: added by migration 00033_atomic_award_xp.sql
+      award_xp_idempotent: {
+        Args: {
+          target_user_id: string
+          xp_amount: number
+          action_text: string
+          idem_key?: string | null
+        }
+        Returns: {
+          new_xp: number
+          new_level: number
+          leveled_up: boolean
+          awarded: boolean
         }[]
       }
       generate_page_briefing: {
@@ -1575,6 +1656,10 @@ export type Database = {
       update_login_streak: {
         Args: { target_user_id: string }
         Returns: undefined
+      }
+      upsert_provider_vault_key: {
+        Args: { p_api_key: string; p_provider_key: string }
+        Returns: string
       }
     }
     Enums: {
