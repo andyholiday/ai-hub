@@ -19,7 +19,6 @@ import { buildManifest, persistManifest } from "@/lib/audit/c2pa-manifest";
 import { hybridSearchBestPractices } from "@/lib/search/hybrid-search";
 import { getFeature } from "@/lib/features/feature-registry";
 import { getUserFeaturePrefs } from "@/lib/features/user-prefs";
-import { SYSTEM_PROMPTS } from "@/lib/ai/prompts/system";
 import { AI_HUB_SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
 import { chatRequestSchema, type ChatRequestBody } from "@/lib/validators/chat";
 import { apiValidationError } from "@/lib/api/response";
@@ -312,7 +311,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         // very low / zero cost per 1k tokens).
         effectiveProvider = "groq";
         effectiveModel = "llama-3.3-70b-versatile";
-        console.info(`[chat] soft-cap at ratio=${budget.ratio.toFixed(2)} — downgraded to groq/llama`);
+        console.warn(`[chat] soft-cap at ratio=${budget.ratio.toFixed(2)} — downgraded to groq/llama`);
       }
     } catch (err) {
       // Fail-open: if budget RPC is unavailable, allow the request through.
