@@ -77,16 +77,16 @@ export async function requireAdmin(
     };
   }
 
-  // --- Check admin role ---
+  // --- Check admin role (ADR-016: DB is source of truth, JWT is fast-path cache) ---
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .single();
 
-  const role = (profile as { role: string } | null)?.role;
+  const dbRole = (profile as { role: string } | null)?.role;
 
-  if (!role || (role !== "admin" && role !== "super_admin")) {
+  if (!dbRole || (dbRole !== "admin" && dbRole !== "super_admin")) {
     return {
       response: NextResponse.json(
         {
@@ -101,8 +101,29 @@ export async function requireAdmin(
     };
   }
 
+  // ADR-016 Mismatch-Guard: DB says admin, but JWT app_metadata.role disagrees
+  // → token is stale (recent role change), refuse and signal refresh needed.
+  const jwtRole = (user.app_metadata as { role?: string } | null | undefined)?.role;
+  if (jwtRole !== dbRole) {
+    console.warn(
+      `[admin-auth] Role mismatch for user ${user.id}: jwt=${jwtRole ?? "null"} db=${dbRole}`,
+    );
+    return {
+      response: NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: "ROLE_SYNC_REQUIRED",
+            message: "Token role does not match DB role. Refresh session.",
+          },
+        },
+        { status: 403 },
+      ),
+    };
+  }
+
   return {
     userId: user.id,
-    role: role as "admin" | "super_admin",
+    role: dbRole as "admin" | "super_admin",
   };
 }

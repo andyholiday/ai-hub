@@ -5,18 +5,41 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Plus, Search, ArrowUpDown, Sparkles } from "lucide-react";
+import { Plus, Search, ArrowUpDown, Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import {
   BestPracticeCard,
   CategoryFilter,
   type BestPracticeCardData,
   type CategoryFilterValue,
 } from "@/components/features/best-practices";
+import type { BestPracticeCategory as UiCategory } from "@/components/features/best-practices";
+
+// -----------------------------------------------------------------------------
+// Category Slug Mapping: DB -> UI
+// API liefert snake_case, UI-Components erwarten kebab-case Deutsch
+// -----------------------------------------------------------------------------
+
+const DB_TO_UI_CATEGORY: Record<string, UiCategory> = {
+  prompt_engineering: "prompt-engineering",
+  ai_tools: "ki-tools",
+  automation: "automatisierung",
+  data_analysis: "datenanalyse",
+  ai_ethics: "ki-ethik",
+};
+
+const UI_TO_DB_CATEGORY: Record<UiCategory, string> = {
+  "prompt-engineering": "prompt_engineering",
+  "ki-tools": "ai_tools",
+  automatisierung: "automation",
+  datenanalyse: "data_analysis",
+  "ki-ethik": "ai_ethics",
+};
 
 // -----------------------------------------------------------------------------
 // Sort Options
@@ -30,166 +53,145 @@ const sortLabels: Record<SortOption, string> = {
   upvotes: "Meiste Upvotes",
 };
 
+const SORT_TO_API: Record<SortOption, string> = {
+  newest: "newest",
+  popular: "most_viewed",
+  upvotes: "most_upvoted",
+};
+
 // -----------------------------------------------------------------------------
-// Demo Data
+// API Response Type
 // -----------------------------------------------------------------------------
 
-const demoBestPractices: BestPracticeCardData[] = [
-  {
-    id: "1",
-    title: "ChatGPT-Prompts fuer Social Media Content",
-    excerpt:
-      "Erfahre, wie du mit gezielten Prompt-Techniken fesselnde Social Media Posts erstellst. Von Instagram Captions bis LinkedIn Artikel -- diese Best Practice zeigt dir bewaehrte Prompt-Strukturen fuer maximales Engagement.",
-    category: "prompt-engineering",
+interface ApiAuthor {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  level: number;
+}
+
+interface ApiBestPractice {
+  id: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  tags: string[];
+  status: string;
+  upvotes_count: number;
+  views_count: number;
+  comments_count: number;
+  created_at: string;
+  author: ApiAuthor;
+}
+
+interface ApiMeta {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+// -----------------------------------------------------------------------------
+// Helper: map API item to Card data
+// -----------------------------------------------------------------------------
+
+function toCardData(item: ApiBestPractice): BestPracticeCardData {
+  const uiCategory: UiCategory =
+    DB_TO_UI_CATEGORY[item.category] ?? "prompt-engineering";
+
+  const date = new Date(item.created_at);
+  const createdAt = date.toLocaleDateString("de-DE", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  return {
+    id: item.id,
+    title: item.title,
+    excerpt: item.excerpt ?? "",
+    category: uiCategory,
     author: {
-      name: "Markus Koenig",
-      department: "Marketing",
+      name: item.author?.full_name ?? "Unbekannt",
+      avatarUrl: item.author?.avatar_url ?? null,
+      department: "",
     },
-    createdAt: "15. Feb 2026",
-    tags: ["ChatGPT", "Social Media", "Content"],
-    upvotes: 24,
-    comments: 8,
-    views: 312,
+    createdAt,
+    tags: item.tags ?? [],
+    upvotes: item.upvotes_count,
+    comments: item.comments_count,
+    views: item.views_count,
     xpReward: 50,
-    isFeatured: true,
-  },
-  {
-    id: "2",
-    title: "KI-Automatisierung im Kundenservice",
-    excerpt:
-      "Wie KI-gestuetzte Automatisierung den Kundenservice revolutioniert. Lerne, wie Chatbots und automatische E-Mail-Klassifizierung die Antwortzeiten um 60% reduzieren und die Kundenzufriedenheit steigern.",
-    category: "automatisierung",
-    author: {
-      name: "Lisa Peters",
-      department: "Kundenservice",
-    },
-    createdAt: "12. Feb 2026",
-    tags: ["Automatisierung", "Chatbot", "Kundenservice"],
-    upvotes: 31,
-    comments: 12,
-    views: 487,
-    xpReward: 50,
-    isFeatured: false,
-  },
-  {
-    id: "3",
-    title: "Datenanalyse mit Claude fuer Vertriebsberichte",
-    excerpt:
-      "Nutze die analytischen Faehigkeiten von Claude, um komplexe Vertriebsdaten in aussagekraeftige Berichte zu verwandeln. Schritt-fuer-Schritt Anleitung mit Beispiel-Prompts und Vorlagen fuer Quartalsberichte.",
-    category: "datenanalyse",
-    author: {
-      name: "Thomas Wagner",
-      department: "Vertrieb",
-    },
-    createdAt: "10. Feb 2026",
-    tags: ["Claude", "Datenanalyse", "Vertrieb", "Berichte"],
-    upvotes: 18,
-    comments: 5,
-    views: 198,
-    xpReward: 50,
-    isFeatured: false,
-  },
-  {
-    id: "4",
-    title: "Ethische Richtlinien fuer den KI-Einsatz im Unternehmen",
-    excerpt:
-      "Ein umfassender Leitfaden zu den ethischen Grundsaetzen beim Einsatz von KI in unserem Unternehmen. Von Datenschutz ueber Transparenz bis hin zu fairer Nutzung -- diese Best Practice definiert den Rahmen fuer verantwortungsvollen KI-Einsatz.",
-    category: "ki-ethik",
-    author: {
-      name: "Julia Richter",
-      department: "Compliance",
-    },
-    createdAt: "8. Feb 2026",
-    tags: ["Ethik", "Richtlinien", "Datenschutz", "DSGVO"],
-    upvotes: 42,
-    comments: 15,
-    views: 623,
-    xpReward: 50,
-    isFeatured: true,
-  },
-  {
-    id: "5",
-    title: "Top 10 KI-Tools fuer Marketer 2026",
-    excerpt:
-      "Die besten KI-Tools fuer das Marketing-Team: Von Text-Generierung ueber Bildbearbeitung bis zur Analyse. Jedes Tool wird mit konkreten Anwendungsfaellen vorgestellt und bewertet.",
-    category: "ki-tools",
-    author: {
-      name: "Sarah Hoffmann",
-      department: "Digital Marketing",
-    },
-    createdAt: "5. Feb 2026",
-    tags: ["KI-Tools", "Marketing", "Produktivitaet"],
-    upvotes: 35,
-    comments: 9,
-    views: 541,
-    xpReward: 50,
-    isFeatured: false,
-  },
-  {
-    id: "6",
-    title: "Midjourney-Prompts fuer Produktbilder",
-    excerpt:
-      "Erstelle professionelle Produktbilder mit Midjourney. Diese Best Practice enthaelt bewaehrte Prompt-Formeln, Stil-Referenzen und Nachbearbeitungstipps fuer Produkte im E-Commerce und Social Media.",
-    category: "ki-tools",
-    author: {
-      name: "Markus Koenig",
-      department: "Marketing",
-    },
-    createdAt: "3. Feb 2026",
-    tags: ["Midjourney", "Bilder", "Produktfotografie"],
-    upvotes: 28,
-    comments: 7,
-    views: 389,
-    xpReward: 50,
-    isFeatured: false,
-  },
-];
+  };
+}
 
 // -----------------------------------------------------------------------------
 // Page Component
 // -----------------------------------------------------------------------------
 
 export default function BestPracticesPage() {
+  const [practices, setPractices] = useState<BestPracticeCardData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [meta, setMeta] = useState<ApiMeta | null>(null);
+  const [page, setPage] = useState(1);
+
   const [activeCategory, setActiveCategory] = useState<CategoryFilterValue>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
 
-  // Filter and sort logic
-  const filteredPractices = useMemo(() => {
-    let result = demoBestPractices;
+  const fetchPractices = useCallback(async (currentPage: number) => {
+    setIsLoading(true);
+    setError(null);
 
-    // Filter by category
-    if (activeCategory !== "all") {
-      result = result.filter((bp) => bp.category === activeCategory);
+    try {
+      const params = new URLSearchParams();
+      params.set("status", "published");
+      params.set("page", String(currentPage));
+      params.set("pageSize", "20");
+      params.set("sort", SORT_TO_API[sortBy]);
+
+      if (activeCategory !== "all") {
+        params.set("category", UI_TO_DB_CATEGORY[activeCategory]);
+      }
+
+      if (searchQuery.trim()) {
+        params.set("search", searchQuery.trim());
+      }
+
+      const res = await fetch(`/api/best-practices?${params.toString()}`);
+
+      if (res.status === 401 || res.status === 403) {
+        window.location.href = "/login?redirectTo=/best-practices";
+        return;
+      }
+
+      const json = await res.json();
+
+      if (json.error) {
+        setError(json.error.message ?? "Unbekannter Fehler");
+        return;
+      }
+
+      setPractices((json.data ?? []).map(toCardData));
+      setMeta(json.meta ?? null);
+    } catch {
+      setError("Best Practices konnten nicht geladen werden.");
+    } finally {
+      setIsLoading(false);
     }
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (bp) =>
-          bp.title.toLowerCase().includes(query) ||
-          bp.excerpt.toLowerCase().includes(query) ||
-          bp.tags.some((tag) => tag.toLowerCase().includes(query))
-      );
-    }
-
-    // Sort
-    switch (sortBy) {
-      case "newest":
-        // Demo data is already sorted by date, keep as-is
-        break;
-      case "popular":
-        result = [...result].sort((a, b) => b.views - a.views);
-        break;
-      case "upvotes":
-        result = [...result].sort((a, b) => b.upvotes - a.upvotes);
-        break;
-    }
-
-    return result;
   }, [activeCategory, searchQuery, sortBy]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeCategory, searchQuery, sortBy]);
+
+  useEffect(() => {
+    fetchPractices(page);
+  }, [fetchPractices, page]);
 
   return (
     <div className="animate-fade-in">
@@ -247,12 +249,10 @@ export default function BestPracticesPage() {
 
           {sortMenuOpen && (
             <>
-              {/* Backdrop to close menu */}
               <div
                 className="fixed inset-0 z-10"
                 onClick={() => setSortMenuOpen(false)}
               />
-              {/* Dropdown menu */}
               <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-xl border border-surface-200 bg-white py-1 shadow-elevated">
                 {(Object.keys(sortLabels) as SortOption[]).map((option) => (
                   <button
@@ -278,47 +278,107 @@ export default function BestPracticesPage() {
       </div>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Results Count */}
+      {/* Error State */}
       {/* ------------------------------------------------------------------ */}
-      <div className="mt-5 flex items-center gap-2">
-        <Sparkles className="h-4 w-4 text-brand-accent-500" />
-        <span className="text-body-sm text-surface-500">
-          {filteredPractices.length}{" "}
-          {filteredPractices.length === 1 ? "Best Practice" : "Best Practices"}{" "}
-          gefunden
-        </span>
-      </div>
+      {error && (
+        <Card className="mt-5 border-error bg-error-light p-4">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-body-sm text-error-dark">{error}</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => fetchPractices(page)}
+            >
+              Erneut versuchen
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* Best Practices Grid */}
+      {/* Loading State */}
       {/* ------------------------------------------------------------------ */}
-      {filteredPractices.length > 0 ? (
-        <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
-          {filteredPractices.map((bp) => (
-            <BestPracticeCard key={bp.id} data={bp} />
-          ))}
+      {isLoading && (
+        <div className="mt-8 flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-primary-500" />
         </div>
-      ) : (
-        <div className="mt-8 rounded-2xl border-2 border-dashed border-surface-200 bg-surface-50/50 p-12 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary-100 shadow-sm">
-            <Sparkles className="h-8 w-8 text-brand-primary-600" />
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Results */}
+      {/* ------------------------------------------------------------------ */}
+      {!isLoading && !error && (
+        <>
+          {/* Results Count */}
+          <div className="mt-5 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-brand-accent-500" />
+            <span className="text-body-sm text-surface-500">
+              {meta?.totalCount ?? practices.length}{" "}
+              {(meta?.totalCount ?? practices.length) === 1
+                ? "Best Practice"
+                : "Best Practices"}{" "}
+              gefunden
+            </span>
           </div>
-          <h3 className="font-heading text-title-md font-semibold text-surface-900">
-            {searchQuery || activeCategory !== "all"
-              ? "Keine passenden Best Practices gefunden"
-              : "Noch keine Best Practices vorhanden"}
-          </h3>
-          <p className="mx-auto mb-6 mt-2 max-w-sm text-body text-surface-500">
-            {searchQuery || activeCategory !== "all"
-              ? "Versuche einen anderen Suchbegriff oder waehle eine andere Kategorie aus."
-              : "Teile dein Wissen mit der Community! Erstelle die erste Best Practice und erhalte 50 XP als Belohnung."}
-          </p>
-          <Link href="/best-practices/new">
-            <Button size="lg" iconLeft={<Plus />}>
-              Best Practice erstellen
-            </Button>
-          </Link>
-        </div>
+
+          {/* Empty State */}
+          {practices.length === 0 ? (
+            <div className="mt-8 rounded-2xl border-2 border-dashed border-surface-200 bg-surface-50/50 p-12 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary-100 shadow-sm">
+                <Sparkles className="h-8 w-8 text-brand-primary-600" />
+              </div>
+              <h3 className="font-heading text-title-md font-semibold text-surface-900">
+                {searchQuery || activeCategory !== "all"
+                  ? "Keine passenden Best Practices gefunden"
+                  : "Noch keine Best Practices verfuegbar. Schreibe die erste!"}
+              </h3>
+              <p className="mx-auto mb-6 mt-2 max-w-sm text-body text-surface-500">
+                {searchQuery || activeCategory !== "all"
+                  ? "Versuche einen anderen Suchbegriff oder waehle eine andere Kategorie aus."
+                  : "Teile dein Wissen mit der Community und erhalte 50 XP als Belohnung."}
+              </p>
+              <Link href="/best-practices/new">
+                <Button size="lg" iconLeft={<Plus />}>
+                  Best Practice erstellen
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <>
+              {/* Grid */}
+              <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+                {practices.map((bp) => (
+                  <BestPracticeCard key={bp.id} data={bp} />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {meta && meta.totalPages > 1 && (
+                <div className="mt-6 flex items-center justify-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={!meta.hasPreviousPage}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    Zurueck
+                  </Button>
+                  <span className="text-body-sm text-surface-500">
+                    Seite {meta.page} von {meta.totalPages}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={!meta.hasNextPage}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Weiter
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </>
       )}
     </div>
   );

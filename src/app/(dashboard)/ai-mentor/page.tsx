@@ -10,6 +10,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils/cn";
 import { useOrbPageState } from "@/components/features/ai-orb/use-orb-page-state";
 import { useOrb } from "@/components/features/ai-orb/orb-provider";
+import { useOrbChat } from "@/components/features/ai-orb/use-orb-chat";
 import { ChatMessage, TypingIndicator } from "@/components/features/ai-orb/chat-message";
 import { Card } from "@/components/ui/card";
 import {
@@ -87,13 +88,8 @@ export default function AIMentorPage() {
   // Set orb to "listening" state while on the AI Mentor page
   useOrbPageState("listening");
 
-  const {
-    messages,
-    addMessage,
-    isTyping,
-    setIsTyping,
-    setOrbState,
-  } = useOrb();
+  const { setOrbState } = useOrb();
+  const { messages, sendMessage, isStreaming, error } = useOrbChat();
 
   const [inputValue, setInputValue] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -102,7 +98,12 @@ export default function AIMentorPage() {
   // Auto-scroll to latest message
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+  }, [messages, isStreaming]);
+
+  // Mirror streaming state into Orb visual state.
+  useEffect(() => {
+    setOrbState(isStreaming ? "thinking" : "idle");
+  }, [isStreaming, setOrbState]);
 
   // Focus input on mount
   useEffect(() => {
@@ -112,163 +113,22 @@ export default function AIMentorPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Handle send message
+  // Handle send message — useOrbChat owns optimistic update, streaming and errors.
   const handleSend = useCallback(() => {
     const trimmed = inputValue.trim();
-    if (!trimmed || isTyping) return;
-
-    addMessage("user", trimmed);
+    if (!trimmed || isStreaming) return;
     setInputValue("");
-    setOrbState("thinking");
-
-    // Call AI chat API
-    setIsTyping(true);
-
-    fetch("/api/ai/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messages: [
-          {
-            role: "system",
-            content:
-              "Du bist der KI-Mentor der AI Hub Community. Du hilfst Community-Mitgliedern, KI im Arbeitsalltag einzusetzen. Antworte auf Deutsch, freundlich und praxisnah. Halte deine Antworten kompakt aber hilfreich.",
-          },
-          ...messages.map((m) => ({
-            role: m.role === "ai" ? "assistant" : "user",
-            content: m.content,
-          })),
-          { role: "user", content: trimmed },
-        ],
-        stream: false,
-      }),
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("API error");
-
-        const contentType = res.headers.get("content-type") || "";
-
-        if (contentType.includes("application/json")) {
-          const json = await res.json();
-          const aiContent =
-            json.content ||
-            json.data?.content ||
-            json.choices?.[0]?.message?.content ||
-            "Entschuldigung, ich konnte deine Anfrage nicht verarbeiten. Versuche es bitte erneut.";
-          addMessage("ai", aiContent);
-        } else {
-          // Handle streaming text response
-          const text = await res.text();
-          // Extract content from SSE stream
-          const lines = text.split("\n");
-          let content = "";
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6);
-              if (data === "[DONE]") break;
-              try {
-                const parsed = JSON.parse(data);
-                content +=
-                  parsed.choices?.[0]?.delta?.content ||
-                  parsed.content ||
-                  parsed.text ||
-                  "";
-              } catch {
-                content += data;
-              }
-            }
-          }
-          addMessage(
-            "ai",
-            content ||
-            "Entschuldigung, ich konnte deine Anfrage nicht verarbeiten."
-          );
-        }
-      })
-      .catch(() => {
-        addMessage(
-          "ai",
-          "Entschuldigung, es gab einen Fehler bei der Verbindung zum KI-Service. Bitte versuche es erneut. 🔄"
-        );
-      })
-      .finally(() => {
-        setIsTyping(false);
-        setOrbState("idle");
-      });
-  }, [inputValue, isTyping, addMessage, setIsTyping, setOrbState, messages]);
+    void sendMessage(trimmed);
+  }, [inputValue, isStreaming, sendMessage]);
 
   // Handle quick action click
   const handleQuickAction = useCallback(
     (prompt: string) => {
+      if (isStreaming) return;
       setInputValue("");
-      addMessage("user", prompt);
-      setOrbState("thinking");
-      setIsTyping(true);
-
-      fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: "system",
-              content:
-                "Du bist der KI-Mentor der AI Hub Community. Du hilfst Community-Mitgliedern, KI im Arbeitsalltag einzusetzen. Antworte auf Deutsch, freundlich und praxisnah.",
-            },
-            { role: "user", content: prompt },
-          ],
-          stream: false,
-        }),
-      })
-        .then(async (res) => {
-          if (!res.ok) throw new Error("API error");
-          const contentType = res.headers.get("content-type") || "";
-          if (contentType.includes("application/json")) {
-            const json = await res.json();
-            const aiContent =
-              json.content ||
-              json.data?.content ||
-              json.choices?.[0]?.message?.content ||
-              "Ich helfe dir gerne dabei! Was genau moechtest du wissen?";
-            addMessage("ai", aiContent);
-          } else {
-            const text = await res.text();
-            const lines = text.split("\n");
-            let content = "";
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const data = line.slice(6);
-                if (data === "[DONE]") break;
-                try {
-                  const parsed = JSON.parse(data);
-                  content +=
-                    parsed.choices?.[0]?.delta?.content ||
-                    parsed.content ||
-                    parsed.text ||
-                    "";
-                } catch {
-                  content += data;
-                }
-              }
-            }
-            addMessage(
-              "ai",
-              content || "Ich helfe dir gerne dabei! Was genau moechtest du wissen?"
-            );
-          }
-        })
-        .catch(() => {
-          addMessage(
-            "ai",
-            "Entschuldigung, es gab einen Fehler. Bitte versuche es erneut. 🔄"
-          );
-        })
-        .finally(() => {
-          setIsTyping(false);
-          setOrbState("idle");
-        });
+      void sendMessage(prompt);
     },
-    [addMessage, setIsTyping, setOrbState]
+    [isStreaming, sendMessage]
   );
 
   // Handle keyboard submit
@@ -335,7 +195,7 @@ export default function AIMentorPage() {
                 AI Mentor Chat
               </span>
               <span className="text-[11px] text-surface-400">
-                {isTyping
+                {isStreaming
                   ? "KI denkt nach..."
                   : "Powered by Multi-Provider AI"}
               </span>
@@ -395,11 +255,25 @@ export default function AIMentorPage() {
           {hasMessages && (
             <div className="py-4">
               {messages.map((message) => (
-                <ChatMessage key={message.id} message={message} />
+                <ChatMessage
+                  key={message.id}
+                  message={{
+                    id: message.id,
+                    role: message.role === "assistant" ? "ai" : "user",
+                    content: message.content,
+                    timestamp: message.timestamp,
+                  }}
+                />
               ))}
 
               {/* Typing indicator */}
-              {isTyping && <TypingIndicator />}
+              {isStreaming && <TypingIndicator />}
+
+              {error && (
+                <p className="px-5 py-2 text-xs text-red-500" role="alert">
+                  {error}
+                </p>
+              )}
 
               {/* Scroll anchor */}
               <div ref={chatEndRef} />
@@ -415,7 +289,7 @@ export default function AIMentorPage() {
                 key={label}
                 type="button"
                 onClick={() => handleQuickAction(prompt)}
-                disabled={isTyping}
+                disabled={isStreaming}
                 className={cn(
                   "flex shrink-0 items-center gap-1.5 rounded-full",
                   "border border-surface-200 bg-white px-3 py-1.5",
@@ -462,7 +336,7 @@ export default function AIMentorPage() {
             <button
               type="button"
               onClick={handleSend}
-              disabled={!inputValue.trim() || isTyping}
+              disabled={!inputValue.trim() || isStreaming}
               className={cn(
                 "flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl",
                 "bg-gradient-to-br from-brand-primary-500 to-brand-primary-600 text-white shadow-lg shadow-brand-primary-500/30",

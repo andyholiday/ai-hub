@@ -33,6 +33,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatMessage, TypingIndicator } from "./chat-message";
 import { useOrb, type OrbState } from "./orb-provider";
+import { useOrbChat } from "./use-orb-chat";
 
 // ---------------------------------------------------------------------------
 // Status labels
@@ -94,25 +95,25 @@ const panelVariants = {
 // Component
 // ---------------------------------------------------------------------------
 export function ChatSplitView() {
-    const {
-        minimize,
-        messages,
-        addMessage,
-        isTyping,
-        setIsTyping,
-        pageContext,
-        orbState,
-    } = useOrb();
+    const { minimize, pageContext, orbState, setOrbState } = useOrb();
+
+    // useOrbChat owns all chat state (ADR-005 consolidation)
+    const { messages, sendMessage, isStreaming, error } = useOrbChat();
 
     const [inputValue, setInputValue] = useState("");
     const [isFullscreen, setIsFullscreen] = useState(false);
     const chatEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
+    // Sync orb animation state with streaming
+    useEffect(() => {
+        setOrbState(isStreaming ? "thinking" : "idle");
+    }, [isStreaming, setOrbState]);
+
     // Auto-scroll
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, isTyping]);
+    }, [messages, isStreaming]);
 
     // Focus input on mount
     useEffect(() => {
@@ -129,66 +130,20 @@ export function ChatSplitView() {
         return () => window.removeEventListener("keydown", handleEsc);
     }, [minimize]);
 
-    // POST /api/ai/chat — non-streaming. Returns the assistant text or throws.
-    const callChatApi = useCallback(
-        async (userText: string): Promise<string> => {
-            const apiMessages = [
-                ...messages.map((m) => ({
-                    role: m.role === "ai" ? ("assistant" as const) : ("user" as const),
-                    content: m.content,
-                })),
-                { role: "user" as const, content: userText },
-            ];
-            const res = await fetch("/api/ai/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ messages: apiMessages, stream: false }),
-            });
-            if (!res.ok) {
-                const errJson = (await res.json().catch(() => ({}))) as { error?: string };
-                throw new Error(errJson.error ?? `API-Fehler ${res.status}`);
-            }
-            const data = (await res.json()) as { message?: { content?: string } };
-            return data.message?.content ?? "(keine Antwort erhalten)";
-        },
-        [messages],
-    );
-
     // Handle send message
-    const handleSend = useCallback(async () => {
+    const handleSend = useCallback(() => {
         const trimmed = inputValue.trim();
-        if (!trimmed) return;
-
-        addMessage("user", trimmed);
+        if (!trimmed || isStreaming) return;
         setInputValue("");
-        setIsTyping(true);
-        try {
-            const reply = await callChatApi(trimmed);
-            addMessage("ai", reply);
-        } catch (err) {
-            const msg = err instanceof Error ? err.message : "Unbekannter Fehler";
-            addMessage("ai", `Fehler beim Abrufen der Antwort: ${msg}`);
-        } finally {
-            setIsTyping(false);
-        }
-    }, [inputValue, addMessage, setIsTyping, callChatApi]);
+        void sendMessage(trimmed);
+    }, [inputValue, isStreaming, sendMessage]);
 
     // Handle quick action
     const handleQuickAction = useCallback(
-        async (action: string) => {
-            addMessage("user", action);
-            setIsTyping(true);
-            try {
-                const reply = await callChatApi(action);
-                addMessage("ai", reply);
-            } catch (err) {
-                const msg = err instanceof Error ? err.message : "Unbekannter Fehler";
-                addMessage("ai", `Fehler beim Abrufen der Antwort: ${msg}`);
-            } finally {
-                setIsTyping(false);
-            }
+        (action: string) => {
+            void sendMessage(action);
         },
-        [addMessage, setIsTyping, callChatApi],
+        [sendMessage],
     );
 
     // Keyboard submit
@@ -329,10 +284,25 @@ export function ChatSplitView() {
                     )}
 
                     {messages.map((message) => (
-                        <ChatMessage key={message.id} message={message} />
+                        <ChatMessage
+                            key={message.id}
+                            message={{
+                                id: message.id,
+                                // Mapping: hook uses "assistant", ChatMessage expects "ai"
+                                role: message.role === "assistant" ? "ai" : "user",
+                                content: message.content,
+                                timestamp: message.timestamp,
+                            }}
+                        />
                     ))}
 
-                    {isTyping && <TypingIndicator />}
+                    {isStreaming && <TypingIndicator />}
+
+                    {error && (
+                        <p className="px-5 py-2 text-xs text-red-500" role="alert">
+                            {error}
+                        </p>
+                    )}
 
                     <div ref={chatEndRef} />
                 </div>
@@ -385,7 +355,7 @@ export function ChatSplitView() {
                         <button
                             type="button"
                             onClick={handleSend}
-                            disabled={!inputValue.trim()}
+                            disabled={!inputValue.trim() || isStreaming}
                             className={cn(
                                 "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
                                 "bg-gradient-to-r from-brand-primary-500 to-brand-primary-600 text-white",

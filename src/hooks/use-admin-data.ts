@@ -89,6 +89,7 @@ const PROVIDER_DISPLAY_META: Record<
   copilot: { icon: "\uD83D\uDD37", iconBg: "#F3E5F5" },
   groq: { icon: "\u26A1", iconBg: "#FFF8E1" },
   mistral: { icon: "\uD83C\uDF0A", iconBg: "#E0F2F1" },
+  openrouter: { icon: "\uD83D\uDD00", iconBg: "#EDE7F6" },
 };
 
 const DEFAULT_ICON = { icon: "\uD83E\uDD16", iconBg: "#F5F5F5" };

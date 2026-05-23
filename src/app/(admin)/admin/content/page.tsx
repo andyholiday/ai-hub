@@ -1,18 +1,25 @@
-// Server Component (no client-side interactivity needed for this placeholder)
+import { Metadata } from 'next';
 
-export const metadata = {
-  title: "Content-Verwaltung | Admin",
-  description: "Content-Verwaltung fuer die Administration",
+export const metadata: Metadata = {
+  title: 'Admin · Content',
 };
 
-export default function AdminContentPage() {
+export default function ContentAdminPage() {
   return (
-    <div className="p-8">
-      <h1 className="font-display text-2xl font-bold text-surface-900">
-        Content-Verwaltung
-      </h1>
-      <p className="mt-2 text-surface-500">
-        Die Content-Verwaltung wird bald verfuegbar sein.
+    <div className="p-8 space-y-4">
+      <h1 className="font-display text-2xl font-bold text-surface-900">Content-Verwaltung</h1>
+      <p className="text-surface-500">
+        Dieses Modul ist im Backlog. Tracking-Issue:{' '}
+        <a
+          href="https://github.com/andyholiday/ai-hub/issues"
+          className="underline"
+        >
+          Issues
+        </a>
+        .
+      </p>
+      <p className="text-sm text-surface-400">
+        Status: Planung. Reale Implementation folgt in einem spaeterem Wave.
       </p>
     </div>
   );

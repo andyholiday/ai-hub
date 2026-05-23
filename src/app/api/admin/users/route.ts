@@ -1,7 +1,21 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
 import { requireAdmin } from "@/lib/api/admin-auth";
-import { apiSuccess, apiInternalError } from "@/lib/api/response";
+import { apiSuccess, apiInternalError, apiBadRequest } from "@/lib/api/response";
 import { createAdminClient } from "@/lib/supabase/admin";
+
+// ---------------------------------------------------------------------------
+// F01 Fix: Zod-Schema fuer PATCH-Body — verhindert role="" Header-Trigger
+// ---------------------------------------------------------------------------
+
+const PatchUserSchema = z.object({
+  id: z.string().min(1),
+  role: z.enum(["user", "admin", "super_admin"]).optional(),
+  is_approved: z.boolean().optional(),
+  full_name: z.string().optional(),
+  department: z.string().optional(),
+  position: z.string().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -93,19 +107,34 @@ export async function PATCH(req: NextRequest) {
         const auth = await requireAdmin(req);
         if ("response" in auth) return auth.response;
 
-        const body = await req.json();
-        const { id, is_approved, role, full_name, department, position } = body;
+        const rawBody: unknown = await req.json();
+        const parsed = PatchUserSchema.safeParse(rawBody);
+        if (!parsed.success) {
+            return apiBadRequest("INVALID_BODY");
+        }
 
-        if (!id) return apiInternalError("Missing user id");
+        const { id, is_approved, role, full_name, department, position } = parsed.data;
 
         const updateData: Record<string, unknown> = {};
         if (typeof is_approved === "boolean") updateData.is_approved = is_approved;
-        if (role) updateData.role = role;
+        if (role !== undefined) updateData.role = role;
         if (typeof full_name === "string") updateData.full_name = full_name;
         if (typeof department === "string") updateData.department = department;
         if (typeof position === "string") updateData.position = position;
 
         const supabase = createAdminClient();
+
+        // Fetch current role to determine if role actually changed (ADR-016)
+        let previousRole: string | undefined;
+        if (role !== undefined) {
+            const { data: current } = await supabase
+                .from("profiles")
+                .select("role")
+                .eq("id", id)
+                .single();
+            previousRole = current?.role;
+        }
+
         const { data, error } = await supabase
             .from("profiles")
             .update(updateData)
@@ -115,7 +144,15 @@ export async function PATCH(req: NextRequest) {
 
         if (error) return apiInternalError(error.message);
 
-        return apiSuccess(data);
+        // Signal to client that a role change happened (ADR-016).
+        // Client should call supabase.auth.refreshSession() to sync JWT.
+        // Only set header when role is explicitly in body AND differs from DB value.
+        const roleChanged = role !== undefined && role !== previousRole;
+        const res = apiSuccess(data);
+        if (roleChanged) {
+            res.headers.set("X-Role-Changed", "true");
+        }
+        return res;
     } catch (err) {
         return apiInternalError(err instanceof Error ? err.message : "Unknown error");
     }
