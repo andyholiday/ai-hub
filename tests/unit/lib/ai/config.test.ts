@@ -59,7 +59,7 @@ describe("DEFAULT_ROUTING_STRATEGY", () => {
 });
 
 describe("DEFAULT_FALLBACK_CHAIN", () => {
-  it("should contain all six providers in order", () => {
+  it("should contain all seven providers in order", () => {
     expect(DEFAULT_FALLBACK_CHAIN).toEqual([
       "gemini",
       "openai",
@@ -67,6 +67,7 @@ describe("DEFAULT_FALLBACK_CHAIN", () => {
       "groq",
       "mistral",
       "copilot",
+      "openrouter",
     ]);
   });
 });
