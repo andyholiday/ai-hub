@@ -242,8 +242,8 @@ export async function POST(
       });
     }
 
-    // Award XP for lesson completion (fire-and-forget)
-    awardXP(supabase, auth.userId, "lesson_completed", LESSON_XP_REWARD).then(
+    // Award XP for lesson completion (fire-and-forget) — M-04 idempotency key
+    awardXP(supabase, auth.userId, "lesson_completed", LESSON_XP_REWARD, `lesson:${lessonId}`).then(
       () => {
         checkAndAwardBadges(supabase, auth.userId);
         checkAndUnlockAchievements(supabase, auth.userId).catch(() => { });

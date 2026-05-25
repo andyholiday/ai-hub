@@ -23,12 +23,31 @@ vi.mock('@/lib/search/hybrid-search', () => ({
   hybridSearchBestPractices: vi.fn(),
 }));
 
-// Feature-Registry NICHT mocken — wir testen den echten defaultEnabled=false Guard.
+// Feature-Registry mocken — per-Test-Kontrolle ueber defaultEnabled.
+// Default: disabled (wie der urspruengliche Registry-Stand vor dem Command-Palette-Flip).
+vi.mock('@/lib/features/feature-registry', () => ({
+  getFeature: vi.fn().mockReturnValue({ defaultEnabled: false, id: 'hybrid-search' }),
+  FEATURE_REGISTRY: [],
+  validateRegistry: vi.fn(),
+}));
 
 import { requireAuth } from '@/lib/api/require-auth';
 import { rateLimit } from '@/lib/api/rate-limit';
 import { hybridSearchBestPractices } from '@/lib/search/hybrid-search';
+import { getFeature } from '@/lib/features/feature-registry';
 import { POST } from '@/app/api/search/hybrid/route';
+
+// ---------------------------------------------------------------------------
+// Global beforeEach: Reset mock call counts between tests.
+// (vi.mock top-level registrations and their default implementations persist;
+//  only call history and mockReturnValueOnce overrides are cleared.)
+// ---------------------------------------------------------------------------
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  // Restore the default: disabled (so feature-flag tests need no extra setup)
+  vi.mocked(getFeature).mockReturnValue({ defaultEnabled: false, id: 'hybrid-search' } as ReturnType<typeof getFeature>);
+});
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -157,30 +176,27 @@ describe('POST /api/search/hybrid — Rate-Limit', () => {
 // ---------------------------------------------------------------------------
 
 describe('POST /api/search/hybrid — Erfolg', () => {
-  it('gibt 200 mit Ergebnissen zurueck wenn Feature aktiv (via Mock)', async () => {
+  it('gibt 200 mit Ergebnissen zurueck wenn Feature aktiv', async () => {
     vi.mocked(requireAuth).mockResolvedValue(MOCK_AUTH_SUCCESS);
     vi.mocked(rateLimit).mockResolvedValue(MOCK_RATE_LIMIT_OK);
     vi.mocked(hybridSearchBestPractices).mockResolvedValue(MOCK_RESULTS);
+    vi.mocked(getFeature).mockReturnValueOnce({ defaultEnabled: true, id: 'hybrid-search' } as ReturnType<typeof getFeature>);
 
-    // Wir mocken getFeature so, dass hybrid-search als aktiv gilt
-    vi.doMock('@/lib/features/feature-registry', () => ({
-      getFeature: vi.fn().mockReturnValue({ defaultEnabled: true, id: 'hybrid-search' }),
-      FEATURE_REGISTRY: [],
-      validateRegistry: vi.fn(),
-    }));
-
-    // Da das Modul bereits gecacht ist, testen wir stattdessen die Route-Logik
-    // direkt ueber den hybridSearchBestPractices-Mock-Aufruf, der durch
-    // den Feature-Flag-Guard kontrolliert wird. Fuer Wave 2 POC ist die
-    // 403-Antwort das erwartete Verhalten.
     const res = await POST(makeRequest({ query: 'semantic search', topK: 5 }));
-    // 403 ist korrekt fuer Wave 2 (defaultEnabled=false)
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(200);
+
+    const json = await res.json() as { data: { results: typeof MOCK_RESULTS } };
+    expect(json.data.results).toEqual(MOCK_RESULTS);
+    expect(hybridSearchBestPractices).toHaveBeenCalledWith(
+      { query: 'semantic search', topK: 5, weights: undefined },
+      'user-123',
+    );
   });
 
   it('hybridSearchBestPractices wird nicht aufgerufen wenn Feature deaktiviert', async () => {
     vi.mocked(requireAuth).mockResolvedValue(MOCK_AUTH_SUCCESS);
     vi.mocked(rateLimit).mockResolvedValue(MOCK_RATE_LIMIT_OK);
+    // getFeature gibt per Default defaultEnabled: false (top-level mock)
 
     await POST(makeRequest({ query: 'test', topK: 5 }));
 

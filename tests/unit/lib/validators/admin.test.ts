@@ -9,6 +9,8 @@ import {
   costQuerySchema,
   updatePromptSchema,
   updateFeatureSchema,
+  userRoleEnum,
+  createUserSchema,
 } from "@/lib/validators/admin";
 
 const VALID_UUID = "550e8400-e29b-41d4-a716-446655440000";
@@ -144,6 +146,54 @@ describe("updateProviderSchema", () => {
       model: "",
     });
     expect(result.success).toBe(false);
+  });
+
+  // M-01: api_endpoint field
+  it("should accept a valid api_endpoint URL", () => {
+    const result = updateProviderSchema.safeParse({
+      id: VALID_UUID,
+      api_endpoint: "https://api.openai.com/v1",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("should accept null for api_endpoint (clear to default)", () => {
+    const result = updateProviderSchema.safeParse({
+      id: VALID_UUID,
+      api_endpoint: null,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.api_endpoint).toBeNull();
+    }
+  });
+
+  it("should accept api_endpoint omitted (no change)", () => {
+    const result = updateProviderSchema.safeParse({ id: VALID_UUID });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.api_endpoint).toBeUndefined();
+    }
+  });
+
+  it("should reject a plain string that is not a URL for api_endpoint", () => {
+    const result = updateProviderSchema.safeParse({
+      id: VALID_UUID,
+      api_endpoint: "not-a-url",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("should strip unknown 'endpoint' field (Zod strips unknown keys)", () => {
+    const result = updateProviderSchema.safeParse({
+      id: VALID_UUID,
+      endpoint: "https://api.openai.com/v1", // wrong key — should be api_endpoint
+    });
+    // Zod strips unknown keys by default; the parse succeeds but endpoint is not in output
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect((result.data as Record<string, unknown>).endpoint).toBeUndefined();
+    }
   });
 });
 
@@ -352,5 +402,90 @@ describe("updateFeatureSchema", () => {
       enabled: true,
     });
     expect(result.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// userRoleEnum (F06)
+// ---------------------------------------------------------------------------
+
+describe("userRoleEnum", () => {
+  it("should accept all DB-defined role values", () => {
+    for (const role of ["user", "moderator", "admin", "super_admin"] as const) {
+      const result = userRoleEnum.safeParse(role);
+      expect(result.success, `'${role}' should be accepted`).toBe(true);
+    }
+  });
+
+  it("should reject unlisted values", () => {
+    for (const bad of ["god_mode", "superuser", "root", "", "ADMIN"]) {
+      const result = userRoleEnum.safeParse(bad);
+      expect(result.success, `'${bad}' should be rejected`).toBe(false);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createUserSchema (F06)
+// ---------------------------------------------------------------------------
+
+describe("createUserSchema", () => {
+  const valid = {
+    email: "user@example.com",
+    password: "secret123",
+    full_name: "Jane Doe",
+  };
+
+  it("should accept minimal valid input", () => {
+    expect(createUserSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("should accept valid input with all optional fields", () => {
+    const result = createUserSchema.safeParse({
+      ...valid,
+      role: "admin",
+      is_approved: true,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("should reject invalid email", () => {
+    expect(createUserSchema.safeParse({ ...valid, email: "not-an-email" }).success).toBe(false);
+  });
+
+  it("should reject password shorter than 8 characters", () => {
+    expect(createUserSchema.safeParse({ ...valid, password: "abc" }).success).toBe(false);
+  });
+
+  it("should reject empty full_name", () => {
+    expect(createUserSchema.safeParse({ ...valid, full_name: "" }).success).toBe(false);
+  });
+
+  it("should reject invalid role value", () => {
+    expect(createUserSchema.safeParse({ ...valid, role: "god_mode" }).success).toBe(false);
+  });
+
+  it("should accept role omitted (optional)", () => {
+    const { role: _r, ...withoutRole } = { ...valid, role: "user" };
+    void _r;
+    expect(createUserSchema.safeParse(withoutRole).success).toBe(true);
+  });
+
+  it("should reject missing email", () => {
+    const { email: _e, ...without } = valid;
+    void _e;
+    expect(createUserSchema.safeParse(without).success).toBe(false);
+  });
+
+  it("should reject missing password", () => {
+    const { password: _p, ...without } = valid;
+    void _p;
+    expect(createUserSchema.safeParse(without).success).toBe(false);
+  });
+
+  it("should reject missing full_name", () => {
+    const { full_name: _f, ...without } = valid;
+    void _f;
+    expect(createUserSchema.safeParse(without).success).toBe(false);
   });
 });

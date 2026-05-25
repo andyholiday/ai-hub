@@ -49,9 +49,9 @@ const variantStyles: Record<ButtonVariant, string> = {
   ].join(" "),
 
   ghost: [
-    "bg-transparent text-surface-700",
-    "border border-surface-300",
-    "hover:bg-surface-100 active:bg-surface-200",
+    "bg-transparent text-surface-700 dark:text-surface-300",
+    "border border-surface-300 dark:border-surface-700",
+    "hover:bg-surface-100 active:bg-surface-200 dark:hover:bg-surface-800 dark:active:bg-surface-700",
     "focus-visible:ring-brand-primary-500",
   ].join(" "),
 

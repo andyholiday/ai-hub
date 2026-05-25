@@ -9,6 +9,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { OrbProvider } from "@/components/features/ai-orb";
+import { CommandPaletteTrigger } from "@/components/shared/command-palette";
 
 // ---------------------------------------------------------------------------
 // Lazy-load the Cosmos Companion (pulls in framer-motion ~45 kB gzipped).
@@ -36,7 +37,7 @@ export default function DashboardLayout({
         </div>
 
         {/* Main Content Area */}
-        <main className="flex flex-1 flex-col overflow-x-hidden bg-[#F7F8FA]">
+        <main className="flex flex-1 flex-col overflow-x-hidden bg-surface-50 dark:bg-surface-900">
           {/* Header */}
           <div className="px-5 pt-6 sm:px-7 lg:px-8 lg:pt-7">
             <Header />
@@ -54,6 +55,9 @@ export default function DashboardLayout({
 
       {/* Cosmos Companion – lazy-loaded floating KI companion */}
       <CosmosCompanionLazy />
+
+      {/* Command Palette – Cmd/Ctrl+K global search + navigation */}
+      <CommandPaletteTrigger />
     </OrbProvider>
   );
 }

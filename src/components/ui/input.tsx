@@ -92,8 +92,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <label
             htmlFor={inputId}
             className={cn(
-              "text-body-sm font-medium text-surface-700",
-              disabled && "text-surface-400"
+              "text-body-sm font-medium text-surface-700 dark:text-surface-300",
+              disabled && "text-surface-500 dark:text-surface-600"
             )}
           >
             {label}
@@ -134,13 +134,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             }
             className={cn(
               // Base
-              "w-full rounded-[10px] border bg-white",
-              "font-sans text-surface-900 placeholder:text-surface-400",
+              "w-full rounded-[10px] border bg-white dark:bg-surface-900",
+              "font-sans text-surface-900 placeholder:text-surface-400 dark:text-surface-50 dark:placeholder:text-surface-600",
               "transition-all duration-200 ease-out",
               // Focus
               "focus:outline-none focus:ring-2 focus:ring-offset-0",
               // Disabled
-              "disabled:cursor-not-allowed disabled:bg-surface-100 disabled:text-surface-400",
+              "disabled:cursor-not-allowed disabled:bg-surface-100 disabled:text-surface-400 dark:disabled:bg-surface-800 dark:disabled:text-surface-600",
               // Size
               sizes.input,
               prefixIcon && sizes.inputWithPrefix,
@@ -149,8 +149,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               hasError
                 ? "border-error text-error-dark focus:border-error focus:ring-error/30"
                 : [
-                    "border-surface-300",
-                    "hover:border-surface-400",
+                    "border-surface-300 dark:border-surface-700",
+                    "hover:border-surface-400 dark:hover:border-surface-600",
                     "focus:border-brand-primary-500 focus:ring-brand-primary-500/20",
                   ].join(" "),
               className
@@ -179,7 +179,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {hint && !error && (
           <p
             id={`${inputId}-hint`}
-            className="text-caption text-surface-500"
+            className="text-caption text-surface-600 dark:text-surface-400"
           >
             {hint}
           </p>

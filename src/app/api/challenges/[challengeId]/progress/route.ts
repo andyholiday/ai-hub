@@ -9,6 +9,7 @@
 // =============================================================================
 
 import { NextRequest } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireAuth } from "@/lib/api/require-auth";
 import {
   apiSuccess,
@@ -18,6 +19,7 @@ import {
   apiValidationError,
 } from "@/lib/api/response";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Database } from "@/lib/supabase/types";
 import { updateProgressSchema } from "@/lib/validators/challenges";
 import { awardXP } from "@/lib/gamification/xp";
 
@@ -62,7 +64,11 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
     const { eventType } = parsed.data;
     const increment = EVENT_INCREMENT[eventType] ?? 10;
-    const supabase = createAdminClient();
+    // User-context for queries/updates on user-owned data (RLS enforced).
+    // Admin-client only retained for `challenge_completions` upsert (no user
+    // INSERT policy) and `awardXP` (service_role RPC).
+    const supabase = auth.supabase as unknown as SupabaseClient<Database>;
+    const admin = createAdminClient();
 
     // Check if user has joined this challenge
     const { data: userChallenge, error: fetchError } = await supabase
@@ -116,11 +122,8 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
       if (challenge) {
         // Upsert with ignoreDuplicates=true ensures XP is awarded exactly once.
-        // If 0 rows are inserted the challenge was already completed — skip XP.
-        // challenge_completions added in migration 00028; cast via 'any' until
-        // types are regenerated after migration is applied.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table added in 00028, types not yet regenerated
-        const { data: insertedRows, error: insertError } = await (supabase as any)
+        // Service-role: challenge_completions has no user-INSERT RLS policy.
+        const { data: insertedRows, error: insertError } = await admin
           .from("challenge_completions")
           .upsert(
             { user_id: auth.userId, challenge_id: challengeId, xp_awarded: challenge.xp_reward },
@@ -132,14 +135,16 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
           return apiInternalError(insertError.message);
         }
 
-        if (((insertedRows as unknown[]) ?? []).length > 0) {
+        if ((insertedRows ?? []).length > 0) {
+          // awardXP uses the `award_xp` RPC (service_role only).
           xpResult = await awardXP(
-            supabase,
+            admin,
             auth.userId,
             `challenge_completed:${challengeId}`,
             challenge.xp_reward
           );
 
+          // notifications_insert_service policy permits user_id = auth.uid().
           await supabase.from("notifications").insert({
             user_id: auth.userId,
             type: "challenge",

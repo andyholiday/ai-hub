@@ -161,7 +161,7 @@ function mapProviderToCard(p: AIProviderRow, allProviders: AIProviderRow[]): Pro
     name: p.display_name,
     icon: meta.icon,
     iconBg: meta.iconBg,
-    endpoint: p.api_endpoint,
+    endpoint: p.api_endpoint ?? "",
     model: p.model,
     apiKeyMasked: p.api_key_encrypted ?? "Nicht hinterlegt",
     temperature: p.temperature,
@@ -289,6 +289,7 @@ export interface AdminDataState {
 
   // --- Prompts ---
   prompts: SystemPromptItem[];
+  promptRows: SystemPromptRow[];
   promptsLoading: boolean;
   promptsError: string | null;
 
@@ -681,6 +682,7 @@ export function useAdminData(): AdminDataState {
 
     // Prompts
     prompts,
+    promptRows,
     promptsLoading,
     promptsError,
 

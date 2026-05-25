@@ -1,8 +1,11 @@
 import { NextRequest } from "next/server";
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/api/admin-auth";
-import { apiSuccess, apiInternalError, apiBadRequest } from "@/lib/api/response";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { apiSuccess, apiInternalError, apiBadRequest, apiValidationError } from "@/lib/api/response";
+import { rateLimit } from "@/lib/api/rate-limit";
+import { createAdminClient, AdminClientConfigError } from "@/lib/supabase/admin";
+import { createUserSchema } from "@/lib/validators/admin";
 
 // ---------------------------------------------------------------------------
 // F01 Fix: Zod-Schema fuer PATCH-Body — verhindert role="" Header-Trigger
@@ -17,12 +20,25 @@ const PatchUserSchema = z.object({
   position: z.string().optional(),
 });
 
+// ---------------------------------------------------------------------------
+// F06 Fix: Zod-Schema fuer DELETE-Body — verhindert fehlende/ungueltige UUID
+// ---------------------------------------------------------------------------
+
+const DeleteUserSchema = z.object({
+  id: z.string().uuid(),
+});
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
     try {
         const auth = await requireAdmin(req);
         if ("response" in auth) return auth.response;
+
+        const rl = await rateLimit(req, "admin", auth.userId);
+        if (!rl.success) {
+            return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
+        }
 
         const supabase = createAdminClient();
 
@@ -62,7 +78,8 @@ export async function GET(req: NextRequest) {
                     }
                     break batchLoop;
                 }
-                return apiInternalError(authError.message);
+                console.error("[admin/users] GET auth pagination fallback failed:", authError);
+                return apiInternalError("Benutzerliste konnte nicht geladen werden");
             }
             allAuthUsers.push(...(authData.users ?? []));
             if ((authData.users ?? []).length < PER_PAGE) break;
@@ -80,7 +97,10 @@ export async function GET(req: NextRequest) {
             .select("id, full_name, role, created_at, last_login_at, xp, level, department, position, is_approved")
             .order("created_at", { ascending: false });
 
-        if (profileError) return apiInternalError(profileError.message);
+        if (profileError) {
+            console.error("[admin/users] GET profiles query failed:", profileError);
+            return apiInternalError("Benutzerliste konnte nicht geladen werden");
+        }
 
         const users = (profileData || []).map(p => ({
             id: p.id,
@@ -97,7 +117,10 @@ export async function GET(req: NextRequest) {
         }));
 
         return apiSuccess(users);
-    } catch {
+    } catch (err) {
+        if (err instanceof AdminClientConfigError) {
+            return apiInternalError(err.message);
+        }
         return apiInternalError();
     }
 }
@@ -106,6 +129,11 @@ export async function PATCH(req: NextRequest) {
     try {
         const auth = await requireAdmin(req);
         if ("response" in auth) return auth.response;
+
+        const rl = await rateLimit(req, "admin", auth.userId);
+        if (!rl.success) {
+            return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
+        }
 
         const rawBody: unknown = await req.json();
         const parsed = PatchUserSchema.safeParse(rawBody);
@@ -142,7 +170,10 @@ export async function PATCH(req: NextRequest) {
             .select()
             .single();
 
-        if (error) return apiInternalError(error.message);
+        if (error) {
+            console.error("[admin/users] PATCH profiles update failed:", error);
+            return apiInternalError("Benutzer konnte nicht aktualisiert werden");
+        }
 
         // Signal to client that a role change happened (ADR-016).
         // Client should call supabase.auth.refreshSession() to sync JWT.
@@ -154,7 +185,11 @@ export async function PATCH(req: NextRequest) {
         }
         return res;
     } catch (err) {
-        return apiInternalError(err instanceof Error ? err.message : "Unknown error");
+        if (err instanceof AdminClientConfigError) {
+            return apiInternalError(err.message);
+        }
+        console.error("[admin/users] PATCH unexpected error:", err);
+        return apiInternalError("Benutzer konnte nicht aktualisiert werden");
     }
 }
 
@@ -163,12 +198,18 @@ export async function POST(req: NextRequest) {
         const auth = await requireAdmin(req);
         if ("response" in auth) return auth.response;
 
-        const body = await req.json();
-        const { email, password, full_name, is_approved, role } = body;
-
-        if (!email || !password || !full_name) {
-            return apiInternalError("Email, password and full name are required");
+        const rl = await rateLimit(req, "admin", auth.userId);
+        if (!rl.success) {
+            return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
         }
+
+        const rawBody: unknown = await req.json();
+        const parsed = createUserSchema.safeParse(rawBody);
+        if (!parsed.success) {
+            return apiValidationError(parsed.error);
+        }
+
+        const { email, password, full_name, is_approved, role } = parsed.data;
 
         const supabase = createAdminClient();
 
@@ -182,7 +223,10 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        if (createError) return apiInternalError(createError.message);
+        if (createError) {
+            console.error("[admin/users] POST createUser failed:", createError);
+            return apiInternalError("Benutzer konnte nicht erstellt werden");
+        }
 
         // Update the profile manually via trigger or explicitly to set is_approved and role
         if (userData.user && (is_approved || role)) {
@@ -197,7 +241,11 @@ export async function POST(req: NextRequest) {
 
         return apiSuccess(userData.user);
     } catch (err) {
-        return apiInternalError(err instanceof Error ? err.message : "Unknown error");
+        if (err instanceof AdminClientConfigError) {
+            return apiInternalError(err.message);
+        }
+        console.error("[admin/users] POST unexpected error:", err);
+        return apiInternalError("Benutzer konnte nicht erstellt werden");
     }
 }
 
@@ -206,16 +254,62 @@ export async function DELETE(req: NextRequest) {
         const auth = await requireAdmin(req);
         if ("response" in auth) return auth.response;
 
-        const body = await req.json();
-        const { id } = body;
+        const rl = await rateLimit(req, "admin", auth.userId);
+        if (!rl.success) {
+            return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
+        }
 
-        if (!id) return apiInternalError("Missing user id");
+        const rawBody: unknown = await req.json();
+        const parsed = DeleteUserSchema.safeParse(rawBody);
+        if (!parsed.success) {
+            return apiValidationError(parsed.error);
+        }
+        const { id } = parsed.data;
+
+        // F08 Fix: sha256(x-forwarded-for) fuer GDPR-Audit-Log
+        const rawIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+        const ip_hash = rawIp
+            ? createHash("sha256").update(rawIp).digest("hex")
+            : null;
 
         const supabase = createAdminClient();
 
+        // GDPR Art. 30: write erasure audit entry BEFORE deleting the user.
+        const { data: erasureRow, error: insertError } = await supabase
+            .from("gdpr_erasure_log")
+            .insert({ user_id: id, ip_hash })
+            .select("id")
+            .single();
+
+        if (insertError || !erasureRow) {
+            return apiInternalError("Audit-Log konnte nicht geschrieben werden.");
+        }
+
         // 1. Delete from Supabase Auth
         const { error: authError } = await supabase.auth.admin.deleteUser(id);
-        if (authError) return apiInternalError(authError.message);
+
+        if (authError) {
+            // Audit record stays with deleted_at = NULL as a failed-attempt marker.
+            console.error("[admin/users] DELETE auth.deleteUser failed:", authError);
+            return apiInternalError("Benutzer konnte nicht gelöscht werden");
+        }
+
+        // Mark erasure as complete in the audit log.
+        const { error: updateError } = await supabase
+            .from("gdpr_erasure_log")
+            .update({ deleted_at: new Date().toISOString() })
+            .eq("id", erasureRow.id);
+
+        if (updateError) {
+            console.error(
+                JSON.stringify({
+                    event: "erasure_log_update_failed",
+                    user_id: id,
+                    erasure_log_id: erasureRow.id,
+                    error: updateError.message,
+                }),
+            );
+        }
 
         // 2. Delete profile row (may already be cascaded, but ensure cleanup)
         const { error: profileError } = await supabase
@@ -223,10 +317,17 @@ export async function DELETE(req: NextRequest) {
             .delete()
             .eq("id", id);
 
-        if (profileError) return apiInternalError(profileError.message);
+        if (profileError) {
+            console.error("[admin/users] DELETE profile cleanup failed:", profileError);
+            return apiInternalError("Benutzer konnte nicht vollständig gelöscht werden");
+        }
 
         return apiSuccess({ deleted: true });
     } catch (err) {
-        return apiInternalError(err instanceof Error ? err.message : "Unknown error");
+        if (err instanceof AdminClientConfigError) {
+            return apiInternalError(err.message);
+        }
+        console.error("[admin/users] DELETE unexpected error:", err);
+        return apiInternalError("Benutzer konnte nicht gelöscht werden");
     }
 }

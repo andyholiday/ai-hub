@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Hub &mdash; Plattform-Uebersicht</title>
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand:       #6366f1;
+      --brand-light: #818cf8;
+      --brand-dim:   #eef2ff;
+      --accent:      #0ea5e9;
+      --accent-dim:  #e0f2fe;
+      --success:     #10b981;
+      --warn:        #f59e0b;
+      --danger:      #ef4444;
+      --muted:       #64748b;
+      --surface:     #f8fafc;
+      --border:      #e2e8f0;
+      --text:        #0f172a;
+      --text-soft:   #475569;
+      --sidebar-w:   260px;
+      --content-max: 820px;
+      font-size: 16px;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text);
+      background: #fff;
+      line-height: 1.65;
+    }
+    a { color: var(--brand); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Monaco, monospace;
+      font-size: 0.85em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: var(--brand);
+    }
+
+    /* ===== Layout ===== */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ===== Sidebar / TOC ===== */
+    #toc {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 28px 0 40px;
+    }
+    #toc .toc-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 20px 12px;
+    }
+    #toc ul { list-style: none; }
+    #toc ul li a {
+      display: block;
+      padding: 5px 20px;
+      font-size: 0.82rem;
+      color: var(--text-soft);
+      border-left: 3px solid transparent;
+      transition: all 0.15s;
+      line-height: 1.4;
+    }
+    #toc ul li a:hover,
+    #toc ul li a.active {
+      color: var(--brand);
+      background: var(--brand-dim);
+      border-left-color: var(--brand);
+      text-decoration: none;
+    }
+    #toc ul li.section-head a {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 0.84rem;
+      padding-top: 14px;
+    }
+    #toc ul li.sub a {
+      padding-left: 32px;
+      font-size: 0.79rem;
+    }
+
+    /* ===== Main content ===== */
+    main {
+      flex: 1;
+      min-width: 0;
+      padding: 0 40px 80px;
+    }
+
+    /* ===== Hero ===== */
+    .hero {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e3a5f 100%);
+      color: #fff;
+      padding: 72px 48px 60px;
+      margin: 0 -40px 0;
+    }
+    .hero .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      letter-spacing: -0.02em;
+    }
+    .hero h1 span { color: #a5b4fc; }
+    .hero p {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      max-width: 620px;
+      color: #c7d2fe;
+    }
+    .hero .for-whom {
+      margin-top: 28px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .hero .tag {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      color: #e0e7ff;
+    }
+
+    /* ===== Section headings ===== */
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin: 60px 0 16px;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 1.4em;
+      background: var(--brand);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 32px 0 10px;
+      color: var(--text);
+    }
+    h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 20px 0 8px;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    p { margin-bottom: 12px; }
+    p:last-child { margin-bottom: 0; }
+
+    /* ===== Section divider ===== */
+    .section-block {
+      max-width: var(--content-max);
+      padding-top: 8px;
+    }
+    .sep { border: none; border-top: 1px solid var(--border); margin: 56px 0; max-width: var(--content-max); }
+
+    /* ===== Value cards ===== */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+      max-width: var(--content-max);
+    }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .card .card-icon {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+    .card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 0 0 6px;
+      color: var(--text);
+    }
+    .card p {
+      font-size: 0.83rem;
+      color: var(--text-soft);
+      line-height: 1.5;
+      margin: 0;
+    }
+    .card.brand { border-color: var(--brand); background: var(--brand-dim); }
+    .card.accent { border-color: var(--accent); background: var(--accent-dim); }
+
+    /* ===== Feature section ===== */
+    .feature-block {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 28px;
+      max-width: var(--content-max);
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .feature-block h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 0 0 4px;
+      color: var(--text);
+    }
+    .feature-block .feature-tag {
+      display: inline-block;
+      background: var(--brand-dim);
+      color: var(--brand);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.73rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+    .feature-block .feature-tag.live { background: #dcfce7; color: #16a34a; }
+    .feature-block .feature-tag.partial { background: #fef9c3; color: #a16207; }
+    .feature-block .feature-tag.placeholder { background: #fee2e2; color: #b91c1c; }
+
+    /* ===== Highlight Orb box ===== */
+    .orb-highlight {
+      background: linear-gradient(135deg, #1e1b4b 0%, #1e3a5f 100%);
+      border-radius: 14px;
+      padding: 36px 40px;
+      color: #e0e7ff;
+      max-width: var(--content-max);
+      margin: 24px 0;
+      box-shadow: 0 4px 24px rgba(99,102,241,0.2);
+    }
+    .orb-highlight h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 0 0 12px;
+    }
+    .orb-highlight p { font-size: 0.92rem; line-height: 1.7; color: #c7d2fe; margin-bottom: 10px; }
+    .orb-highlight .orb-caps {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 20px;
+    }
+    .orb-highlight .orb-cap {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .orb-highlight .orb-cap strong {
+      display: block;
+      font-size: 0.82rem;
+      color: #a5b4fc;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .orb-highlight .orb-cap span { font-size: 0.85rem; color: #c7d2fe; line-height: 1.5; }
+
+    /* ===== Step list ===== */
+    .steps {
+      list-style: none;
+      counter-reset: step;
+      margin: 14px 0 18px;
+    }
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      color: var(--text-soft);
+      line-height: 1.55;
+    }
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      background: var(--brand);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    /* ===== XP table & status table ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.87rem;
+      margin: 14px 0 18px;
+    }
+    th {
+      text-align: left;
+      padding: 8px 12px;
+      background: var(--surface);
+      font-weight: 600;
+      color: var(--text-soft);
+      border-bottom: 2px solid var(--border);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-soft);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface); }
+
+    /* Status pills inside tables */
+    .pill {
+      display: inline-block;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .pill.live { background: #dcfce7; color: #16a34a; }
+    .pill.partial { background: #fef9c3; color: #a16207; }
+    .pill.flag { background: #ede9fe; color: #6d28d9; }
+    .pill.no { background: #fee2e2; color: #b91c1c; }
+    .pill.todo { background: #f1f5f9; color: #64748b; }
+
+    /* ===== Aside / callout ===== */
+    .aside {
+      background: var(--surface);
+      border-left: 3px solid var(--border);
+      border-radius: 0 6px 6px 0;
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin: 14px 0;
+      line-height: 1.55;
+    }
+    .aside.warn { border-left-color: var(--warn); background: #fffbeb; color: #92400e; }
+    .aside.info { border-left-color: var(--brand); background: var(--brand-dim); color: #3730a3; }
+    .aside.success { border-left-color: var(--success); background: #f0fdf4; color: #166534; }
+
+    /* ===== Guidance grid ===== */
+    .guidance-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 18px 0;
+      max-width: var(--content-max);
+    }
+    .guidance-box {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      background: #fff;
+    }
+    .guidance-box h4 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 0 0 10px;
+      color: var(--brand);
+    }
+    .guidance-box.free h4 { color: var(--accent); }
+    .guidance-box ul {
+      list-style: none;
+      font-size: 0.85rem;
+      color: var(--text-soft);
+      line-height: 1.6;
+    }
+    .guidance-box ul li::before { content: "– "; color: var(--muted); }
+
+    /* ===== Security section ===== */
+    .security-layers {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+      margin: 18px 0;
+      max-width: var(--content-max);
+    }
+    .sec-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      background: #fff;
+    }
+    .sec-item .sec-label {
+      font-size: 0.73rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--success);
+      margin-bottom: 4px;
+    }
+    .sec-item .sec-title { font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .sec-item .sec-desc { font-size: 0.8rem; color: var(--text-soft); line-height: 1.45; }
+
+    /* ===== Footer ===== */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 28px 40px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    footer strong { color: var(--text-soft); }
+
+    /* ===== Print ===== */
+    @media print {
+      #toc { display: none; }
+      main { padding: 0 24px; }
+      .hero { background: #1e1b4b; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .feature-block, .orb-highlight, .card { break-inside: avoid; }
+      h2 { page-break-before: always; }
+      h2:first-of-type { page-break-before: avoid; }
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 900px) {
+      #toc { display: none; }
+      main { padding: 0 20px 60px; }
+      .hero { padding: 48px 24px 40px; margin: 0 -20px 0; }
+      .orb-highlight .orb-caps { grid-template-columns: 1fr; }
+      .guidance-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ===== Sidebar TOC ===== -->
+  <nav id="toc" aria-label="Inhaltsverzeichnis">
+    <div class="toc-title">Inhalt</div>
+    <ul>
+      <li class="section-head"><a href="#was-ist-ai-hub">Was ist AI Hub?</a></li>
+      <li class="section-head"><a href="#mehrwert">Der Mehrwert</a></li>
+      <li class="section-head"><a href="#fuehrung">Wie einfach ist es?</a></li>
+      <li class="section-head"><a href="#features">Features im Detail</a></li>
+      <li class="sub"><a href="#feat-dashboard">Dashboard</a></li>
+      <li class="sub"><a href="#feat-orb">AI Orb (Cosmos Companion)</a></li>
+      <li class="sub"><a href="#feat-command-palette">Command Palette</a></li>
+      <li class="sub"><a href="#feat-ai-mentor">AI Mentor</a></li>
+      <li class="sub"><a href="#feat-best-practices">Best Practices</a></li>
+      <li class="sub"><a href="#feat-community">Community</a></li>
+      <li class="sub"><a href="#feat-learn-hub">Learn Hub</a></li>
+      <li class="sub"><a href="#feat-challenges">Challenges</a></li>
+      <li class="sub"><a href="#feat-leaderboard">Leaderboard</a></li>
+      <li class="sub"><a href="#feat-gamification">Gamification</a></li>
+      <li class="sub"><a href="#feat-innovation-radar">Innovation Radar</a></li>
+      <li class="sub"><a href="#feat-profil">Profil &amp; Einstellungen</a></li>
+      <li class="sub"><a href="#feat-privacy-mode">Privacy Mode</a></li>
+      <li class="section-head"><a href="#orb-fokus">Der AI Orb im Fokus</a></li>
+      <li class="section-head"><a href="#sicherheit">Sicherheit &amp; Datenschutz</a></li>
+      <li class="section-head"><a href="#status">Status &amp; Grenzen</a></li>
+    </ul>
+  </nav>
+
+  <!-- ===== Main ===== -->
+  <main>
+
+    <!-- HERO -->
+    <section class="hero" id="was-ist-ai-hub">
+      <div class="badge">Plattform-Uebersicht &middot; Stand 2026-05-22</div>
+      <h1>AI Hub &mdash; <span>deine KI-Lernplattform</span></h1>
+      <p>
+        AI Hub ist eine browserbasierte Lernplattform, die strukturiertes KI-Wissen,
+        eine aktive Community, spielerische Motivation und einen dauerhaft
+        verfuegbaren KI-Begleiter zu einem einzigen Erlebnis zusammenfuehrt.
+        Wer KI-Kompetenzen aufbauen oder vertiefen will, findet hier alles an einem Ort:
+        kuratierte Kurse, praxiserprobte Best Practices, Community-Austausch
+        und einen KI-Assistenten, der die Plattform kennt und proaktiv hilft.
+      </p>
+      <div class="for-whom">
+        <span class="tag">KI-Einsteiger</span>
+        <span class="tag">Praktiker &amp; Professionals</span>
+        <span class="tag">Teams &amp; Organisationen</span>
+        <span class="tag">Datenschutz-bewusste Nutzer</span>
+      </div>
+    </section>
+
+    <hr class="sep" />
+
+    <!-- DER MEHRWERT -->
+    <section id="mehrwert" class="section-block">
+      <h2>Der Mehrwert</h2>
+      <p style="color: var(--text-soft); max-width: 660px;">
+        AI Hub loest konkrete Probleme, die jeder kennt, der KI ernsthaft lernen oder einsetzen will.
+      </p>
+
+      <div class="cards">
+        <div class="card brand">
+          <div class="card-icon">&#128218;</div>
+          <h3>Wissen strukturiert aufbauen</h3>
+          <p>Kurse, Lernpfade und Quizzes fuehren Schritt fuer Schritt &mdash; statt eines unsortierten YouTube-Stacks.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128100;</div>
+          <h3>Community-Wissen nutzen</h3>
+          <p>Forum, Idea Board und Best-Practice-Artikel machen Erfahrungen anderer Nutzer findbar und diskutierbar.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#127942;</div>
+          <h3>Motiviert bleiben</h3>
+          <p>XP, Levels, Streaks, Achievements und ein Leaderboard sorgen dafuer, dass Lernen Spass macht und Fortschritt sichtbar wird.</p>
+        </div>
+        <div class="card accent">
+          <div class="card-icon">&#129680;</div>
+          <h3>KI-Begleiter, der mitdenkt</h3>
+          <p>Der AI Orb ist auf jeder Seite erreichbar, kennt den Plattform-Inhalt und kann proaktiv helfen &mdash; ohne dass man ihn zuerst suchen muss.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128270;</div>
+          <h3>Sofort finden statt suchen</h3>
+          <p>Cmd+K oeffnet eine Suchpalette, die semantisch versteht was gemeint ist &mdash; auch ohne exakte Schluesselwoerter.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128274;</div>
+          <h3>Datenschutz ohne Kompromisse</h3>
+          <p>Privacy Mode haelt alle Suchanfragen im Browser und leitet KI-Anfragen an einen EU-Server &mdash; kein US-Cloud-Transfer.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="sep" />
+
+    <!-- WIE EINFACH IST ES? -->
+    <section id="fuehrung" class="section-block">
+      <h2>Wie einfach ist es? Wird man gefuehrt oder allein gelassen?</h2>
+      <p style="color: var(--text-soft);">
+        Ehrliche Antwort: <strong>Man wird an den relevanten Stellen aktiv gefuehrt,
+        und hat dort Freiheit, wo man sie erwartet.</strong>
+        Hier ist, was konkret passiert:
+      </p>
+
+      <h3>Onboarding-Flow</h3>
+      <ol class="steps">
+        <li>Login &mdash; nach Supabase-Auth landet man direkt auf <code>/dashboard</code>. Keine Konfigurationsseite, kein Wizard.</li>
+        <li>Das Dashboard zeigt sofort echte Inhalte (Seed-Kurse, -Empfehlungen, -Activities) &mdash; nie eine leere Seite.</li>
+        <li>Der AI Orb begruesst beim ersten Aufruf nach Login kurz ("greeting"-State, 3 Sekunden) und ist danach immer rechts unten erreichbar.</li>
+        <li>Das Empfehlungs-Widget oben rechts schlaegt sofort konkrete naechste Schritte vor (basierend auf 5 Datenquellen).</li>
+      </ol>
+
+      <h3>Der proaktive AI Orb</h3>
+      <p style="color: var(--text-soft); font-size: 0.9rem;">
+        Der Cosmos Companion (rechts unten, animierter Blob) ist der primaere Fuehrungsmechanismus.
+        Er wechselt seinen visuellen Zustand je nach Kontext (nachdenkend, feiern, Begruessung, Benachrichtigung)
+        und kann &mdash; bei aktivem Feature-Flag &mdash; proaktiv Sprechblasen einblenden:
+        nach Inaktivitaet, wenn man lange auf einer Sektion verweilt, oder bei Rueckkehr nach mehr als einem Tag.
+        Sprechblasen sind per ESC oder X schliessbar. Die Cooldown-Logik verhindert, dass er laestig wird.
+      </p>
+
+      <h3>Cmd+K &mdash; die Schaltzentrale</h3>
+      <p style="color: var(--text-soft); font-size: 0.9rem;">
+        Von jeder Seite aus oeffnet <code>Cmd+K</code> (Mac) oder <code>Ctrl+K</code> (Windows/Linux)
+        eine Suchpalette. Ohne Eingabe zeigt sie 10 Schnellnavigationsziele.
+        Mit Eingabe startet eine semantische Suche. Fehler degradiert auf einfachen Substring-Filter &mdash;
+        nie ein leerer Zustand.
+      </p>
+
+      <div class="guidance-grid">
+        <div class="guidance-box">
+          <h4>Aktive Fuehrung</h4>
+          <ul>
+            <li>Dashboard-Empfehlungen: "Was als naechstes?"</li>
+            <li>Orb-Begruessung beim Login</li>
+            <li>Quick-Action-Chips im Chat (kein leeres Eingabefeld)</li>
+            <li>Kurs-Sidebar mit Lektion-Status</li>
+            <li>Quiz-Sofortfeedback nach jeder Antwort</li>
+            <li>XP-Animation nach Lektionsabschluss</li>
+            <li>Empty States mit Erstelle-CTA</li>
+            <li>Tooltips am Orb-Button</li>
+            <li>Feature-Toggles mit lesbaren Beschriftungen</li>
+          </ul>
+        </div>
+        <div class="guidance-box free">
+          <h4>Freie Erkundung</h4>
+          <ul>
+            <li>Innovation Radar: selbst erkunden</li>
+            <li>Best Practices: filtern und stoebrern</li>
+            <li>Community: eigene Beitraege und Ideen</li>
+            <li>AI Mentor: freie Gespraechsfuehrung</li>
+            <li>Profil-Einstellungen: selbst konfigurieren</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Barrierefreiheit &amp; Zustand</h3>
+      <ul style="font-size: 0.88rem; color: var(--text-soft); margin: 8px 0 0 18px; line-height: 1.8;">
+        <li><strong>Dark Mode:</strong> Toggle in Einstellungen; App-Shell und UI-Primitives reagieren; viele Feature-Seiten noch in Konvertierung.</li>
+        <li><strong>Tastaturnavigation:</strong> Command Palette vollstaendig tastaturgesteuert; Orb hat <code>focus-visible</code>-Ring und gibt Fokus nach Schliessen zurueck.</li>
+        <li><strong>Reduced Motion:</strong> JS-Animationen des Orbs werden deaktiviert wenn <code>prefers-reduced-motion</code> gesetzt ist.</li>
+        <li><strong>Screen Reader:</strong> <code>aria-live</code>-Region kuendigt Orb-Statusaenderungen an.</li>
+      </ul>
+
+      <div class="aside info" style="margin-top: 20px;">
+        Bekannte Luecke: Einige Feature-Seiten enthalten noch keine vollstaendige Dark-Mode-Unterstuetzung.
+        Das ist als Follow-up erfasst, kein Blocker fuer die Kernfunktionalitaet.
+      </div>
+    </section>
+
+    <hr class="sep" />
+
+    <!-- FEATURES IM DETAIL -->
+    <section id="features" class="section-block">
+      <h2>Features im Detail</h2>
+
+      <!-- Dashboard -->
+      <div class="feature-block" id="feat-dashboard">
+        <h3>Dashboard</h3>
+        <span class="feature-tag live">Vollstaendig live</span>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Was es ist:</strong> Die persoenliche Einstiegsseite nach dem Login &mdash;
+          ein Ueberblick ueber XP-Stand, Streak, aktuelle Achievements und personalisierte Empfehlungen.
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Mehrwert:</strong> Beantwortet in Sekunden: Wo stehe ich? Was mache ich als naechstes?
+          Alle Daten sind echt (keine Dummy-Inhalte), und das Empfehlungs-Widget zieht aus
+          5 Quellen (Kurse, Best Practices, Posts, Challenges, Ideen).
+        </p>
+        <h4>User-Prozess</h4>
+        <ol class="steps">
+          <li>Login &rarr; Landing auf <code>/dashboard</code>.</li>
+          <li>Stats-Grid: XP-Gesamtpunkte, Level (mit Titel), Streak-Tage, XP-Fortschrittsbalken zum naechsten Level.</li>
+          <li>Streak-Widget mit Flammen-Animation; laengste Streak immer sichtbar.</li>
+          <li>Letzte Achievements als Cards mit Icon und Freischalt-Datum.</li>
+          <li>Empfehlungs-Widget schlaegt die naechste sinnvolle Aktion vor &mdash; Klick fuehrt direkt dorthin.</li>
+          <li>Aktivitaets-Feed zeigt die neuesten Community-Aktivitaeten.</li>
+          <li>Orb begruesst beim ersten Post-Login-Aufruf kurz.</li>
+        </ol>
+        <div class="aside">Echtzeit-Aktualisierung des Feeds ist noch nicht live; manuelles Neu laden ist noetig.</div>
+      </div>
+
+      <!-- AI Orb -->
+      <div class="feature-block" id="feat-orb">
+        <h3>AI Orb (Cosmos Companion)</h3>
+        <span class="feature-tag live">Kern live</span>
+        <span class="feature-tag flag" style="margin-left: 6px;">Proaktive Bubbles: Feature-Flag</span>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Was es ist:</strong> Ein dauerhaft sichtbarer, animierter KI-Begleiter (120px Fluid-Blob),
+          der auf allen Dashboard-Seiten rechts unten eingeblendet wird und beim Klick ein eingebettetes
+          Chat-Panel oeffnet.
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Mehrwert:</strong> Kein Navigieren zu einer separaten Chat-Seite noetig.
+          Der Orb ist immer da, kennt den Plattform-Inhalt durch RAG-Suche und antwortet
+          auf plattformspezifische Fragen mit echten Quellen statt nur mit Trainingswissen.
+        </p>
+        <h4>User-Prozess</h4>
+        <ol class="steps">
+          <li>Orb ist auf jeder Seite (ausser <code>/ai-mentor</code>) rechts unten sichtbar.</li>
+          <li>Hover zeigt Tooltip ("AI Mentor oeffnen").</li>
+          <li>Klick oeffnet <code>ChatSplitView</code> &mdash; 50/50 Overlay mit Glassmorphism-Header, Nachrichten-Liste, Kontext-Banner und Eingabefeld.</li>
+          <li>Quick-Action-Chips (Idee bewerten, Zusammenfassen, Vorschlag) senken die Einstiegshuerde &mdash; kein leeres Eingabefeld.</li>
+          <li>Frage stellen &mdash; Antwort kommt Token fuer Token gestreamt; Orb wechselt visuell auf "thinking".</li>
+          <li>Orb durchsucht die Best-Practices-Datenbank im Hintergrund (RAG) und erdet die Antwort in echten Inhalten.</li>
+          <li>Minimize-Button schliesst den Chat; Fokus kehrt zum Orb-Button zurueck.</li>
+          <li>Orb kann per Drag in eine der vier Bildschirmecken gezogen werden.</li>
+        </ol>
+        <h4>Proaktive Bubbles (bei aktivem Feature-Flag)</h4>
+        <ul style="font-size: 0.86rem; color: var(--text-soft); margin: 6px 0 0 18px; line-height: 1.8;">
+          <li>Nach Inaktivitaet, bei langem Verweilen auf einer Sektion, bei Rueckkehr nach &gt; 1 Tag.</li>
+          <li>Cooldown-Logik verhindert Ueberhaeufung.</li>
+          <li>Per ESC oder X schliessbar.</li>
+          <li>Trigger fuer XP-Meilenstein, erster KI-Chat und leere Suchergebnisse sind gebaut, aber noch ohne vollstaendige Datenquelle.</li>
+        </ul>
+        <div class="aside warn">Session-Persistenz ueber Tab-Reload noch nicht live &mdash; die Session-ID liegt nur im React-State. Offene Konversationen gehen bei Reload verloren.</div>
+      </div>
+
+      <!-- Command Palette -->
+      <div class="feature-block" id="feat-command-palette">
+        <h3>Command Palette &amp; Globale Suche (Cmd+K)</h3>
+        <span class="feature-tag live">Vollstaendig live</span>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Was es ist:</strong> Eine globale Suchpalette, die von jeder Seite aus
+          per <code>Cmd+K</code> (Mac) oder <code>Ctrl+K</code> (Windows/Linux) erreichbar ist
+          und Schnellnavigation mit semantischer Inhaltssuche kombiniert.
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Mehrwert:</strong> Eine Tastenkombination genuegt, um zu jeder Seite zu springen
+          oder Inhalte nach Bedeutung zu suchen &mdash; nicht nur nach exakten Woertern.
+          Im Privacy Mode laeuft die Suche vollstaendig im Browser.
+        </p>
+        <h4>User-Prozess</h4>
+        <ol class="steps">
+          <li><code>Cmd+K</code> (oder <code>Ctrl+K</code>) auf einer beliebigen Dashboard-Seite.</li>
+          <li>Ohne Eingabe: 10 Schnellnavigationsziele (Dashboard, Community, Learn Hub usw.).</li>
+          <li>Tippen (ab 1 Zeichen, 200ms Debounce): semantische Suche startet automatisch.</li>
+          <li>Standard-Modus: Hybrid-Suche (BM25 + Vektorsuche) gegen die Best-Practices-Datenbank.</li>
+          <li>Privacy Mode: identische UX, aber rein lokal im Browser &mdash; kein Netzwerk-Request.</li>
+          <li>Ergebnis auswaehlen per Klick oder Enter &rarr; direkter Seitenaufruf.</li>
+          <li>ESC schliesst die Palette.</li>
+        </ol>
+        <div class="aside">Aktuell werden nur Best-Practice-Artikel durchsucht. Community-Posts und Kurse sind noch nicht indexiert. Der lokale Corpus im Privacy Mode umfasst 6 Demo-Eintraege (kein automatisches Sync).</div>
+      </div>
+
+      <!-- AI Mentor -->
+      <div class="feature-block" id="feat-ai-mentor">
+        <h3>AI Mentor</h3>
+        <span class="feature-tag live">Vollstaendig live</span>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Was es ist:</strong> Eine dedizierte Chat-Seite (<code>/ai-mentor</code>),
+          auf der Nutzer mit einem Multi-Provider-KI-Assistenten
+          (Standard: Gemini, Fallback-Chain: OpenAI &rarr; Claude &rarr; Copilot)
+          in Echtzeit interagieren. Der volle Viewport gehoert dem Gespraech.
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Mehrwert:</strong> Der zentrale Lernbegleiter: Fragen zu KI-Themen,
+          Prompt-Hilfe, Use-Case-Bewertung, Kursempfehlungen &mdash; alles in einem uneingeschraenkten
+          Chat ohne die Platzbeschraenkung des Orb-Overlays.
+        </p>
+        <h4>User-Prozess</h4>
+        <ol class="steps">
+          <li>Navigation zu <code>/ai-mentor</code> (Sidebar oder Command Palette).</li>
+          <li>Vier Quick-Action-Chips als Einstiegspunkt (KI-Grundlagen, Prompt verbessern, Use-Case bewerten, Lernempfehlung).</li>
+          <li>Eigene Eingabe oder Chip-Klick &rarr; Token-fuer-Token-Streaming beginnt.</li>
+          <li>Mentor-Stats-Karten (gesendete Nachrichten, Themen, Level) geben ein Gefuehl von Fortschritt.</li>
+          <li>Session bleibt waehrend der Browser-Session erhalten; Deep-Link <code>/ai-mentor/[sessionId]</code> moeglich.</li>
+        </ol>
+        <h4>Fuehrung &amp; Sicherheit</h4>
+        <ul style="font-size: 0.86rem; color: var(--text-soft); margin: 6px 0 0 18px; line-height: 1.8;">
+          <li>Content Moderation serverseitig aktiv: unangemessene Inhalte werden abgelehnt.</li>
+          <li>Rate-Limiting: 20 Anfragen / 60 Sekunden (Tier "ai").</li>
+          <li>Budget-Cap: bei Ueberschreitung HTTP 429; bei 80% Auslastung automatische Degradierung auf guenstigeren Provider.</li>
+          <li>Orb ist auf dieser Seite ausgeblendet &mdash; kein Konflikt mit der Chat-UI.</li>
+        </ul>
+        <div class="aside">Chat-History-Pagination (Nachladen aelterer Nachrichten) ist noch nicht implementiert.</div>
+      </div>
+
+      <!-- Best Practices -->
+      <div class="feature-block" id="feat-best-practices">
+        <h3>Best Practices</h3>
+        <span class="feature-tag live">Vollstaendig live</span>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Was es ist:</strong> Eine kuratierte Wissensdatenbank (<code>/best-practices</code>)
+          mit Artikeln zu KI-Einsatzszenarien, semantisch durchsuchbar und mit automatischem KI-Tagging.
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Mehrwert:</strong> Praxiserprobte Antworten auf konkrete KI-Fragen &mdash;
+          ohne langes Googeln. Die semantische Suche findet passende Artikel auch bei
+          umgangssprachlichen oder inhaltlich verwandten Formulierungen.
+        </p>
+        <h4>User-Prozess</h4>
+        <ol class="steps">
+          <li>Navigation zu <code>/best-practices</code>.</li>
+          <li>Artikel-Grid mit Filtern nach Kategorie, Schwierigkeitsgrad und Tags.</li>
+          <li>Suchfeld: semantische Hybrid-Suche (BM25 + Vektorsuche).</li>
+          <li>Klick auf Artikel &rarr; Markdown-Inhalt, Tags, Autor, Views, Upvotes.</li>
+          <li>Neuen Artikel einreichen &rarr; Auto-Tagging startet automatisch im Hintergrund.</li>
+        </ol>
+        <div class="aside success">Eigene Entwuerfe sind nur fuer den Autor sichtbar; fremde Artikel nur wenn sie veroeffentlicht sind (RLS). Admin moderiert den Freigabeprozess.</div>
+      </div>
+
+      <!-- Community -->
+      <div class="feature-block" id="feat-community">
+        <h3>Community (Forum &amp; Idea Board)</h3>
+        <span class="feature-tag live">Vollstaendig live</span>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Was es ist:</strong> Zwei Bereiche &mdash; ein <strong>Forum</strong>
+          fuer offene Diskussionen (Posts, verschachtelte Kommentare bis 4 Ebenen, Upvotes)
+          und ein <strong>Idea Board</strong> fuer KI-Use-Case-Ideen mit Community-Voting
+          und optionaler KI-Bewertung.
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Mehrwert:</strong> Erfahrungen austauschen, Fragen stellen, Ideen einreichen &mdash;
+          jede Interaktion bringt XP und kann Badges freischalten.
+          Der soziale Aspekt verstaerkt die Motivation zum Lernen.
+        </p>
+        <h4>User-Prozess (Forum)</h4>
+        <ol class="steps">
+          <li>Gefilterte, sortierbare Post-Liste (Neueste / Beliebteste, Typ, Tags).</li>
+          <li>"Neuer Beitrag" &rarr; Formular fuer Titel, Inhalt, Tags &rarr; 15 XP bei Veroeffentlichung.</li>
+          <li>Post oeffnet Thread-Ansicht; Kommentar schreiben &rarr; 5 XP.</li>
+          <li>Upvote-Toggle; kein Self-Vote-XP (DB-Constraint).</li>
+        </ol>
+        <h4>User-Prozess (Idea Board)</h4>
+        <ol class="steps">
+          <li>Grid aller Ideen; Sortierung nach Neueste / Beliebteste / Score.</li>
+          <li>Idee einreichen &rarr; Community kann voten.</li>
+          <li>KI-Bewertung optional anforderbar (5 Dimensionen, Score 0&ndash;100).</li>
+        </ol>
+        <div class="aside">Echtzeit-Updates (Live-Feed neuer Posts) sind noch nicht verdrahtet; Seite muss manuell neu geladen werden.</div>
+      </div>
+
+      <!-- Learn Hub -->
+      <div class="feature-block" id="feat-learn-hub">
+        <h3>Learn Hub</h3>
+        <span class="feature-tag live">Vollstaendig live</span>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Was es ist:</strong> Ein strukturierter Lernbereich (<code>/learn-hub</code>)
+          mit Kursen, Lektionen, Multiple-Choice-Quizzes, automatischen Zertifikaten und kuratierten Lernpfaden.
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Mehrwert:</strong> KI-Kompetenzen systematisch aufbauen: von einzelnen Lektionen
+          ueber ganze Kurse bis zu vordefinierten Lernpfaden. Jeder Abschluss bringt XP,
+          Quizzes geben Sofortfeedback, Zertifikate machen Fortschritt sichtbar.
+        </p>
+        <h4>User-Prozess (Kurs)</h4>
+        <ol class="steps">
+          <li>Kurs-Grid mit Schwierigkeitsgrad-Filter und Fortschrittsbalken pro Kurs.</li>
+          <li>Klick &rarr; Kurs-Detail-Seite mit Sidebar-Lektionsliste (Status: offen / abgeschlossen).</li>
+          <li>Lektion lesen &rarr; "Lektion abschliessen" &rarr; 25 XP und XP-Animation.</li>
+          <li>Falls Quiz vorhanden: Multiple-Choice mit Sofortfeedback; bestanden bei &ge; 70%.</li>
+          <li>Alle Lektionen abgeschlossen &rarr; Zertifikat wird automatisch ausgestellt.</li>
+        </ol>
+        <h4>User-Prozess (Lernpfade)</h4>
+        <ol class="steps">
+          <li>Lernpfad-Cards mit Kurs-Anzahl und geschaetzter Dauer.</li>
+          <li>"Einschreiben" aktiviert Pfad-Fortschritt.</li>
+          <li>Stepper-Timeline zeigt Kursreihenfolge; abgeschlossene Kurse markiert.</li>
+        </ol>
+        <div class="aside">3 Seed-Kurse und 3 Seed-Lernpfade sind ab Installation vorhanden &mdash; keine leere Seite. KI-generierte Lektionsinhalte sind noch nicht live (Inhalte manuell befuellt).</div>
+      </div>
+
+      <!-- Challenges -->
+      <div class="feature-block" id="feat-challenges">
+        <h3>Challenges</h3>
+        <span class="feature-tag live">Vollstaendig live</span>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Was es ist:</strong> Zeitbasierte Herausforderungen (<code>/challenges</code>),
+          bei denen Nutzer sich anmelden, Fortschritt melden und bei Abschluss 100 XP erhalten.
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Mehrwert:</strong> Regelmassiger Anreiz, die Plattform aktiv zu nutzen.
+          Wettbewerb und soziale Sichtbarkeit (Teilnehmer-Liste) &mdash;
+          eine klar abgegrenzte Aufgabe mit Deadline und Belohnung.
+        </p>
+        <h4>User-Prozess</h4>
+        <ol class="steps">
+          <li>Liste aller Challenges mit Status-Filter (aktiv / abgeschlossen), Zeitraum und Belohnung.</li>
+          <li>Klick &rarr; Challenge-Detail mit Teilnehmer-Liste.</li>
+          <li>"Beitreten" &rarr; Fortschritt melden &rarr; bei Abschluss 100 XP und ggf. Achievement.</li>
+          <li>Orb wechselt bei Abschluss in den "celebration"-State.</li>
+        </ol>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="feature-block" id="feat-leaderboard">
+        <h3>Leaderboard</h3>
+        <span class="feature-tag live">Vollstaendig live</span>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Was es ist:</strong> Rangliste der aktivsten Nutzer nach XP,
+          filterbar nach Woche / Monat / Gesamt, mit Podest-Darstellung fuer die Top 3.
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Mehrwert:</strong> Sozialer Vergleich motiviert; die eigene Position
+          inklusive XP-Abstand zum naechsten Platz ist immer sichtbar.
+          Opt-Out fuer Nutzer, die nicht erscheinen wollen.
+        </p>
+        <h4>User-Prozess</h4>
+        <ol class="steps">
+          <li>Navigation zu <code>/leaderboard</code>.</li>
+          <li>Rangliste mit Platz, Name, XP, Level, Badges; Top 3 auf Podest.</li>
+          <li>Eigene Zeile farblich hervorgehoben; XP-Abstand zum naechsten Platz sichtbar.</li>
+          <li>Perioden-Filter (Tabs: Woche / Monat / Gesamt).</li>
+        </ol>
+        <div class="aside">Opt-Out via Feature-Toggle in den Einstellungen. Orb wechselt auf der Leaderboard-Seite in den "energized"-State.</div>
+      </div>
+
+      <!-- Gamification -->
+      <div class="feature-block" id="feat-gamification">
+        <h3>Gamification &mdash; XP, Levels, Achievements, Badges, Streaks</h3>
+        <span class="feature-tag live">Vollstaendig live</span>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Was es ist:</strong> Ein schichtenweises Motivationssystem aus
+          Experience Points (XP), 7 Levels, 20 Achievements in 4 Kategorien,
+          12 Community-Badges und taeglich erneuerbaren Streaks.
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Mehrwert:</strong> Lernfortschritt wird messbar und belohnend.
+          Jede Interaktion ist sichtbar bestaetigt. Streak-System haelt Nutzer
+          taeglich zurueck; Achievements geben langfristige Ziele.
+        </p>
+
+        <h4>XP-Quellen</h4>
+        <table>
+          <thead>
+            <tr><th>Aktion</th><th>XP</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Kurslektion abschliessen</td><td>25</td></tr>
+            <tr><td>Community-Post erstellen</td><td>15</td></tr>
+            <tr><td>Challenge abschliessen</td><td>100</td></tr>
+            <tr><td>Kommentar schreiben</td><td>5</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Level-System</h4>
+        <p style="font-size: 0.86rem; color: var(--text-soft);">
+          7 Stufen von "Neugieriger" (0 XP) bis "KI-Visionaer" (10.000 XP).
+          Level-Titel und Icon erscheinen auf Profil, Dashboard und Leaderboard.
+        </p>
+
+        <h4>Achievements (20 Stueck, 4 Kategorien)</h4>
+        <ul style="font-size: 0.86rem; color: var(--text-soft); margin: 6px 0 0 18px; line-height: 1.8;">
+          <li><strong>Learning:</strong> Erster Kurs abgeschlossen, Lernpfad beendet, ...</li>
+          <li><strong>Community:</strong> Erster Post, 10 Kommentare, erste Upvotes erhalten, ...</li>
+          <li><strong>Innovation:</strong> Erste Idee eingereicht, KI-Bewertung angefordert, ...</li>
+          <li><strong>Engagement:</strong> 7-Tage-Streak, Leaderboard-Top-10, ...</li>
+        </ul>
+
+        <p style="font-size: 0.86rem; color: var(--text-soft); margin-top: 10px;">
+          Achievements unter <code>/profile/achievements</code>: freigeschaltete hervorgehoben,
+          gesperrte ausgegraut, teilweise freigeschaltete mit Fortschrittsbalken.
+          Bei Achievement-Freischaltung: Orb in "celebration"-State mit Partikelexplosion.
+        </p>
+        <div class="aside success">XP-Doppelvergabe-Schutz ist 3-fach abgesichert (DB-Constraint, Server-Check, Client-Guard).</div>
+      </div>
+
+      <!-- Innovation Radar -->
+      <div class="feature-block" id="feat-innovation-radar">
+        <h3>Innovation Radar</h3>
+        <span class="feature-tag live">Vollstaendig live</span>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Was es ist:</strong> Eine interaktive SVG-Visualisierung (<code>/innovation-radar</code>)
+          von KI-Technologien und -Themen, geordnet in 4 Ringe (Adopt / Trial / Assess / Hold)
+          und 4 Quadranten (Techniques / Tools / Platforms / Frameworks).
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Mehrwert:</strong> Strukturierter Ueberblick ueber den Stand relevanter KI-Technologien
+          &mdash; aehnlich dem Thoughtworks Technology Radar. Auf einen Blick: was sofort einsetzen,
+          was erproben, was beobachten.
+        </p>
+        <h4>User-Prozess</h4>
+        <ol class="steps">
+          <li>Navigation zu <code>/innovation-radar</code>; SVG-Radar laedt dynamisch.</li>
+          <li>Punkte auf dem Radar nach Ring und Quadrant positioniert.</li>
+          <li>Klick auf Punkt oder Sidebar-Eintrag &rarr; Detail-Card (Beschreibung, Ring-Erklaerung, Trend).</li>
+          <li>Suchfeld in der Sidebar filtert Themen in Echtzeit.</li>
+          <li>Quadrant-Filter fuer eine Technologie-Kategorie.</li>
+          <li>"Trending Topics"-Sektion: 5 meistdiskutierte Themen.</li>
+        </ol>
+      </div>
+
+      <!-- Profil & Einstellungen -->
+      <div class="feature-block" id="feat-profil">
+        <h3>Profil &amp; Einstellungen</h3>
+        <span class="feature-tag live">Vollstaendig live</span>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Was es ist:</strong> Das Profil (<code>/profile</code>) als oeffentliche Selbstdarstellung
+          mit Stats und Achievements; Einstellungen (<code>/settings</code>) fuer Dark Mode,
+          Privacy Mode, Feature-Praeferenzen und Leaderboard-Sichtbarkeit.
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Mehrwert:</strong> Sichtbarkeit in der Community und Kontrolle ueber das eigene Erlebnis &mdash;
+          insbesondere datenschutzrelevante Optionen.
+        </p>
+        <h4>User-Prozess</h4>
+        <ol class="steps">
+          <li>Profil: Name, Level, XP, Badges, Stats; Achievements-Tab mit Kategorie-Tabs.</li>
+          <li>Profil-Settings: Formular vorbefuellt mit aktuellen Daten; Speichern &rarr; Erfolgsmeldung.</li>
+          <li>Einstellungen: Feature-Toggles (Privacy Mode, Leaderboard-Sichtbarkeit, Living Orb, Animationen, Learn Hub, AI Mentor); alle mit lesbaren Beschriftungen.</li>
+          <li>Dark-Mode-Toggle: App-Shell und UI-Primitives reagieren sofort.</li>
+        </ol>
+        <div class="aside">Avatar-Upload noch nicht live. Account-Loeschung (GDPR-Erasure) ist ueber den API-Endpunkt verfuegbar.</div>
+      </div>
+
+      <!-- Privacy Mode -->
+      <div class="feature-block" id="feat-privacy-mode">
+        <h3>Privacy Mode &amp; Lokale Suche</h3>
+        <span class="feature-tag partial">Kern live; lokaler Corpus ist Demo-Stub</span>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Was es ist:</strong> Bei aktivem Privacy Mode werden alle Suchembeddings
+          im Browser erzeugt (384-d, <code>all-MiniLM-L6-v2</code> via Transformers.js)
+          und alle KI-Anfragen ueber Mistral EU (Frankreich, DSGVO-Datenschutzvereinbarung vorhanden)
+          statt US-Cloud geroutet. Keine Suchanfrage verlaesst den Browser.
+        </p>
+        <p style="color: var(--text-soft); font-size: 0.9rem;">
+          <strong>Mehrwert:</strong> Nutzung ohne US-Cloud-Transfer &mdash; fuer Nutzer und Organisationen
+          mit strengen Datenschutzanforderungen. Die Suche funktioniert vollstaendig lokal
+          (nach einmaligem Modell-Download), der Chat bleibt EU-datenschutzkonform.
+        </p>
+        <h4>User-Prozess</h4>
+        <ol class="steps">
+          <li>Einstellungen (<code>/settings</code>) &rarr; Feature-Settings &rarr; "Privacy Mode" aktivieren.</li>
+          <li>Command-Palette-Suche laeuft ab sofort lokal (kein HTTP-Request).</li>
+          <li>Beim ersten Oeffnen der Palette: Transformers.js-Modell laedt (Fortschrittsanzeige); danach gecacht.</li>
+          <li>Orb-Chat-Anfragen werden automatisch ueber Mistral EU geroutet.</li>
+          <li>Jederzeit wieder deaktivierbar.</li>
+        </ol>
+        <div class="aside warn">Lokaler Corpus umfasst aktuell 6 Demo-Eintraege (statisch hardcodiert). Automatische Synchronisierung aus der Datenbank ist noch nicht live.</div>
+      </div>
+
+    </section>
+
+    <hr class="sep" />
+
+    <!-- DER AI ORB IM FOKUS -->
+    <section id="orb-fokus" class="section-block">
+      <h2>Der AI Orb im Fokus</h2>
+      <p style="color: var(--text-soft);">
+        Der Cosmos Companion ist die herausragende Faehigkeit von AI Hub.
+        Hier ist, was ihn von einem einfachen Chat-Button unterscheidet:
+      </p>
+
+      <div class="orb-highlight">
+        <h3>Was der Orb kann &mdash; und was ihn besonders macht</h3>
+        <p>
+          Der Orb ist kein einfaches Chat-Widget. Er ist ein kontextbewusster KI-Begleiter,
+          der auf jeder Seite erreichbar ist, die Plattform kennt und proaktiv reagiert.
+        </p>
+        <div class="orb-caps">
+          <div class="orb-cap">
+            <strong>RAG-Suche (App-Wissen)</strong>
+            <span>
+              Wenn du den Orb nach Inhalten der Plattform fragst (z.B. "Wie setze ich KI im Kundenservice ein?"),
+              durchsucht er im Hintergrund die Best-Practices-Datenbank (BM25 + Vektorsuche, RLS-sicher)
+              und erdet seine Antwort in echten Quellen statt nur im Trainingswissen des LLM.
+              Halluzinationen bei plattformspezifischen Fragen werden so verhindert.
+            </span>
+          </div>
+          <div class="orb-cap">
+            <strong>Proaktive Hinweise</strong>
+            <span>
+              Mit Feature-Flag: Der Orb bemerkt, wenn du laengere Zeit inaktiv bist,
+              lange auf einer Sektion verweilst oder nach mehr als einem Tag zur Plattform zurueckkehrst
+              &mdash; und zeigt eine kontextuelle Sprechblase. Eine Cooldown-Logik sorgt dafuer,
+              dass er nicht aufdringlich wird. Schliessen per ESC oder X.
+            </span>
+          </div>
+          <div class="orb-cap">
+            <strong>Visuelle Zustandsmaschine</strong>
+            <span>
+              Der Orb kommuniziert seinen Zustand visuell: nachdenkend (thinking),
+              feiernd (celebration mit Partikelexplosion bei Achievement),
+              begruesend, benachrichtigend (goldener Status-Dot), energetisiert (auf dem Leaderboard).
+              Das XState-Idle-System steuert die Animation ressourcenschonend.
+            </span>
+          </div>
+          <div class="orb-cap">
+            <strong>Privacy Mode vollstaendig im Browser</strong>
+            <span>
+              Wenn Privacy Mode aktiv ist, werden Suchanfragen lokal im Browser verarbeitet
+              (kein Netzwerk-Request). Chat-Anfragen gehen ausschliesslich an Mistral EU (Frankreich) &mdash;
+              garantiert durch serverseitiges Routing, das die Nutzer-Prefs prueft.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <h3>Wie man mit dem Orb chattet</h3>
+      <ol class="steps">
+        <li>Klick auf den animierten Blob rechts unten (oder Hover fuer Tooltip).</li>
+        <li>Chat-Overlay oeffnet sich &mdash; keine Navigation noetig.</li>
+        <li>Quick-Action-Chips waehlen oder eigene Frage stellen.</li>
+        <li>Antwort streamt Token fuer Token; Orb wechselt visuell auf "thinking".</li>
+        <li>Orb hat die Plattform-Inhalte im Kontext &mdash; Fragen wie "Was sagen Best Practices zu Prompt Engineering?" werden fundiert beantwortet.</li>
+        <li>Minimize, ESC oder Klick aussen schliesst den Chat.</li>
+        <li>Drag in eine der vier Ecken fuer die bevorzugte Position.</li>
+      </ol>
+
+      <div class="aside info">
+        Auf der Seite <code>/ai-mentor</code> ist der Orb ausgeblendet, damit der volle
+        Viewport fuer den dedizierten Chat zur Verfuegung steht.
+      </div>
+    </section>
+
+    <hr class="sep" />
+
+    <!-- SICHERHEIT & DATENSCHUTZ -->
+    <section id="sicherheit" class="section-block">
+      <h2>Sicherheit &amp; Datenschutz aus Nutzersicht</h2>
+      <p style="color: var(--text-soft);">
+        In einfachen Worten: Deine Daten sind nicht von anderen lesbar,
+        KI-Kosten sind gedeckelt, und du hast die Kontrolle darueber,
+        ob und wie deine Daten das EU-Territorium verlassen.
+      </p>
+
+      <div class="security-layers">
+        <div class="sec-item">
+          <div class="sec-label">Datenschutz</div>
+          <div class="sec-title">Row Level Security</div>
+          <div class="sec-desc">32 Tabellen mit 50+ Policies: du liest und schreibst ausschliesslich deine eigenen Daten. Technisch erzwungen in der Datenbank &mdash; kein Codepfad kann das umgehen.</div>
+        </div>
+        <div class="sec-item">
+          <div class="sec-label">Datenschutz</div>
+          <div class="sec-title">Privacy Mode</div>
+          <div class="sec-desc">Alle Suchanfragen bleiben im Browser (Transformers.js). KI-Antworten kommen aus Frankreich (Mistral EU, DSGVO-DPA vorhanden) &mdash; kein US-Cloud-Transfer.</div>
+        </div>
+        <div class="sec-item">
+          <div class="sec-label">Kosten</div>
+          <div class="sec-title">Budget-Cap</div>
+          <div class="sec-desc">Atomarer Kostenpuffer in der Datenbank. Bei Ueberschreitung: HTTP 429. Bei 80% Auslastung: automatische Degradierung auf guenstigeren Provider &mdash; kein unbegrenzter KI-Verbrauch.</div>
+        </div>
+        <div class="sec-item">
+          <div class="sec-label">Limits</div>
+          <div class="sec-title">Rate-Limiting</div>
+          <div class="sec-desc">20 AI-Anfragen / 60 Sekunden (Tier "ai"), 30 Suchen / 60 Sekunden. Schutzt vor Missbrauch und kontrolliert die Infrastruktur-Kosten.</div>
+        </div>
+        <div class="sec-item">
+          <div class="sec-label">Inhalt</div>
+          <div class="sec-title">Content Moderation</div>
+          <div class="sec-desc">Serverseitige Moderation im AI Mentor: unangemessene Inhalte werden abgelehnt, ohne die Nutzung zu unterbrechen.</div>
+        </div>
+        <div class="sec-item">
+          <div class="sec-label">DSGVO</div>
+          <div class="sec-title">Recht auf Loeschung</div>
+          <div class="sec-desc">Alle personenbezogenen Daten koennen per Selbstbedienungs-Endpunkt vollstaendig geloescht werden (/api/user/erasure).</div>
+        </div>
+        <div class="sec-item">
+          <div class="sec-label">Transparenz</div>
+          <div class="sec-title">C2PA Audit-Logs</div>
+          <div class="sec-desc">Jede KI-Antwort wird pseudonymisiert protokolliert (SHA-256 des Antwort-Texts, Modell, Provider, Region). Regulatorisch pruefbar nach AI Act Art. 50.</div>
+        </div>
+        <div class="sec-item">
+          <div class="sec-label">Keys</div>
+          <div class="sec-title">Provider-Keys im Vault</div>
+          <div class="sec-desc">API-Schluessel der KI-Provider liegen in Supabase Vault hinter SECURITY DEFINER RPC &mdash; niemals im Client-Bundle oder in Logs.</div>
+        </div>
+      </div>
+
+      <div class="aside success" style="margin-top: 8px;">
+        Bestaetigt sicher: alle 32 Tabellen haben RLS; kein Provider-Secret im Client-Bundle;
+        Provider-Keys in Supabase Vault; alle Admin-Routen role-gated; DOMPurify auf allen
+        user-generierten Inhalten; Privacy Mode hart-verankert auf Mistral EU.
+      </div>
+    </section>
+
+    <hr class="sep" />
+
+    <!-- STATUS & EHRLICHE GRENZEN -->
+    <section id="status" class="section-block">
+      <h2>Status &amp; Ehrliche Grenzen</h2>
+      <p style="color: var(--text-soft); margin-bottom: 20px;">
+        Was vollstaendig live ist, was hinter einem Feature-Flag liegt,
+        und was noch als Platzhalter oder bekanntes TODO existiert &mdash;
+        Stand nach Winston-Audit Wave 1 (2026-05-22).
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Bereich</th>
+            <th>Status</th>
+            <th>Anmerkung</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Dashboard (Stats, Empfehlungen, Feed)</td>
+            <td><span class="pill live">Live</span></td>
+            <td>Echtzeit-Feed-Updates fehlen noch</td>
+          </tr>
+          <tr>
+            <td>AI Orb &mdash; sichtbar, animiert, Chat</td>
+            <td><span class="pill live">Live</span></td>
+            <td>Session-Persistenz bei Tab-Reload fehlt</td>
+          </tr>
+          <tr>
+            <td>AI Orb &mdash; RAG-Suche (Best Practices)</td>
+            <td><span class="pill live">Live</span></td>
+            <td>Nur Best-Practices-Corpus; Community-Posts, Kurse nicht indexiert</td>
+          </tr>
+          <tr>
+            <td>AI Orb &mdash; proaktive Bubbles</td>
+            <td><span class="pill flag">Feature-Flag</span></td>
+            <td>Hinter <code>proactive-orb-bubble</code>; 3 von 8 Triggern ohne Datenquelle</td>
+          </tr>
+          <tr>
+            <td>Command Palette (Cmd+K)</td>
+            <td><span class="pill live">Live</span></td>
+            <td>Corpus nur Best Practices; Community/Kurse nicht durchsucht</td>
+          </tr>
+          <tr>
+            <td>AI Mentor (Chat, Streaming, Fallback)</td>
+            <td><span class="pill live">Live</span></td>
+            <td>Chat-History-Pagination noch nicht live</td>
+          </tr>
+          <tr>
+            <td>Best Practices (Suche, Auto-Tagging, RLS)</td>
+            <td><span class="pill live">Live</span></td>
+            <td>Kommentare auf Artikeln noch nicht live</td>
+          </tr>
+          <tr>
+            <td>Community (Forum, Idea Board, KI-Bewertung)</td>
+            <td><span class="pill live">Live</span></td>
+            <td>Echtzeit-Updates fehlen</td>
+          </tr>
+          <tr>
+            <td>Learn Hub (Kurse, Quizzes, Zertifikate, Lernpfade)</td>
+            <td><span class="pill live">Live</span></td>
+            <td>Inhalte manuell; KI-generierte Lektionen nicht live</td>
+          </tr>
+          <tr>
+            <td>Challenges (Beitritt, Fortschritt, XP)</td>
+            <td><span class="pill live">Live</span></td>
+            <td>Fortschritt anderer Teilnehmer nicht in Echtzeit</td>
+          </tr>
+          <tr>
+            <td>Leaderboard (XP, Perioden, Opt-Out)</td>
+            <td><span class="pill live">Live</span></td>
+            <td>Anonymisierter Modus fehlt</td>
+          </tr>
+          <tr>
+            <td>Gamification (XP, Level, 20 Achievements, 12 Badges, Streaks)</td>
+            <td><span class="pill live">Live</span></td>
+            <td>Opt-Out nur org-weit, nicht per Nutzer</td>
+          </tr>
+          <tr>
+            <td>Innovation Radar (SVG, Suche, Filter, Voting)</td>
+            <td><span class="pill live">Live</span></td>
+            <td>Themen-Generierung durch KI nicht live</td>
+          </tr>
+          <tr>
+            <td>Profil &amp; Einstellungen (echte Daten, Toggles)</td>
+            <td><span class="pill live">Live</span></td>
+            <td>Avatar-Upload fehlt</td>
+          </tr>
+          <tr>
+            <td>Privacy Mode (lokale Suche, Mistral EU)</td>
+            <td><span class="pill partial">Kern live</span></td>
+            <td>Lokaler Corpus: 6 statische Demo-Eintraege; kein automatischer Sync</td>
+          </tr>
+          <tr>
+            <td>Dark Mode</td>
+            <td><span class="pill partial">Teilweise</span></td>
+            <td>App-Shell und UI-Primitives; viele Feature-Seiten noch nicht konvertiert</td>
+          </tr>
+          <tr>
+            <td>Benachrichtigungs-Seite (<code>/notifications</code>)</td>
+            <td><span class="pill no">Platzhalter</span></td>
+            <td>Nur Toast-Layer live; Seite zeigt Placeholder-Text</td>
+          </tr>
+          <tr>
+            <td>Echtzeit-Push via Supabase Realtime</td>
+            <td><span class="pill no">Nicht live</span></td>
+            <td>Community-Feed und Notifications ohne Live-Updates</td>
+          </tr>
+          <tr>
+            <td>Budget-Cap (Kostendach)</td>
+            <td><span class="pill partial">Kern live</span></td>
+            <td>Enforcement live; actual-vs-estimate Reconciliation noch offen</td>
+          </tr>
+          <tr>
+            <td>LLM-Gate (Kostenoptimierung einfacher Anfragen)</td>
+            <td><span class="pill flag">Feature-Flag</span></td>
+            <td>Gebaut; <code>defaultEnabled: false</code></td>
+          </tr>
+          <tr>
+            <td>C2PA Audit-Log (AI Act Art. 50)</td>
+            <td><span class="pill partial">Schema live</span></td>
+            <td>Admin-Lesepfad fehlt (Phase-5-Scope)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="aside warn" style="margin-top: 8px;">
+        Diese Tabelle spiegelt den Zustand nach dem Winston-Audit und den darauf folgenden Verbesserungs-Waves.
+        Sie ist ehrlich: kein Feature ist als "live" markiert, wenn es nur gebaut aber nicht verdrahtet ist.
+      </div>
+    </section>
+
+    <hr class="sep" style="margin-bottom: 0;" />
+
+  </main>
+</div>
+
+<footer>
+  <strong>AI Hub &mdash; Plattform-Uebersicht</strong><br />
+  Erstellt: 2026-05-22 &middot;
+  Spiegelt den Zustand nach Winston-Audit Wave 1 und den nachfolgenden Verbesserungs-Waves.
+  Alle Aussagen basieren auf dem tatsaechlichen Source-Code und den Feature-Dokumenten unter
+  <code>docs/features/</code>. Keine erfundenen oder spekulativen Features.
+</footer>
+
+<script>
+  // Scrollspy: highlight active TOC link
+  (function () {
+    var links = document.querySelectorAll('#toc a[href^="#"]');
+    var sections = Array.from(links).map(function (a) {
+      return document.getElementById(a.getAttribute('href').slice(1));
+    }).filter(Boolean);
+
+    function onScroll() {
+      var scrollY = window.scrollY + 80;
+      var active = null;
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i].offsetTop <= scrollY) {
+          active = i;
+        }
+      }
+      links.forEach(function (a) { a.classList.remove('active'); });
+      if (active !== null) {
+        links[active].classList.add('active');
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+</script>
+
+</body>
+</html>

@@ -1,7 +1,9 @@
 // =============================================================================
 // Badges API
 // GET /api/gamification/badges            - List all available badges
-// GET /api/gamification/badges?userId=... - List badges earned by a user
+// GET /api/gamification/badges?userId=... - List badges earned by the session user
+//   Note: ?userId param is accepted for backwards compat but always resolved to
+//   the authenticated session user (prevents enumeration by arbitrary UUID).
 // =============================================================================
 
 import { NextRequest } from "next/server";
@@ -9,7 +11,9 @@ import {
   apiSuccess,
   apiInternalError,
 } from "@/lib/api/response";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuth } from "@/lib/api/require-auth";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 
 export const dynamic = 'force-dynamic';
 
@@ -19,12 +23,21 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
+    // Auth required – prevents unauthenticated enumeration of user_badges
+    const auth = await requireAuth(req);
+    if ("response" in auth) return auth.response;
+
+    const { userId: sessionUserId } = auth;
+    // Cast: createServerClient<Database> and createClient<Database> both return
+    // SupabaseClient<Database>; the cast aligns the generic for tsc.
+    const supabase = auth.supabase as unknown as SupabaseClient<Database>;
+
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
+    // ?userId is accepted for API compatibility but always replaced with the
+    // session user to prevent cross-user badge enumeration.
+    const userId = searchParams.get("userId") ? sessionUserId : null;
 
-    const supabase = createAdminClient();
-
-    if (userId) {
+    if (userId !== null) {
       // Fetch badge IDs earned by this user
       const { data: userBadgeRows, error: ubError } = await supabase
         .from("user_badges")

@@ -56,6 +56,7 @@ vi.mock("framer-motion", () => {
   return {
     motion: { div: MotionDiv },
     AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    useReducedMotion: () => false,
   };
 });
 
@@ -73,6 +74,20 @@ vi.mock("../../../../../src/components/features/ai-orb/orb-animation-layer", () 
 
 vi.mock("../../../../../src/components/features/ai-orb/celebration-fireworks", () => ({
   CelebrationFireworks: () => null,
+}));
+
+// OURS components (ADR-008 proactive bubble, page context) — stub them out so
+// the test does not pull in IntersectionObserver-using hooks (use-orb-trigger).
+vi.mock("../../../../../src/components/features/ai-orb/use-orb-trigger", () => ({
+  useOrbTrigger: () => ({ payload: null, dismiss: vi.fn() }),
+}));
+
+vi.mock("../../../../../src/components/features/ai-orb/bubble-speech", () => ({
+  BubbleSpeech: () => null,
+}));
+
+vi.mock("../../../../../src/components/features/ai-orb/orb-page-context", () => ({
+  OrbPageContext: () => null,
 }));
 
 // ---------------------------------------------------------------------------

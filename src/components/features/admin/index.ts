@@ -38,3 +38,9 @@ export { AdminBrandingTab } from "./admin-branding";
 
 export { ProviderKeyModal } from "./provider-key-modal";
 export type { ProviderKeyModalProps } from "./provider-key-modal";
+
+export { ProviderConfigModal } from "./provider-config-modal";
+export type { ProviderConfigModalProps, ProviderConfigValues } from "./provider-config-modal";
+
+export { SystemPromptModal } from "./system-prompt-modal";
+export type { SystemPromptModalProps } from "./system-prompt-modal";

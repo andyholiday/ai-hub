@@ -42,9 +42,32 @@ export interface AdminAuthError {
 export async function requireAdmin(
   req: NextRequest,
 ): Promise<AdminAuthResult | AdminAuthError> {
+  // Guard: if Supabase env vars are missing on a Vercel deployment, return 503
+  // with a clear message instead of crashing. Analog zu require-auth.ts:60-79.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (process.env.VERCEL && (!supabaseUrl || !supabaseAnonKey)) {
+    console.error(
+      "[admin-auth] NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not set. " +
+        "Configure these env vars in Vercel Dashboard → Settings → Environment Variables.",
+    );
+    return {
+      response: NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: "SERVICE_UNAVAILABLE",
+            message: "Authentication service is not configured.",
+          },
+        },
+        { status: 503 },
+      ),
+    };
+  }
+
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl ?? "",
+    supabaseAnonKey ?? "",
     {
       cookies: {
         get(name: string) {

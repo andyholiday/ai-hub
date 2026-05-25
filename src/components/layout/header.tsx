@@ -5,10 +5,11 @@
 // Top header bar for the main content area
 // =============================================================================
 
-import { Bell, Plus } from "lucide-react";
+import { Bell, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 import { useAuth } from "@/hooks/use-auth";
+import { openCommandPalette } from "@/components/shared/command-palette";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -64,23 +65,47 @@ export function Header({
     >
       {/* Left: Greeting */}
       <div className="min-w-0 flex-1">
-        <h1 className="truncate font-display text-[26px] font-bold leading-tight text-surface-900">
+        <p className="truncate font-display text-[26px] font-bold leading-tight text-surface-900 dark:text-surface-50">
           {greeting}, {resolvedName}
-        </h1>
+        </p>
         {subtitle && (
-          <p className="mt-1 text-[14px] text-surface-500">{subtitle}</p>
+          <p className="mt-1 text-[14px] text-surface-600 dark:text-surface-400">{subtitle}</p>
         )}
       </div>
 
       {/* Right: Actions */}
       <div className="flex shrink-0 items-center gap-2">
+        {/* Search Button — opens command palette */}
+        <button
+          type="button"
+          onClick={openCommandPalette}
+          className={cn(
+            "flex items-center gap-2 rounded-xl px-3 py-2",
+            "border border-surface-200 bg-white text-[13px] text-surface-500",
+            "transition-colors duration-150 hover:border-surface-300 hover:text-surface-700",
+            "dark:border-surface-700 dark:bg-surface-800 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:text-surface-200",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2",
+          )}
+          aria-label="Suche oeffnen (Cmd+K)"
+        >
+          <Search className="h-4 w-4" strokeWidth={1.8} />
+          <span className="hidden sm:inline">Suchen</span>
+          <kbd className={cn(
+            "hidden rounded px-1.5 py-0.5 text-[11px] font-medium lg:block",
+            "border border-surface-200 bg-surface-100 text-surface-400",
+            "dark:border-surface-600 dark:bg-surface-700 dark:text-surface-500",
+          )}>
+            ⌘K
+          </kbd>
+        </button>
+
         {/* Notifications Button */}
         <Link
           href="/notifications"
           className={cn(
             "relative flex h-10 w-10 items-center justify-center rounded-xl",
-            "text-surface-500 transition-colors duration-150",
-            "hover:bg-surface-100 hover:text-surface-700",
+            "text-surface-600 transition-colors duration-150",
+            "hover:bg-surface-100 hover:text-surface-700 dark:text-surface-400 dark:hover:bg-surface-800 dark:hover:text-surface-200",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500 focus-visible:ring-offset-2"
           )}
           aria-label={`Benachrichtigungen${notificationCount > 0 ? ` (${notificationCount} ungelesen)` : ""}`}

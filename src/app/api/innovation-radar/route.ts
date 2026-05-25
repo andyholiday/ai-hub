@@ -10,8 +10,9 @@ import {
   apiInternalError,
   apiValidationError,
 } from "@/lib/api/response";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { listRadarItemsQuerySchema } from "@/lib/validators/innovation-radar";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +41,9 @@ export async function GET(req: NextRequest) {
 
     const { category, ring, search, sort } = parsed.data;
 
-    const supabase = createAdminClient();
+    // Cast: createServerClient<Database> and createClient<Database> both return
+    // SupabaseClient<Database>; the cast aligns the generic for tsc.
+    const supabase = auth.supabase as unknown as SupabaseClient<Database>;
 
     // Build query
     let query = supabase
@@ -57,7 +60,9 @@ export async function GET(req: NextRequest) {
     }
 
     if (search) {
-      query = query.ilike("title", `%${search}%`);
+      // F04: escape ilike special chars to prevent injection via wildcard abuse
+      const escapedSearch = search.replace(/[%_\\]/g, "\\$&");
+      query = query.ilike("title", `%${escapedSearch}%`);
     }
 
     // Sorting

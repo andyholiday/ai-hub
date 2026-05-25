@@ -347,7 +347,7 @@ export default function ProfileSettingsPage() {
               ) : (
                 <span />
               )}
-              <p className="text-caption text-surface-400">
+              <p className="text-caption text-surface-600">
                 {form.bio.length}/500
               </p>
             </div>

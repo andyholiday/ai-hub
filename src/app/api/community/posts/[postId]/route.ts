@@ -57,12 +57,19 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       return apiInternalError(error.message);
     }
 
-    // Increment view count (fire-and-forget)
-    supabase
-      .from("community_posts")
-      .update({ views_count: post.views_count + 1 })
-      .eq("id", postId)
-      .then();
+    // F10: Increment view count atomically via RPC (increment_field, migration 00001)
+    // avoids read-modify-write race condition. Wrapped in Promise.resolve() so
+    // .catch() is available (PostgrestBuilder does not expose .catch directly).
+    void Promise.resolve(
+      supabase.rpc("increment_field", {
+        table_name: "community_posts",
+        row_id: postId,
+        field_name: "views_count",
+        increment_by: 1,
+      }),
+    ).catch((err: unknown) =>
+      console.warn("[community/posts] increment_field RPC failed:", err),
+    );
 
     // Fetch comments with authors
     const { data: comments } = await supabase

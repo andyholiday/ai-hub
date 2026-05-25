@@ -13,7 +13,7 @@ import {
 } from "@/lib/api/response";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { testProviderSchema } from "@/lib/validators/admin";
-import { getAIRouter } from "@/lib/ai/router";
+import { getAIRouterWithDBKeys } from "@/lib/ai/router";
 import type { AIProvider } from "@/lib/ai/types";
 
 export const dynamic = 'force-dynamic';
@@ -48,10 +48,26 @@ export async function POST(req: NextRequest) {
       return apiNotFound("Provider not found");
     }
 
-    // Use the AI Router to check availability
-    const router = getAIRouter();
-    const startMs = Date.now();
+    // Use the AI Router with DB-sourced keys (env-var-only router would always
+    // fail for providers whose API keys are stored in the Supabase Vault).
+    const router = await getAIRouterWithDBKeys();
 
+    // Check if the requested provider is registered (i.e. has an API key).
+    // getAvailableProviders() only returns providers that are both registered
+    // and pass their own isAvailable() check.
+    const availableKeys = await router.getAvailableProviders();
+    if (!availableKeys.includes(provider.provider_key as AIProvider)) {
+      return apiSuccess({
+        provider_key: provider.provider_key,
+        display_name: provider.display_name,
+        available: false,
+        latency_ms: 0,
+        error: "Kein API-Key hinterlegt",
+        tested_at: new Date().toISOString(),
+      });
+    }
+
+    const startMs = Date.now();
     let available = false;
     let errorMessage: string | null = null;
 
@@ -59,9 +75,16 @@ export async function POST(req: NextRequest) {
       const resolved = await router.resolveProvider(
         provider.provider_key as AIProvider,
       );
-      available = resolved.provider === provider.provider_key;
+      if (resolved.provider === provider.provider_key) {
+        available = true;
+      } else {
+        // resolveProvider fell back to a different provider — should not happen
+        // after the availableKeys check above, but guard defensively.
+        errorMessage = `Provider hat keinen Key. Fallback ${resolved.provider} aktiv.`;
+      }
     } catch (err) {
       errorMessage = err instanceof Error ? err.message : "Unknown error";
+      console.error("[admin/providers/test] resolveProvider failed:", { provider: provider.provider_key, err });
     }
 
     const latencyMs = Date.now() - startMs;
@@ -74,7 +97,8 @@ export async function POST(req: NextRequest) {
       error: errorMessage,
       tested_at: new Date().toISOString(),
     });
-  } catch {
+  } catch (err) {
+    console.error("[provider-test] error:", err);
     return apiInternalError();
   }
 }

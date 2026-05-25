@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       achievements: {
@@ -53,6 +78,36 @@ export type Database = {
           requirement_value?: number
           title?: string
           xp_reward?: number
+        }
+        Relationships: []
+      }
+      ai_call_logs: {
+        Row: {
+          call_type: string
+          created_at: string
+          feature: string
+          id: string
+          provider: string | null
+          tokens_used: number | null
+          user_id: string | null
+        }
+        Insert: {
+          call_type: string
+          created_at?: string
+          feature: string
+          id?: string
+          provider?: string | null
+          tokens_used?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          call_type?: string
+          created_at?: string
+          feature?: string
+          id?: string
+          provider?: string | null
+          tokens_used?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -242,6 +297,42 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          content_hash: string
+          created_at: string
+          id: string
+          manifest_json: Json
+          model_id: string
+          privacy_mode: boolean
+          provider: string
+          region: string
+          user_id_hash: string
+        }
+        Insert: {
+          content_hash: string
+          created_at?: string
+          id?: string
+          manifest_json: Json
+          model_id: string
+          privacy_mode?: boolean
+          provider: string
+          region: string
+          user_id_hash: string
+        }
+        Update: {
+          content_hash?: string
+          created_at?: string
+          id?: string
+          manifest_json?: Json
+          model_id?: string
+          privacy_mode?: boolean
+          provider?: string
+          region?: string
+          user_id_hash?: string
+        }
+        Relationships: []
+      }
       badges: {
         Row: {
           category: Database["public"]["Enums"]["badge_category"]
@@ -291,6 +382,7 @@ export type Database = {
           excerpt: string | null
           id: string
           is_featured: boolean
+          search_vector: unknown
           status: Database["public"]["Enums"]["content_status"]
           tags: string[] | null
           title: string
@@ -310,6 +402,7 @@ export type Database = {
           excerpt?: string | null
           id?: string
           is_featured?: boolean
+          search_vector?: unknown
           status?: Database["public"]["Enums"]["content_status"]
           tags?: string[] | null
           title: string
@@ -329,6 +422,7 @@ export type Database = {
           excerpt?: string | null
           id?: string
           is_featured?: boolean
+          search_vector?: unknown
           status?: Database["public"]["Enums"]["content_status"]
           tags?: string[] | null
           title?: string
@@ -342,6 +436,42 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenge_completions: {
+        Row: {
+          challenge_id: string
+          completed_at: string
+          user_id: string
+          xp_awarded: number
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string
+          user_id: string
+          xp_awarded?: number
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string
+          user_id?: string
+          xp_awarded?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_completions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "active_challenges_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_completions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
             referencedColumns: ["id"]
           },
         ]
@@ -458,6 +588,7 @@ export type Database = {
           id: string
           is_pinned: boolean
           is_resolved: boolean
+          search_vector: unknown
           tags: string[] | null
           title: string
           type: Database["public"]["Enums"]["community_post_type"]
@@ -475,6 +606,7 @@ export type Database = {
           id?: string
           is_pinned?: boolean
           is_resolved?: boolean
+          search_vector?: unknown
           tags?: string[] | null
           title: string
           type?: Database["public"]["Enums"]["community_post_type"]
@@ -492,6 +624,7 @@ export type Database = {
           id?: string
           is_pinned?: boolean
           is_resolved?: boolean
+          search_vector?: unknown
           tags?: string[] | null
           title?: string
           type?: Database["public"]["Enums"]["community_post_type"]
@@ -573,6 +706,7 @@ export type Database = {
           flag_key: string
           id: string
           name: string
+          toggle_strategy: string
           updated_at: string
           updated_by: string | null
         }
@@ -583,6 +717,7 @@ export type Database = {
           flag_key: string
           id?: string
           name: string
+          toggle_strategy?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -593,6 +728,7 @@ export type Database = {
           flag_key?: string
           id?: string
           name?: string
+          toggle_strategy?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -1277,6 +1413,30 @@ export type Database = {
           },
         ]
       }
+      user_feature_prefs: {
+        Row: {
+          feature_id: string
+          id: string
+          is_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          feature_id: string
+          id?: string
+          is_enabled: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          feature_id?: string
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_learning_path_progress: {
         Row: {
           completed_at: string | null
@@ -1484,6 +1644,38 @@ export type Database = {
         }
       }
       get_user_profile_data: { Args: { target_user_id: string }; Returns: Json }
+      hybrid_search_best_practices: {
+        Args: {
+          full_text_weight?: number
+          match_count?: number
+          query_embedding: string
+          query_text: string
+          rrf_k?: number
+          semantic_weight?: number
+        }
+        Returns: {
+          content: string
+          id: string
+          score: number
+          title: string
+        }[]
+      }
+      hybrid_search_community_posts: {
+        Args: {
+          full_text_weight?: number
+          match_count?: number
+          query_embedding: string
+          query_text: string
+          rrf_k?: number
+          semantic_weight?: number
+        }
+        Returns: {
+          content: string
+          id: string
+          score: number
+          title: string
+        }[]
+      }
       increment_field: {
         Args: {
           field_name: string
@@ -1731,6 +1923,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       achievement_category: ["learning", "community", "engagement", "mastery"],

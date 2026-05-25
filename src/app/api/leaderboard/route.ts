@@ -13,8 +13,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/require-auth";
 import { apiInternalError, apiValidationError } from "@/lib/api/response";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { rateLimit, rateLimitHeaders } from "@/lib/api/rate-limit";
 import { leaderboardQuerySchema } from "@/lib/validators/leaderboard";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +48,19 @@ interface LeaderboardResponse {
 
 export async function GET(req: NextRequest) {
   try {
+    // --- Optional auth (don't fail if unauthenticated) ---
+    const auth = await requireAuth(req);
+    const currentUserId = !("response" in auth) ? auth.userId : null;
+
+    // --- Rate limiting (keyed by user ID or IP) ---
+    const rl = await rateLimit(req, "api", currentUserId ?? undefined);
+    if (!rl.success) {
+      return NextResponse.json(
+        { data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } },
+        { status: 429, headers: { ...rateLimitHeaders(rl), "Retry-After": String(Math.ceil((rl.reset - Date.now()) / 1000)) } },
+      );
+    }
+
     // --- Parse and validate query params ---
     const { searchParams } = new URL(req.url);
     const queryRaw = {
@@ -60,11 +75,33 @@ export async function GET(req: NextRequest) {
 
     const { period, limit } = parsed.data;
 
-    // --- Optional auth (don't fail if unauthenticated) ---
-    const auth = await requireAuth(req);
-    const currentUserId = !("response" in auth) ? auth.userId : null;
+    // Use the user-session client when authenticated; fall back to a read-only
+    // anon client (auth.supabase) when unauthenticated.
+    // admin-client OK: leaderboard RPC + fallback queries read public profile
+    // data that RLS exposes to the anon role anyway. Using the user-session
+    // client here means queries run under the authenticated user's RLS context,
+    // which is strictly safer than the service-role key.
+    // Cast: createServerClient<Database> and createClient<Database> both return
+    // SupabaseClient<Database>; the cast aligns the generic for tsc.
+    const supabase = !("response" in auth)
+      ? (auth.supabase as unknown as SupabaseClient<Database>)
+      : null;
 
-    const supabase = createAdminClient();
+    if (!supabase) {
+      const emptyResult: LeaderboardResponse = {
+        entries: [],
+        totalActiveUsers: 0,
+        currentUserRank: null,
+        currentUserXp: null,
+        currentUserLevel: null,
+        period,
+      };
+      return NextResponse.json(
+        { data: emptyResult, error: null },
+        { status: 200, headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=120", ...rateLimitHeaders(rl) } },
+      );
+    }
+
     const cappedLimit = Math.min(limit, 50);
 
     // --- Try optimized RPC first (requires migration 00009) ---
@@ -183,6 +220,7 @@ export async function GET(req: NextRequest) {
         status: 200,
         headers: {
           "Cache-Control": "private, max-age=60, stale-while-revalidate=120",
+          ...rateLimitHeaders(rl),
         },
       },
     );

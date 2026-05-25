@@ -11,6 +11,7 @@ import {
   apiInternalError,
   apiValidationError,
 } from "@/lib/api/response";
+import { rateLimit } from "@/lib/api/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updatePromptSchema } from "@/lib/validators/admin";
 
@@ -25,6 +26,11 @@ export async function GET(req: NextRequest) {
     const auth = await requireAdmin(req);
     if ("response" in auth) return auth.response;
 
+    const rl = await rateLimit(req, "admin", auth.userId);
+    if (!rl.success) {
+      return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
+    }
+
     const supabase = createAdminClient();
 
     // Fetch all prompts, sorted by key and version descending.
@@ -36,7 +42,8 @@ export async function GET(req: NextRequest) {
       .order("version", { ascending: false });
 
     if (error) {
-      return apiInternalError(error.message);
+      console.error("[admin/prompts] fetch system_prompts:", error);
+      return apiInternalError("Interner Fehler");
     }
 
     // Group by prompt_key and pick the latest active version
@@ -78,6 +85,11 @@ export async function PUT(req: NextRequest) {
     const auth = await requireAdmin(req);
     if ("response" in auth) return auth.response;
 
+    const rl = await rateLimit(req, "admin", auth.userId);
+    if (!rl.success) {
+      return new Response(JSON.stringify({ data: null, error: { code: "RATE_LIMITED", message: "Too many requests" } }), { status: 429 });
+    }
+
     const body: unknown = await req.json();
     const parsed = updatePromptSchema.safeParse(body);
 
@@ -114,7 +126,8 @@ export async function PUT(req: NextRequest) {
       .single();
 
     if (error) {
-      return apiInternalError(error.message);
+      console.error("[admin/prompts] insert system_prompts:", error);
+      return apiInternalError("Interner Fehler");
     }
 
     // --- Deactivate all previous versions (new version is already persisted) ---

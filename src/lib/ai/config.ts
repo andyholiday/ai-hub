@@ -163,6 +163,18 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
 
   openrouter: [
     {
+      id: "nvidia/nemotron-nano-9b-v2:free",
+      provider: "openrouter",
+      name: "nvidia/nemotron-nano-9b-v2:free",
+      displayName: "OpenRouter → Nvidia Nemotron Nano 9B (free)",
+      maxTokens: 4096,
+      inputCostPer1k: 0,
+      outputCostPer1k: 0,
+      supportsStreaming: true,
+      supportsVision: false,
+      supportsFunctionCalling: false,
+    },
+    {
       id: "openai/gpt-4o-mini",
       provider: "openrouter",
       name: "openai/gpt-4o-mini",
@@ -256,7 +268,7 @@ export function getRouterConfig(): RouterConfig {
       openrouter: {
         provider: "openrouter",
         apiKey: process.env.OPENROUTER_API_KEY || "",
-        defaultModel: "openai/gpt-4o-mini",
+        defaultModel: "nvidia/nemotron-nano-9b-v2:free",
         models: AI_MODELS.openrouter,
         enabled: !!process.env.OPENROUTER_API_KEY,
       },

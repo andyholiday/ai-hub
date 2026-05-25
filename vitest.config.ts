@@ -12,6 +12,9 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
+    // Node 26 enables the Web Storage API (localStorage/sessionStorage) natively,
+    // which conflicts with jsdom's mock. Disabling it restores jsdom behaviour.
+    execArgv: ["--no-experimental-webstorage"],
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     exclude: ["node_modules", ".next", "out", "dist"],
     coverage: {

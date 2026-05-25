@@ -97,7 +97,9 @@ const panelVariants = {
 export function ChatSplitView() {
     const { minimize, pageContext, orbState, setOrbState } = useOrb();
 
-    // useOrbChat owns all chat state (ADR-005 consolidation)
+    // ADR-005 persistence: useOrbChat manages messages + sessionId + streaming
+    // + transient error. The sessionId is sent to /api/ai/chat so the server
+    // persists the session.
     const { messages, sendMessage, isStreaming, error } = useOrbChat();
 
     const [inputValue, setInputValue] = useState("");
@@ -151,7 +153,7 @@ export function ChatSplitView() {
         (e: React.KeyboardEvent) => {
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                handleSend();
+                void handleSend();
             }
         },
         [handleSend],
@@ -315,7 +317,7 @@ export function ChatSplitView() {
                         <button
                             key={label}
                             type="button"
-                            onClick={() => handleQuickAction(label)}
+                            onClick={() => void handleQuickAction(label)}
                             className={cn(
                                 "flex shrink-0 items-center gap-1.5 rounded-full",
                                 "border border-surface-200 bg-white px-3.5 py-2",
