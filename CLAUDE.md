@@ -71,14 +71,17 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ## Project: ai-hub
 
 Next.js 14 + React 18 + Supabase AI-Hub-Plattform. Multi-Provider AI-Routing
-(Anthropic, OpenAI, Google, Groq, Mistral). Liegt aktuell in `_archiv/`,
-Phasen 1–7 abgeschlossen, Reaktivierung ueber `docs/IMPROVEMENTS.md`.
+über sieben Provider: Gemini (Default), Claude, OpenAI, Copilot, Groq,
+Mistral, OpenRouter (Aggregator, freier Nvidia-Nemotron-Default).
+Production-Stand seit 2026-05-25 reflektiert post-merge alle Wave-1..11
+Security-Iter, ADR-016 JWT-DB-Guard, NOP-07 server-side Mentor-Prompt,
+Best-Practices CRUD, RAG, Budget-Cap, c2pa-Audit-Trail.
 
 ## Layout
 
 - `src/` — App-Code (Next.js App Router)
-- `supabase/migrations/` — DB-Schema + RLS-Policies
-- `tests/` — Vitest + Playwright
+- `supabase/migrations/` — DB-Schema + RLS-Policies (00001–00037 + 99999)
+- `tests/` — Vitest (~924 grün) + Playwright E2E
 - `spikes/` — **TABU**: isolierte POCs (mem0, voice-realtime, edge-streaming),
   nicht modifizieren
 
@@ -89,7 +92,16 @@ Phasen 1–7 abgeschlossen, Reaktivierung ueber `docs/IMPROVEMENTS.md`.
 - Keine Force-Pushes auf `main`
 - Roadmap: `docs/IMPROVEMENTS.md` (9 Phasen)
 
+## Deployment
+
+- Vercel: Production auf https://ai-hub-cyan-five.vercel.app
+  (Project `ancreat1985-6630s-projects/ai-hub`), Auto-Deploy auf main-Push.
+- Supabase: Project `ziwqxnzsrnyhzhsircqh` (Frankfurt, EU); Migrations via
+  `supabase db push --include-all` nach `supabase link --project-ref …`.
+- Env-Vars in Vercel-Dashboard; Provider-API-Keys über Admin-UI in
+  Supabase Vault statt env (siehe `getAIRouterWithDBKeys`).
+
 ## Active Work
 
-Phase 0 — Hardening (Merge-Blocker). 6 Tasks aus `docs/IMPROVEMENTS.md`,
-orchestriert via Winston-Multi-Agent-System.
+Production-Cycle. Nächste Schwerpunkte: Phase-3+ Roadmap aus
+`docs/IMPROVEMENTS.md`, orchestriert via Winston-Multi-Agent-System.
